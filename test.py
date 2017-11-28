@@ -19,13 +19,16 @@ def main():
   sess.connect(conf["_Server(UNINETT-backup)"])
   sess.auth(conf["_User(UNINETT-backup)"], conf["_Secret(UNINETT-backup)"])
   caseids = sess.caseids()
-  for i in caseids:
-    print("Case: %s" % i)
-    pprint(sess.getattrs(int(i)))
-  print("Get History: 23936")
-  pprint(sess.gethist(23936))
-  print("Get Log: 23936")
-  pprint(sess.getlog(23936))
-
+  #for i in caseids:
+  #  print("Case: %s" % i)
+  #  pprint(sess.getattrs(int(i)))
+  print("Get History: 24014")
+  pprint(sess.gethist(24014))
+  print("Get Log: 24014")
+  pprint(sess.getlog(24014))
+  #print("Add test message to log: 24014")
+  #pprint(sess.addhist(24014, "Testmelding ifra pyRitz"))
+  print("Setstate 'open': 24014")
+  pprint(sess.setstate(24014, "open"))
 if __name__ == "__main__":
   main()
