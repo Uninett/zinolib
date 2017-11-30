@@ -1,21 +1,22 @@
 import socket
 import hashlib
 from pprint import pprint
+from datetime import datetime
+import errno
 
 
 # Things to implement
 # /local/src/zino/zino/server.tcl
-# proc ServerCmd { chan line } {
 #   user        Authenticate user
-#               Status: Login implemented
+#               Status: Implemented
 
-#   nsocket     doNsocketCmd $chan $l
+#   nsocket     Outdated, DO NOT IMPLEMENT
 
 #   ntie        Connect to notification socket
 #               Status: NOT implemented
 
 #   caseids     Get list of caseids
-#               Status: caseids implemented
+#               Status: Implemented
 
 #   clearflap   doClearFlap $chan $l
 
@@ -29,19 +30,33 @@ from pprint import pprint
 #               Status: Crude implementation
 
 #   addhist     Add history line to CaseID
-#               Status: addhist Implemented
+#               Status: Implemented
 
 #   setstate    Set noe state on caseID
-#               Status: setstate implemented
+#               Status: Implemented
 
-#   community   doCommunityCmd $chan $l
+#   community   Returns SNMP Community to comm. with device
+#               uses router name as parameter
+#               State: not Implemented
+
 #   pollintf    Poll a router
 #               State: implemented but not tested
 
 #   pollrtr     Poll an interface
 #               State: implemented but not Testmelding
 
-#   pm          doPM $chan $l
+#   pm          Preventive Maintenance
+#               has a bid tree of sob commands,
+#                 pm add from_timestamp to_timestamp type m_type
+#                 pm lits $$
+#                 pm cancel $$
+#                 pm details $$
+#                 pm matching $$
+#                 pm addlog $$
+#                 pm log $$
+#                 pm help
+#                  State: NOT implemented
+#
 #   quit        doQuitCmd $chan $l
 #   help        doHelpCmd $chan $l
 #   version     doVersionCmd $chan $l
@@ -90,7 +105,7 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
 
 
 
-class ritz_channel():
+class ritz():
   def __init__(self):
     self.s = None
     self.connected = None
@@ -145,10 +160,14 @@ class ritz_channel():
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-
     data,header = readcommand(self.s, "caseids\r\n")
 
-    return data
+    ids = []
+    for id in data:
+      if id.isdigit():
+        ids.append(int(id))
+
+    return ids
 
 
   def getattrs(self, caseid):
@@ -163,6 +182,21 @@ class ritz_channel():
     for d in data:
       v = d.split(":",1)
       caseinfo[v[0].strip()] = v[1].strip()
+
+    caseinfo['id'] = int(caseinfo['id'])
+    caseinfo['opened'] = datetime.fromtimestamp(int(caseinfo['opened']))
+    caseinfo['updated'] = datetime.fromtimestamp(int(caseinfo['updated']))
+    caseinfo['priority'] = int(caseinfo['priority'])
+
+    if 'ifindex' in caseinfo:
+      caseinfo['ifindex'] = int(caseinfo['ifindex'])
+    if 'lasttrans' in caseinfo:
+      caseinfo['lasttrans'] = datetime.fromtimestamp(int(caseinfo['lasttrans']))
+    if 'flaps' in caseinfo:
+      caseinfo['flaps'] = int(caseinfo['flaps'])
+    if 'ac-down' in caseinfo:
+      caseinfo['ac-down'] = int(caseinfo['ac-down'])
+
     return caseinfo
 
 
@@ -230,6 +264,7 @@ class ritz_channel():
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
 
+
   def setstate(self, caseid, state):
     if state not in ["open", "working",
                      "waiting", "confirm-wait",
@@ -255,8 +290,10 @@ class ritz_channel():
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
 
+
   def pollintf(self, router, ifindex):
-    if not isinstance(ifindex, int)
+    if not isinstance(ifindex, int):
+        raise TypeError("CaseID needs to be an interger")
     self.s.send("pollintf %s %s\r\n" % (router, ifindex))
 
     # Check returncode
@@ -265,6 +302,95 @@ class ritz_channel():
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
     pass
+
+
+  def ntie(self, key):
+    # Tie to notification channel
+    # Parameters: key:
+    #   key is key reported by notification channel.
+    self.s.send("ntie %s\r\n" % key)
+
+    # Check returncode
+    self._buff = self.s.recv(4096)
+    if not self._buff[0:3] == "200":
+      raise Exception("Not gettingstatus from server: %s" % self._buff)
+    return True
+    pass
+
+
+    def pmAdd(self):
+      #pm add from_timestamp to_timestamp type m_type
+      raise NotImplementedError("pmAdd not Implemented")
+
+
+    def pmlist(self):
+      #pm list
+      raise NotImplementedError("pmList not Implemented")
+
+
+    def pmCancel(self):
+      #pm cancel
+      raise NotImplementedError("pmCancel not Implemented")
+
+
+    def pmDetails(self):
+      #pm details
+      raise NotImplementedError("pmDetails not Implemented")
+
+
+    def pmMatching(self):
+      #pm matching
+      raise NotImplementedError("pmMatching not Implemented")
+
+
+    def pmAddLog(self):
+      #pm addlog
+      raise NotImplementedError("pmAddLog not Implemented")
+
+
+    def pmLog(self):
+      #pm log
+      raise NotImplementedError("Not Implemented")
+
+
+
+class notifier():
+  def __init__(self):
+    self.s = None
+    self.connected = False
+    self._buff = ""
+
+  def connect(self, server, port = 8002, timeout = 30):
+    if not self.s:
+      self.s = socket.create_connection((server, port), timeout)
+      self._buff = self.s.recv(4096)
+      self.s.setblocking(False)
+      rawHeader = self._buff.split("\r\n")[0]
+      header = rawHeader.split(" ", 1)
+      #print len(header[0])
+      if len(header[0]) == 40:
+        self.connected = True
+        self._buff = ''
+
+        return header[0]
+      else:
+        raise NotConnectedError("Key not found")
+
+
+  def poll(self):
+    try:
+      self._buff += self.s.recv(4096)
+    except socket.error, e:
+      if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
+        # a "real" error occurred
+        self.s = None
+        self.connected = False
+        raise NotConnectedError("Not connected to server")
+
+    if "\r\n" in self._buff:
+      line, self._buff = self._buff.split('\r\n', 1)
+      return line
+
 
 
 
