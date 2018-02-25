@@ -81,7 +81,7 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
   sock.send(command)
   while data:
     data = sock.recv(recv_buffer)
-    buffer += data
+    buffer += data.decode('UTF-8')
 
     if not header:
       if buffer.find(delim) != -1:
@@ -104,22 +104,24 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
   return r,header
 
 
-
 class ritz():
+  """Connect to zino datachannel."""
   def __init__(self):
+    """Initialize."""
     self.s = None
-    self.connected = None
+    self.connStatus = False
 
   def connect(self, server, port=8001, timeout=10):
     # Opens an connection to the Server
     # To do things you need to authenticate after connection
     self.s = socket.create_connection((server, port), timeout)
     self._buff = self.s.recv(4096)
-    rawHeader = self._buff.split("\r\n")[0]
-    header = rawHeader.split(" ", 2)
-    if header[0] == "200":
+    rawHeader = self._buff.split(b"\r\n")[0]
+    header = rawHeader.split(b" ", 2)
+    print("header:'{}'".format(header))
+    if header[0] == b"200":
       self.authChallenge = header[1]
-      self.connected = True
+      self.connStatus = True
     else:
       raise NotConnectedError("Did not get a status code 200")
 
@@ -131,7 +133,7 @@ class ritz():
 
   @property
   def connected(self):
-    if self.s and self.connected and self.authenticated:
+    if self.s and self.connStatus and self.authenticated:
       return True;
     return False
 
@@ -140,27 +142,28 @@ class ritz():
 
   def auth(self, user, password):
     # Authenticate user
-    if not self.connected:
+    if not self.connStatus:
       raise NotConnectedError("Not connected to device")
 
     # Combine Password and authChallenge from Ritz to make authToken
-    authToken = hashlib.sha1("%s %s" % (self.authChallenge, password)).hexdigest()
-
-    self.s.send("user %s %s  -\r\n" % (user, authToken))
+    genToken = "%s %s" % (self.authChallenge.decode('UTF-8'), password)
+    authToken = hashlib.sha1(genToken.encode('UTF-8')).hexdigest()
+    cmd = 'user %s %s  -\r\n' % (user, authToken)
+    self.s.send(bytes(cmd.encode('UTF-8')))
     self._buff = self.s.recv(4096)
-    if self._buff[0:3] == "200":
+    if self._buff[0:3] == b"200":
       self.authenticated = True
       return
     raise AuthenticationError("Access Denied while authenticating")
 
 
   def caseids(self):
-    if not self.connected:
+    if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-    data,header = readcommand(self.s, "caseids\r\n")
+    data,header = readcommand(self.s, b"caseids\r\n")
 
     ids = []
     for id in data:
@@ -171,13 +174,14 @@ class ritz():
 
 
   def getattrs(self, caseid):
-    if not self.connected:
+    if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    data, header = readcommand(self.s, "getattrs %s\r\n" % caseid)
+    cmd = "getattrs %s\r\n" % caseid
+    data, header = readcommand(self.s, cmd.encode('UTF-8'))
     caseinfo = {}
     for d in data:
       v = d.split(":",1)
@@ -204,7 +208,7 @@ class ritz():
     #   gethist     Get Logs from CaseID
     #   Parameters: caseID
     #   Returns a list of historylines (timestamp, message)??
-    if not self.connected:
+    if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
@@ -222,7 +226,7 @@ class ritz():
     #   getlog      Get Logs from CaseID
     #   Parameters: caseID
     #   Returns a list of loglines (timestamp, message)
-    if not self.connected:
+    if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
@@ -260,7 +264,7 @@ class ritz():
 
     # Check returncode
     self._buff = self.s.recv(4096)
-    if not self._buff[0:3] == "200":
+    if not self._buff[0:3] == b"200":
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
 
@@ -276,7 +280,7 @@ class ritz():
 
     # Check returncode
     self._buff = self.s.recv(4096)
-    if not self._buff[0:3] == "200":
+    if not self._buff[0:3] == b"200":
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
 
@@ -298,7 +302,7 @@ class ritz():
 
     # Check returncode
     self._buff = self.s.recv(4096)
-    if not self._buff[0:3] == "200":
+    if not self._buff[0:3] == b"200":
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
     pass
@@ -308,11 +312,11 @@ class ritz():
     # Tie to notification channel
     # Parameters: key:
     #   key is key reported by notification channel.
-    self.s.send("ntie %s\r\n" % key)
+    self.s.send(b"ntie %s\r\n" % key)
 
     # Check returncode
     self._buff = self.s.recv(4096)
-    if not self._buff[0:3] == "200":
+    if not self._buff[0:3] == b"200":
       raise Exception("Not gettingstatus from server: %s" % self._buff)
     return True
     pass
@@ -357,7 +361,7 @@ class ritz():
 class notifier():
   def __init__(self):
     self.s = None
-    self.connected = False
+    self.connStatus = False
     self._buff = ""
 
   def connect(self, server, port = 8002, timeout = 30):
@@ -365,11 +369,11 @@ class notifier():
       self.s = socket.create_connection((server, port), timeout)
       self._buff = self.s.recv(4096)
       self.s.setblocking(False)
-      rawHeader = self._buff.split("\r\n")[0]
-      header = rawHeader.split(" ", 1)
+      rawHeader = self._buff.split(b"\r\n")[0]
+      header = rawHeader.split(b" ", 1)
       #print len(header[0])
       if len(header[0]) == 40:
-        self.connected = True
+        self.connStatus = True
         self._buff = ''
 
         return header[0]
@@ -380,11 +384,11 @@ class notifier():
   def poll(self):
     try:
       self._buff += self.s.recv(4096)
-    except socket.error, e:
+    except socket.error as e:
       if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
         # a "real" error occurred
         self.s = None
-        self.connected = False
+        self.connStatus = False
         raise NotConnectedError("Not connected to server")
 
     if "\r\n" in self._buff:
