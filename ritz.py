@@ -65,11 +65,14 @@ import errno
 class AuthenticationError(Exception):
   pass
 
+
 class NotConnectedError(Exception):
   pass
 
+
 class ProtocolError(Exception):
   pass
+
 
 def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
   # Reads socket buffer until the end of datastructure
@@ -88,7 +91,7 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
         line, buffer = buffer.split('\r\n', 1)
         rawh = line.split(' ', 1)
         header = (int(rawh[0]), rawh[1])
-        #header = line
+        # header = line
         # Crude error detection :)
         if header[0] >= 500:
           raise ProtocolError(header)
@@ -99,9 +102,9 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
     while buffer.find(delim) != -1:
       line, buffer = buffer.split('\r\n', 1)
       if line == ".":
-        return r,header
+        return r, header
       r.append(line)
-  return r,header
+  return r, header
 
 
 class ritz():
@@ -125,20 +128,15 @@ class ritz():
     else:
       raise NotConnectedError("Did not get a status code 200")
 
-
   def close(self):
     if self.s:
       pass
 
-
   @property
   def connected(self):
     if self.s and self.connStatus and self.authenticated:
-      return True;
+      return True
     return False
-
-
-
 
   def auth(self, user, password):
     # Authenticate user
@@ -156,14 +154,13 @@ class ritz():
       return
     raise AuthenticationError("Access Denied while authenticating")
 
-
   def caseids(self):
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-    data,header = readcommand(self.s, b"caseids\r\n")
+    data, header = readcommand(self.s, b"caseids\r\n")
 
     ids = []
     for id in data:
@@ -171,7 +168,6 @@ class ritz():
         ids.append(int(id))
 
     return ids
-
 
   def getattrs(self, caseid):
     if not self.connStatus:
@@ -184,7 +180,7 @@ class ritz():
     data, header = readcommand(self.s, cmd.encode('UTF-8'))
     caseinfo = {}
     for d in data:
-      v = d.split(":",1)
+      v = d.split(":", 1)
       caseinfo[v[0].strip()] = v[1].strip()
 
     caseinfo['id'] = int(caseinfo['id'])
@@ -203,7 +199,6 @@ class ritz():
 
     return caseinfo
 
-
   def gethist(self, caseid):
     #   gethist     Get Logs from CaseID
     #   Parameters: caseID
@@ -215,12 +210,11 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
     data, header = readcommand(self.s, "gethist %s\r\n" % caseid)
-    caseinfo = {}
-    #for d in data:
-    #  v = d.split(":",1)
-    #  caseinfo[v[0].strip()] = v[1].strip()
+    # caseinfo = {}
+    # for d in data:
+    #   v = d.split(":",1)
+    #   caseinfo[v[0].strip()] = v[1].strip()
     return data
-
 
   def getlog(self, caseid):
     #   getlog      Get Logs from CaseID
@@ -232,15 +226,14 @@ class ritz():
       raise AuthenticationError("User not authenticated")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    #self.s.send("getattrs %d\r\n" % caseid)
-    #print "Getting %s " % caseid
+    # self.s.send("getattrs %d\r\n" % caseid)
+    # print "Getting %s " % caseid
     data, header = readcommand(self.s, "getlog %s\r\n" % caseid)
-    caseinfo = {}
-    #for d in data:
-    #  v = d.split(":",1)
-    #  caseinfo[v[0].strip()] = v[1].strip()
+    # caseinfo = {}
+    # for d in data:
+    #   v = d.split(":",1)
+    #   caseinfo[v[0].strip()] = v[1].strip()
     return data
-
 
   def addhist(self, caseid, message):
     # ZinoServer:
@@ -268,7 +261,6 @@ class ritz():
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
 
-
   def setstate(self, caseid, state):
     if state not in ["open", "working",
                      "waiting", "confirm-wait",
@@ -284,7 +276,6 @@ class ritz():
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
 
-
   def pollrtr(self, router):
     self.s.send("pollrtr %s\r\n" % router)
 
@@ -293,7 +284,6 @@ class ritz():
     if not self._buff[0:3] == "200":
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
-
 
   def pollintf(self, router, ifindex):
     if not isinstance(ifindex, int):
@@ -306,7 +296,6 @@ class ritz():
       raise Exception("Not getting 200 status from server: %s" % self._buff)
     return True
     pass
-
 
   def ntie(self, key):
     # Tie to notification channel
@@ -321,41 +310,64 @@ class ritz():
     return True
     pass
 
-
     def pmAdd(self):
-      #pm add from_timestamp to_timestamp type m_type
+      # Adds a Maintenance period
+      # pm add
+      #    [2] from_t   -  Timestamp
+      #    [3] to_t     -  Timestamp
+      #    [4] type     -  could be portstate or device
+      #    [5] m_type   -  could be regex, str, exact, intf-regexp
+      #    case intf_regexp:
+      #      [6] m_dev  -  device?
+      #      [7] m_expr -  interface-regexp
+      #    else:
+      #      [6] m_expr -  device_regex
+      #  Returns 200 with id on PM on sucessfull pm add
       raise NotImplementedError("pmAdd not Implemented")
 
-
-    def pmlist(self):
-      #pm list
+    def pmList(self):
+      # Lists all Maintenance periods registrered
+      # pm list
+      # returns 300 with list of all scheduled PM's, exits with ^.$
       raise NotImplementedError("pmList not Implemented")
 
-
     def pmCancel(self):
-      #pm cancel
+      # Cansels a Maintenance period
+      # pm cancel
+      #    [2] id      - id of pm to cancel
       raise NotImplementedError("pmCancel not Implemented")
 
-
     def pmDetails(self):
-      #pm details
+      # Get details of a Maintenance period
+      # pm details
+      #    [2] id      - id of pm
+      # returns 200 with details. need testing
       raise NotImplementedError("pmDetails not Implemented")
 
-
     def pmMatching(self):
-      #pm matching
+      # Get list of all ports and devices matching a Maintenance id
+      # pm matching
+      #    [2] id       - id of pm
+      # returns 300 with ports and devices matching id, exits with ^.$
       raise NotImplementedError("pmMatching not Implemented")
 
-
     def pmAddLog(self):
-      #pm addlog
+      # Adds a log message on this PM
+      # pm addlog
+      #   [2] id        -  id of PM
+      # returns 302 please provide new PM log entry, terminate with '.'
+      #   <message here>
+      # .
+      # returns 200? need verification
       raise NotImplementedError("pmAddLog not Implemented")
 
-
     def pmLog(self):
-      #pm log
+      # Get log of a PM
+      # pm log
+      #   [2] id       -  ID of pm to gat log from
+      # returns 300 log follows, exits with ^.$
+      #
       raise NotImplementedError("Not Implemented")
-
 
 
 class notifier():
@@ -364,14 +376,14 @@ class notifier():
     self.connStatus = False
     self._buff = ""
 
-  def connect(self, server, port = 8002, timeout = 30):
+  def connect(self, server, port=8002, timeout=30):
     if not self.s:
       self.s = socket.create_connection((server, port), timeout)
       self._buff = self.s.recv(4096)
       self.s.setblocking(False)
       rawHeader = self._buff.split(b"\r\n")[0]
       header = rawHeader.split(b" ", 1)
-      #print len(header[0])
+      # print len(header[0])
       if len(header[0]) == 40:
         self.connStatus = True
         self._buff = ''
@@ -379,7 +391,6 @@ class notifier():
         return header[0]
       else:
         raise NotConnectedError("Key not found")
-
 
   def poll(self):
     try:
@@ -394,8 +405,6 @@ class notifier():
     if "\r\n" in self._buff:
       line, self._buff = self._buff.split('\r\n', 1)
       return line
-
-
 
 
 if "__main__" == __name__:
