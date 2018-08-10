@@ -48,7 +48,7 @@ def main():
   print("Schedule test pm:")
   pm = sess.pmAddDevice(datetime.now()+timedelta(minutes=1),
                         datetime.now()+timedelta(minutes=10),
-                        "dummydevice")
+                        "teknobyen-gw", m_type='str')
   print("Scheduled")
 
   print("List all PMs:")
@@ -60,6 +60,9 @@ def main():
 
   print("pmLog:")
   print(sess.pmLog(pm))
+
+  print("pmMatching:")
+  print(sess.pmMatching(pm))
 
   print("pmCancel:")
   print(sess.pmCancel(pm))

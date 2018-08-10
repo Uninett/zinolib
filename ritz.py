@@ -345,7 +345,7 @@ class ritz():
         raise TypeError("to_t is not a datetime")
     if from_t > to_t:
         raise Exception("To timestamp is earlier than From timestamp")
-    if m_type not in ("exact", "str", "regex"):
+    if m_type not in ("exact", "str", "regexp"):
         raise Exception("Unknown m_type, needs to be exact, str or regex")
 
     from_ts = mktime(from_t.timetuple())
@@ -445,7 +445,9 @@ class ritz():
     data, header = readcommand(self.s, b"pm matching %d\r\n" % id)
 
     # What to return?
-    raise NotImplementedError("pmMatching not Implemented")
+    print(header)
+    print(data)
+    #raise NotImplementedError("pmMatching not Implemented")
 
   def pmAddLog(self):
     # Adds a log message on this PM
