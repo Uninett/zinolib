@@ -47,8 +47,8 @@ import errno
 
 #   pm          Preventive Maintenance
 #               has a bid tree of sob commands,
-#                 pm add from_timestamp to_timestamp type m_type
-#                 pm lits $$
+#                 pm add $$
+#                 pm list $$
 #                 pm cancel $$
 #                 pm details $$
 #                 pm matching $$
@@ -258,7 +258,7 @@ class ritz():
     # Check returncode
     self._buff = self.s.recv(4096)
     if not self._buff[0:3] == b"200":
-      raise Exception("Not getting 200 status from server: %s" % self._buff)
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
   def setstate(self, caseid, state):
@@ -273,7 +273,7 @@ class ritz():
     # Check returncode
     self._buff = self.s.recv(4096)
     if not self._buff[0:3] == b"200":
-      raise Exception("Not getting 200 status from server: %s" % self._buff)
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
   def pollrtr(self, router):
@@ -282,7 +282,7 @@ class ritz():
     # Check returncode
     self._buff = self.s.recv(4096)
     if not self._buff[0:3] == "200":
-      raise Exception("Not getting 200 status from server: %s" % self._buff)
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
   def pollintf(self, router, ifindex):
@@ -293,7 +293,7 @@ class ritz():
     # Check returncode
     self._buff = self.s.recv(4096)
     if not self._buff[0:3] == b"200":
-      raise Exception("Not getting 200 status from server: %s" % self._buff)
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
     pass
 
@@ -306,7 +306,7 @@ class ritz():
     # Check returncode
     self._buff = self.s.recv(4096)
     if not self._buff[0:3] == b"200":
-      raise Exception("Not gettingstatus from server: %s" % self._buff)
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
     pass
 
