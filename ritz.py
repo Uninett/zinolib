@@ -310,64 +310,77 @@ class ritz():
     return True
     pass
 
-    def pmAdd(self):
-      # Adds a Maintenance period
-      # pm add
-      #    [2] from_t   -  Timestamp
-      #    [3] to_t     -  Timestamp
-      #    [4] type     -  could be portstate or device
-      #    [5] m_type   -  could be regex, str, exact, intf-regexp
-      #    case intf_regexp:
-      #      [6] m_dev  -  device?
-      #      [7] m_expr -  interface-regexp
-      #    else:
-      #      [6] m_expr -  device_regex
-      #  Returns 200 with id on PM on sucessfull pm add
-      raise NotImplementedError("pmAdd not Implemented")
+  def pmAdd(self, from_t, to_t, type, m_type, device="", type=""):
+    # Adds a Maintenance period
+    # pm add
+    #    [2] from_t   -  Timestamp
+    #    [3] to_t     -  Timestamp
+    #    [4] type     -  could be portstate or device
+    #    [5] m_type   -  could be regex, str, exact, intf-regexp
+    #    case intf_regexp:
+    #      [6] m_dev  -  device
+    #      [7] m_expr -  interface-regexp
+    #    else:
+    #      [6] m_expr -  device_regex
+    #  Returns 200 with id on PM on sucessfull pm add
+    raise NotImplementedError("pmAdd not Implemented")
 
-    def pmList(self):
-      # Lists all Maintenance periods registrered
-      # pm list
-      # returns 300 with list of all scheduled PM's, exits with ^.$
-      raise NotImplementedError("pmList not Implemented")
+  def pmList(self):
+    # Lists all Maintenance periods registrered
+    # pm list
+    # returns 300 with list of all scheduled PM's, exits with ^.$
+    if not self.connStatus:
+      raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+      raise AuthenticationError("User not authenticated")
 
-    def pmCancel(self):
-      # Cansels a Maintenance period
-      # pm cancel
-      #    [2] id      - id of pm to cancel
-      raise NotImplementedError("pmCancel not Implemented")
+    data, header = readcommand(self.s, b"pm list\r\n")
 
-    def pmDetails(self):
-      # Get details of a Maintenance period
-      # pm details
-      #    [2] id      - id of pm
-      # returns 200 with details. need testing
-      raise NotImplementedError("pmDetails not Implemented")
+    ids = []
+    for id in data:
+      if id.isdigit():
+        ids.append(int(id))
 
-    def pmMatching(self):
-      # Get list of all ports and devices matching a Maintenance id
-      # pm matching
-      #    [2] id       - id of pm
-      # returns 300 with ports and devices matching id, exits with ^.$
-      raise NotImplementedError("pmMatching not Implemented")
+    return ids
+    raise NotImplementedError("pmList not Implemented")
 
-    def pmAddLog(self):
-      # Adds a log message on this PM
-      # pm addlog
-      #   [2] id        -  id of PM
-      # returns 302 please provide new PM log entry, terminate with '.'
-      #   <message here>
-      # .
-      # returns 200? need verification
-      raise NotImplementedError("pmAddLog not Implemented")
+  def pmCancel(self):
+    # Cansels a Maintenance period
+    # pm cancel
+    #    [2] id      - id of pm to cancel
+    raise NotImplementedError("pmCancel not Implemented")
 
-    def pmLog(self):
-      # Get log of a PM
-      # pm log
-      #   [2] id       -  ID of pm to gat log from
-      # returns 300 log follows, exits with ^.$
-      #
-      raise NotImplementedError("Not Implemented")
+  def pmDetails(self):
+    # Get details of a Maintenance period
+    # pm details
+    #    [2] id      - id of pm
+    # returns 200 with details. need testing
+    raise NotImplementedError("pmDetails not Implemented")
+
+  def pmMatching(self):
+    # Get list of all ports and devices matching a Maintenance id
+    # pm matching
+    #    [2] id       - id of pm
+    # returns 300 with ports and devices matching id, exits with ^.$
+    raise NotImplementedError("pmMatching not Implemented")
+
+  def pmAddLog(self):
+    # Adds a log message on this PM
+    # pm addlog
+    #   [2] id        -  id of PM
+    # returns 302 please provide new PM log entry, terminate with '.'
+    #   <message here>
+    # .
+    # returns 200? need verification
+    raise NotImplementedError("pmAddLog not Implemented")
+
+  def pmLog(self):
+    # Get log of a PM
+    # pm log
+    #   [2] id       -  ID of pm to gat log from
+    # returns 300 log follows, exits with ^.$
+    #
+    raise NotImplementedError("Not Implemented")
 
 
 class notifier():
