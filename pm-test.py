@@ -5,6 +5,7 @@ from time import sleep
 import re
 import argparse
 import sys
+from datetime import datetime, timedelta
 
 
 def importconf(file):
@@ -19,9 +20,8 @@ def importconf(file):
 def main():
   parser = argparse.ArgumentParser(description='Process some integers.')
 
-  parser.add_argument('CaseID', metavar='N', type=int,
-                      help='CaseID to test with')
   parser.add_argument('--prod', action='store_true')
+  parser.add_argument('--remove-all-pms', action='store_true')
 
   args = parser.parse_args()
   sess = ritz()
@@ -38,9 +38,42 @@ def main():
   sess.connect(c_server)
   sess.auth(c_user, c_secret)
 
+  print("List all PMs:")
   pm = sess.pmList()
-  print pm
+  print(pm)
+  for i in pm:
+    print("canceling %d" % i)
+    sess.pmCancel(i)
+
+  print("Schedule test pm:")
+  pm = sess.pmAddDevice(datetime.now()+timedelta(minutes=1),
+                        datetime.now()+timedelta(minutes=10),
+                        "dummydevice")
+  print("Scheduled")
+
+  print("List all PMs:")
+  pms = sess.pmList()
+  print(pm)
+
+  print("pmDetails:")
+  print(sess.pmDetails(pm))
+
+  print("pmLog:")
+  print(sess.pmLog(pm))
+
+  print("pmCancel:")
+  print(sess.pmCancel(pm))
+
+
   return
+
+
+
+
+
+
+
+
 
 
   caseids = sess.caseids()
@@ -56,7 +89,7 @@ def main():
     while True:
       n = notif.poll()
       if n:
-        print n
+        print(n)
         p = n.split(' ',2)
         if "attr" in p[1]:
           pprint(sess.getattrs(int(p[0])))

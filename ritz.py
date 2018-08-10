@@ -3,6 +3,8 @@ import hashlib
 from pprint import pprint
 from datetime import datetime
 import errno
+from time import mktime
+
 
 
 # Things to implement
@@ -47,14 +49,21 @@ import errno
 
 #   pm          Preventive Maintenance
 #               has a bid tree of sob commands,
-#                 pm add $$
-#                 pm list $$
-#                 pm cancel $$
-#                 pm details $$
-#                 pm matching $$
-#                 pm addlog $$
-#                 pm log $$
-#                 pm help
+#                 pm add      - Scheduled a PM
+#                   State: Not Implemented
+#                 pm list     - List all PMs
+#                   State: Crude implementation
+#                 pm cancel   - Cancel a PM
+#                   State: Not Implemented
+#                 pm details  - Details of a PM
+#                   State: Not Implemented
+#                 pm matching - Get ports and devices matching a PM
+#                   State: Not Implemented
+#                 pm addlog   - Add a log entry to a PM
+#                   State: Not Implemented
+#                 pm log      - Get log of a PM
+#                   State: Not Implemented
+#                 pm help     - Get help... wil not implement
 #                  State: NOT implemented
 #
 #   quit        doQuitCmd $chan $l
@@ -88,8 +97,8 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
 
     if not header:
       if buffer.find(delim) != -1:
-        line, buffer = buffer.split('\r\n', 1)
-        rawh = line.split(' ', 1)
+        line, buffer = buffer.split('\r\n', 1) # '\r\n' is not a byte
+        rawh = line.split(' ', 1) # ' ' is not a byte
         header = (int(rawh[0]), rawh[1])
         # header = line
         # Crude error detection :)
@@ -100,7 +109,7 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
       next
 
     while buffer.find(delim) != -1:
-      line, buffer = buffer.split('\r\n', 1)
+      line, buffer = buffer.split('\r\n', 1) # '\r\n' is not a byte
       if line == ".":
         return r, header
       r.append(line)
@@ -131,6 +140,7 @@ class ritz():
   def close(self):
     if self.s:
       pass
+    raise NotImplementedError("close is not implemented")
 
   @property
   def connected(self):
@@ -180,7 +190,7 @@ class ritz():
     data, header = readcommand(self.s, cmd.encode('UTF-8'))
     caseinfo = {}
     for d in data:
-      v = d.split(":", 1)
+      v = d.split(b":", 1)
       caseinfo[v[0].strip()] = v[1].strip()
 
     caseinfo['id'] = int(caseinfo['id'])
@@ -227,7 +237,7 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
     # self.s.send("getattrs %d\r\n" % caseid)
-    # print "Getting %s " % caseid
+    # print("Getting %s " % caseid)
     data, header = readcommand(self.s, "getlog %s\r\n" % caseid)
     # caseinfo = {}
     # for d in data:
@@ -241,7 +251,7 @@ class ritz():
     # 302 please provide new history entry, termiate with '.'
 
     # Start Command
-    self.s.send("addhist %s  -\r\n" % (caseid))
+    self.s.send(b"addhist %s  -\r\n" % (caseid))
     self._buff = self.s.recv(4096)
     if not self._buff[0:3] == "302":
       raise Exception("Unknown return from server: %s" % self._buff)
@@ -253,7 +263,7 @@ class ritz():
       msg = message
 
     # Send message
-    self.s.send("%s\r\n\r\n.\r\n" % msg)
+    self.s.send(b"%b\r\n\r\n.\r\n" % msg.encode())
 
     # Check returncode
     self._buff = self.s.recv(4096)
@@ -268,7 +278,7 @@ class ritz():
       raise Exception("Illegal state")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    self.s.send("setstate %s %s\r\n" % (caseid, state))
+    self.s.send(b"setstate %s %s\r\n" % (caseid, state.encode()))
 
     # Check returncode
     self._buff = self.s.recv(4096)
@@ -277,7 +287,7 @@ class ritz():
     return True
 
   def pollrtr(self, router):
-    self.s.send("pollrtr %s\r\n" % router)
+    self.s.send(b"pollrtr %s\r\n" % router.encode())
 
     # Check returncode
     self._buff = self.s.recv(4096)
@@ -288,7 +298,7 @@ class ritz():
   def pollintf(self, router, ifindex):
     if not isinstance(ifindex, int):
         raise TypeError("CaseID needs to be an interger")
-    self.s.send("pollintf %s %s\r\n" % (router, ifindex))
+    self.s.send(b"pollintf %s %s\r\n" % (router.encode(), ifindex))
 
     # Check returncode
     self._buff = self.s.recv(4096)
@@ -310,25 +320,56 @@ class ritz():
     return True
     pass
 
-  def pmAdd(self, from_t, to_t, type, m_type, device="", type=""):
+  def pmAddDevice(self, from_t, to_t, device, m_type="exact"):
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  Timestamp
     #    [3] to_t     -  Timestamp
     #    [4] type     -  could be portstate or device
-    #    [5] m_type   -  could be regex, str, exact, intf-regexp
+    #    [5] m_type   -  could be regex, str, exact, intf-regexp <-- Trenger mer info om denne
     #    case intf_regexp:
     #      [6] m_dev  -  device
     #      [7] m_expr -  interface-regexp
     #    else:
     #      [6] m_expr -  device_regex
     #  Returns 200 with id on PM on sucessfull pm add
-    raise NotImplementedError("pmAdd not Implemented")
+    #  Function returns id of added PM
+    if not self.connStatus:
+      raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+      raise AuthenticationError("User not authenticated")
+
+    if not isinstance(from_t, datetime):
+        raise TypeError("from_t is not a datetime")
+    if not isinstance(to_t, datetime):
+        raise TypeError("to_t is not a datetime")
+    if from_t > to_t:
+        raise Exception("To timestamp is earlier than From timestamp")
+    if m_type not in ("exact", "str", "regex"):
+        raise Exception("Unknown m_type, needs to be exact, str or regex")
+
+    from_ts = mktime(from_t.timetuple())
+    to_ts = mktime(to_t.timetuple())
+
+    data, header = readcommand(self.s, b'pm add %d %d device %b %b\r\n' % (from_ts, to_ts, m_type.encode(), device.encode()))
+
+    # Check returncode
+    if not header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+
+    data2 = data.split(" ",3)
+    return int(data2[2])
+
 
   def pmList(self):
     # Lists all Maintenance periods registrered
     # pm list
     # returns 300 with list of all scheduled PM's, exits with ^.$
+    if not self.connStatus:
+      raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+      raise AuthenticationError("User not authenticated")
+
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
@@ -342,26 +383,68 @@ class ritz():
         ids.append(int(id))
 
     return ids
-    raise NotImplementedError("pmList not Implemented")
 
-  def pmCancel(self):
+  def pmCancel(self, id):
     # Cansels a Maintenance period
     # pm cancel
     #    [2] id      - id of pm to cancel
-    raise NotImplementedError("pmCancel not Implemented")
+    if not self.connStatus:
+      raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+      raise AuthenticationError("User not authenticated")
 
-  def pmDetails(self):
+    if not isinstance(id, int):
+      raise TypeError("ID needs to be an integer")
+    data, header = readcommand(self.s, b"pm cancel %d\r\n" % (id))
+
+    # Check returncode
+    if not header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+    else:
+      return True
+
+  def pmDetails(self, id):
     # Get details of a Maintenance period
     # pm details
     #    [2] id      - id of pm
     # returns 200 with details. need testing
-    raise NotImplementedError("pmDetails not Implemented")
+    if not self.connStatus:
+        raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+        raise AuthenticationError("User not authenticated")
 
-  def pmMatching(self):
+    if not isinstance(id, int):
+      raise TypeError("ID needs to be an integer")
+
+    data, header = readcommand(self.s, b"pm details %d\r\n" % (id))
+
+    data2 = data.split(' ',5)
+    print(data2)
+
+    res = {'id': int(data2[0]),
+            'from': datetime.fromtimestamp(int(data2[1])),
+            'to': datetime.fromtimestamp(int(data2[2])),
+            'type': data2[3],
+            'm_type': data2[4],
+            'device': data2[5]}
+
+    return res
+
+  def pmMatching(self, id):
     # Get list of all ports and devices matching a Maintenance id
     # pm matching
     #    [2] id       - id of pm
     # returns 300 with ports and devices matching id, exits with ^.$
+    if not self.connStatus:
+        raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+        raise AuthenticationError("User not authenticated")
+    if not isinstance(id, int):
+        raise TypeError("ID needs to be an integer")
+
+    data, header = readcommand(self.s, b"pm matching %d\r\n" % id)
+
+    # What to return?
     raise NotImplementedError("pmMatching not Implemented")
 
   def pmAddLog(self):
@@ -372,15 +455,32 @@ class ritz():
     #   <message here>
     # .
     # returns 200? need verification
+    if not self.connStatus:
+        raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+        raise AuthenticationError("User not authenticated")
+
     raise NotImplementedError("pmAddLog not Implemented")
 
-  def pmLog(self):
+  def pmLog(self, id):
     # Get log of a PM
     # pm log
     #   [2] id       -  ID of pm to gat log from
     # returns 300 log follows, exits with ^.$
     #
-    raise NotImplementedError("Not Implemented")
+
+    if not isinstance(id, int):
+      raise TypeError("ID needs to be a integer")
+    if not self.connStatus:
+        raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+        raise AuthenticationError("User not authenticated")
+
+    data, header = readcommand(self.s, b"pm log %d\r\n" % id)
+
+    print(header)
+    print(data)
+    #raise NotImplementedError("Not Implemented")
 
 
 class notifier():
@@ -396,7 +496,7 @@ class notifier():
       self.s.setblocking(False)
       rawHeader = self._buff.split(b"\r\n")[0]
       header = rawHeader.split(b" ", 1)
-      # print len(header[0])
+      # print(len(header[0]))
       if len(header[0]) == 40:
         self.connStatus = True
         self._buff = ''
@@ -416,7 +516,7 @@ class notifier():
         raise NotConnectedError("Not connected to server")
 
     if "\r\n" in self._buff:
-      line, self._buff = self._buff.split('\r\n', 1)
+      line, self._buff = self._buff.split(b'\r\n', 1)
       return line
 
 
