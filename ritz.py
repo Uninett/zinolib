@@ -50,15 +50,15 @@ from time import mktime
 #   pm          Preventive Maintenance
 #               has a bid tree of sob commands,
 #                 pm add      - Scheduled a PM
-#                   State: Not Implemented
+#                   State: Crude implementation
 #                 pm list     - List all PMs
 #                   State: Crude implementation
 #                 pm cancel   - Cancel a PM
-#                   State: Not Implemented
+#                   State: Implemented
 #                 pm details  - Details of a PM
-#                   State: Not Implemented
+#                   State: Crude implementation
 #                 pm matching - Get ports and devices matching a PM
-#                   State: Not Implemented
+#                   State: Crude implementation not tested
 #                 pm addlog   - Add a log entry to a PM
 #                   State: Not Implemented
 #                 pm log      - Get log of a PM
