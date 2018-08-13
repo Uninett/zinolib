@@ -323,17 +323,15 @@ class ritz():
   def pmAddDevice(self, from_t, to_t, device, m_type="exact"):
     # Adds a Maintenance period
     # pm add
-    #    [2] from_t   -  Timestamp
-    #    [3] to_t     -  Timestamp
-    #    [4] type     -  could be portstate or device
-    #    [5] m_type   -  could be regex, str, exact, intf-regexp <-- Trenger mer info om denne
-    #    case intf_regexp:
-    #      [6] m_dev  -  device
-    #      [7] m_expr -  interface-regexp
-    #    else:
-    #      [6] m_expr -  device_regex
+    #    [2] from_t   -  start timestamp  (unixtime)
+    #    [3] to_t     -  stop  timestamp  (unixtime)
+    #    [4] type     -  "device"
+    #    [5] m_type   -  could be "regexp", "str", "exact"
+    #                    str: allows ? or * for single or multicaracter wildcard
+    #    [6] m_expr   -  device_regex
     #  Returns 200 with id on PM on sucessfull pm add
     #  Function returns id of added PM
+    # str: matcher mot device-name, kan bruke ? - en char * - flere char
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
@@ -346,19 +344,64 @@ class ritz():
     if from_t > to_t:
         raise Exception("To timestamp is earlier than From timestamp")
     if m_type not in ("exact", "str", "regexp"):
-        raise Exception("Unknown m_type, needs to be exact, str or regex")
+        raise Exception("Unknown m_type, needs to be exact, str or regexp")
 
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = readcommand(self.s, b'pm add %d %d device %b %b\r\n' % (from_ts, to_ts, m_type.encode(), device.encode()))
+    data, header = readcommand(self.s, b'pm add %d %d device %b %b\r\n' %
+                               (from_ts,
+                                to_ts,
+                                m_type.encode(),
+                                device.encode()))
 
     # Check returncode
     if not header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
 
-    data2 = data.split(" ",3)
+    data2 = data.split(" ", 3)
     return int(data2[2])
+
+
+def pmAddInterface(self, from_t, to_t, device, interface):
+  # Adds a Maintenance period
+  # pm add
+  #    [2] from_t   -  start timestamp (unixtime)
+  #    [3] to_t     -  stop  timestamp   (unixtime)
+  #    [4] type     -  "portstate"
+  #    [5] m_type   -  "intf-regexp"
+  #    [6] m_dev    -  device excact name
+  #    [7] m_expr   -  interface regexp
+
+  #  Returns 200 with id on PM on sucessfull pm add
+  #  Function returns id of added PM
+  if not self.connStatus:
+    raise NotConnectedError("Not connected to device")
+  if not self.authenticated:
+    raise AuthenticationError("User not authenticated")
+
+  if not isinstance(from_t, datetime):
+      raise TypeError("from_t is not a datetime")
+  if not isinstance(to_t, datetime):
+      raise TypeError("to_t is not a datetime")
+  if from_t > to_t:
+      raise Exception("To timestamp is earlier than From timestamp")
+
+  from_ts = mktime(from_t.timetuple())
+  to_ts = mktime(to_t.timetuple())
+
+  data, header = readcommand(self.s, b'pm add %d %d portstate %b %b\r\n' %
+                             (from_ts,
+                              to_ts,
+                              device.encode(),
+                              interface.encode()))
+
+  # Check returncode
+  if not header[0] == 200:
+    raise Exception("Not getting 200 OK from server: %s" % self._buff)
+
+  data2 = data.split(" ", 3)
+  return int(data2[2])
 
 
   def pmList(self):
