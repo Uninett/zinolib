@@ -363,46 +363,45 @@ class ritz():
     return int(data2[2])
 
 
-def pmAddInterface(self, from_t, to_t, device, interface):
-  # Adds a Maintenance period
-  # pm add
-  #    [2] from_t   -  start timestamp (unixtime)
-  #    [3] to_t     -  stop  timestamp   (unixtime)
-  #    [4] type     -  "portstate"
-  #    [5] m_type   -  "intf-regexp"
-  #    [6] m_dev    -  device excact name
-  #    [7] m_expr   -  interface regexp
+  def pmAddInterface(self, from_t, to_t, device, interface):
+    # Adds a Maintenance period
+    # pm add
+    #    [2] from_t   -  start timestamp (unixtime)
+    #    [3] to_t     -  stop  timestamp   (unixtime)
+    #    [4] type     -  "portstate"
+    #    [5] m_type   -  "intf-regexp"
+    #    [6] m_dev    -  device excact name
+    #    [7] m_expr   -  interface regexp
 
-  #  Returns 200 with id on PM on sucessfull pm add
-  #  Function returns id of added PM
-  if not self.connStatus:
-    raise NotConnectedError("Not connected to device")
-  if not self.authenticated:
-    raise AuthenticationError("User not authenticated")
+    #  Returns 200 with id on PM on sucessfull pm add
+    #  Function returns id of added PM
+    if not self.connStatus:
+      raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+      raise AuthenticationError("User not authenticated")
 
-  if not isinstance(from_t, datetime):
-      raise TypeError("from_t is not a datetime")
-  if not isinstance(to_t, datetime):
-      raise TypeError("to_t is not a datetime")
-  if from_t > to_t:
-      raise Exception("To timestamp is earlier than From timestamp")
+    if not isinstance(from_t, datetime):
+        raise TypeError("from_t is not a datetime")
+    if not isinstance(to_t, datetime):
+        raise TypeError("to_t is not a datetime")
+    if from_t > to_t:
+        raise Exception("To timestamp is earlier than From timestamp")
 
-  from_ts = mktime(from_t.timetuple())
-  to_ts = mktime(to_t.timetuple())
+    from_ts = mktime(from_t.timetuple())
+    to_ts = mktime(to_t.timetuple())
 
-  data, header = readcommand(self.s, b'pm add %d %d portstate %b %b\r\n' %
-                             (from_ts,
-                              to_ts,
-                              device.encode(),
-                              interface.encode()))
+    data, header = readcommand(self.s, b'pm add %d %d portstate %s %s\r\n' %
+                               (from_ts,
+                                to_ts,
+                                device.encode(),
+                                interface.encode()))
 
-  # Check returncode
-  if not header[0] == 200:
-    raise Exception("Not getting 200 OK from server: %s" % self._buff)
+    # Check returncode
+    if not header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
 
-  data2 = data.split(" ", 3)
-  return int(data2[2])
-
+    data2 = data.split(" ", 3)
+    return int(data2[2])
 
   def pmList(self):
     # Lists all Maintenance periods registrered
