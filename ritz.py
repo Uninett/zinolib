@@ -4,6 +4,7 @@ from pprint import pprint
 from datetime import datetime
 import errno
 from time import mktime
+import re
 
 
 
@@ -93,7 +94,8 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
   sock.send(command)
   while data:
     data = sock.recv(recv_buffer)
-    buffer += data.decode('UTF-8')
+    #buffer += data.decode('UTF-8')
+    buffer += data.decode('latin-1')
 
     if not header:
       if buffer.find(delim) != -1:
@@ -115,6 +117,35 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
       r.append(line)
   return r, header
 
+
+def decodeHistory(logarray):
+  ret = []
+  curr = {}
+  for log in logarray:
+    if not log[0] == " ":
+      # This is a header line
+      curr = {}
+      curr["log"] = []
+
+      header = log.split(" ", 1)
+      curr["header"] = header
+      curr["date"] = datetime.fromtimestamp(int(header[0]))
+
+      if header[1].count(" ") is not 0:
+        # this is a short system log
+        curr["log"] = [header[1]]
+        curr["user"] = re.match(".*\((\w+)\)$", header[1]).group(1)
+        ret.append(curr)
+      else:
+        curr["user"] = header[1]
+
+    elif log == " ":
+      # End entry, empty line with one space
+      ret.append(curr)
+    else:
+      # Append log line
+      curr["log"].append(log[1::])
+  return ret
 
 class ritz():
   """Connect to zino datachannel."""
@@ -224,7 +255,8 @@ class ritz():
     # for d in data:
     #   v = d.split(":",1)
     #   caseinfo[v[0].strip()] = v[1].strip()
-    return data
+
+    return decodeHistory(data)
 
   def getlog(self, caseid):
     #   getlog      Get Logs from CaseID
