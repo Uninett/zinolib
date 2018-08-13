@@ -381,7 +381,7 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = readcommand(self.s, b'pm add %d %d device %b %b\r\n' %
+    data, header = readcommand(self.s, b'pm add %d %d device %s %s\r\n' %
                                (from_ts,
                                 to_ts,
                                 m_type.encode(),
@@ -523,7 +523,7 @@ class ritz():
     print(data)
     #raise NotImplementedError("pmMatching not Implemented")
 
-  def pmAddLog(self):
+  def pmAddLog(self, id, message):
     # Adds a log message on this PM
     # pm addlog
     #   [2] id        -  id of PM
@@ -535,6 +535,31 @@ class ritz():
         raise NotConnectedError("Not connected to device")
     if not self.authenticated:
         raise AuthenticationError("User not authenticated")
+
+    if not isinstance(id, int):
+        raise TypeError("ID needs to be an integer")
+
+    self.s.send(b"pm addlog %d  -\r\n" % (id))
+    self._buff = self.s.recv(4096)
+    if not self._buff[0:3] == "302":
+      raise Exception("Unknown return from server: %s" % self._buff)
+
+    # Generate Message to zino
+    if isinstance(message, list):
+      msg = "\r\n".join(message)
+    else:
+      msg = message
+
+    # Send message
+    self.s.send(b"%s\r\n\r\n.\r\n" % msg.encode())
+
+    # Check returncode
+    self._buff = self.s.recv(4096)
+    print self._buff
+
+    if not self._buff[0:3] == b"200":
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+    return True
 
     raise NotImplementedError("pmAddLog not Implemented")
 
@@ -551,7 +576,7 @@ class ritz():
         raise NotConnectedError("Not connected to device")
     if not self.authenticated:
         raise AuthenticationError("User not authenticated")
-
+    self.s.settimeout(30)
     data, header = readcommand(self.s, b"pm log %d\r\n" % id)
 
     print(header)
