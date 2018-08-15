@@ -42,7 +42,6 @@ def main():
   parser.add_argument('--prod', action='store_true')
 
   args = parser.parse_args()
-  sess = ritz()
   conf = importconf("~/.ritz.tcl")
   pprint(conf)
   if args.prod:
@@ -53,9 +52,10 @@ def main():
     c_server = conf["_Server(UNINETT-backup)"]
     c_user   = conf["_User(UNINETT-backup)"]
     c_secret = conf["_Secret(UNINETT-backup)"]
-  sess.connect(c_server)
-  sess.auth(c_user, c_secret)
   caseids = sess.caseids()
+  sess = ritz(c_server)
+  sess.connect()
+  sess.authenticate(c_user, c_secret)
 
   for i in caseids:
     print("Case: %i" % i)

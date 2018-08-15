@@ -149,15 +149,33 @@ def decodeHistory(logarray):
 
 class ritz():
   """Connect to zino datachannel."""
-  def __init__(self):
+  def __init__(self,
+               server,
+               port=8001,
+               timeout=10,
+               username=None,
+               password=None):
     """Initialize."""
     self.s = None
     self.connStatus = False
+    self.server = server
+    self.port = port
+    self.timeout = timeout
+    self.username = username
+    self.password = password
 
-  def connect(self, server, port=8001, timeout=10):
+  def __enter__(self):
+    self.connect()
+    return self
+
+  def __exit__(self, type, value, traceback):
+    pass
+    # self.close()
+
+  def connect(self):
     # Opens an connection to the Server
     # To do things you need to authenticate after connection
-    self.s = socket.create_connection((server, port), timeout)
+    self.s = socket.create_connection((self.server, self.port), self.timeout)
     self._buff = self.s.recv(4096)
     rawHeader = self._buff.split(b"\r\n")[0]
     header = rawHeader.split(b" ", 2)
@@ -167,6 +185,10 @@ class ritz():
       self.connStatus = True
     else:
       raise NotConnectedError("Did not get a status code 200")
+
+    # Automaticly authenticate if username and password is supplied
+    if self.username and self.password:
+      self.authenticate(self.username, self.password)
 
   def close(self):
     if self.s:
