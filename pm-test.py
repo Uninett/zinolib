@@ -1,21 +1,11 @@
-from ritz import ritz,notifier
+from ritz import ritz, notifier, importconf
 from pprint import pprint
-from os.path import expanduser
 from time import sleep
 import re
 import argparse
 import sys
 from datetime import datetime, timedelta
-
-
-def importconf(file):
-  config = {}
-  with open(expanduser(file), "r") as f:
-    for line in f.readlines():
-      sets = re.findall("^\s?set\s+(\S+)\s+(.*)$", line)
-      if sets:
-        config[sets[0][0]] = sets[0][1]
-  return config
+import logging
 
 def main():
   parser = argparse.ArgumentParser(description='Process some integers.')
@@ -26,14 +16,27 @@ def main():
   args = parser.parse_args()
   conf = importconf("~/.ritz.tcl")
   pprint(conf)
+
   if args.prod:
-    c_server = conf["_Server(UNINETT)"]
-    c_user   = conf["_User(UNINETT)"]
-    c_secret = conf["_Secret(UNINETT)"]
+    c_server = conf["default"]["Server"]
+    c_user   = conf["default"]["User"]
+    c_secret = conf["default"]["Secret"]
   else:
-    c_server = conf["_Server(UNINETT-backup)"]
-    c_user   = conf["_User(UNINETT-backup)"]
-    c_secret = conf["_Secret(UNINETT-backup)"]
+    c_server = conf["UNINETT-backup"]["Server"]
+    c_user   = conf["UNINETT-backup"]["User"]
+    c_secret = conf["UNINETT-backup"]["Secret"]
+
+  logging.basicConfig()
+  logging.getLogger().setLevel(logging.DEBUG)
+  requests_log = logging.getLogger("socket")
+  requests_log.setLevel(logging.DEBUG)
+  requests_log.propagate = True
+
+
+
+
+
+
   sess = ritz(c_server)
   sess.connect()
   sess.authenticate(c_user, c_secret)
