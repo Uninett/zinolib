@@ -5,6 +5,8 @@ from datetime import datetime
 import errno
 from time import mktime
 import re
+from os.path import expanduser
+
 
 
 # Things to implement
@@ -146,6 +148,23 @@ def _decode_history(logarray):
       curr["log"].append(log[1::])
   return ret
 
+
+def importconf(file):
+  config = {}
+  with open(expanduser(file), 'r') as f:
+    for line in f.readlines():
+      _set = re.findall(r'^\s?set _?([a-zA-Z0-9]+)(?:\((.*)\))? (.*)$', line)
+      if _set:
+        print
+        group = _set[0][1] if _set[0][1] != '' else 'default'
+        key = _set[0][0]
+        value = _set[0][2]
+
+        if group not in config:
+          config[group] = {}
+
+        config[group][key] = value
+  return config
 
 class ritz():
   """Connect to zino datachannel."""
