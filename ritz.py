@@ -7,7 +7,6 @@ from time import mktime
 import re
 
 
-
 # Things to implement
 # /local/src/zino/zino/server.tcl
 #   user        Authenticate user
@@ -94,13 +93,13 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
   sock.send(command)
   while data:
     data = sock.recv(recv_buffer)
-    #buffer += data.decode('UTF-8')
+    # buffer += data.decode('UTF-8')
     buffer += data.decode('latin-1')
 
     if not header:
       if buffer.find(delim) != -1:
-        line, buffer = buffer.split('\r\n', 1) # '\r\n' is not a byte
-        rawh = line.split(' ', 1) # ' ' is not a byte
+        line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
+        rawh = line.split(' ', 1)  # ' ' is not a byte
         header = (int(rawh[0]), rawh[1])
         # header = line
         # Crude error detection :)
@@ -111,7 +110,7 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
       next
 
     while buffer.find(delim) != -1:
-      line, buffer = buffer.split('\r\n', 1) # '\r\n' is not a byte
+      line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
       if line == ".":
         return r, header
       r.append(line)
@@ -146,6 +145,7 @@ def decodeHistory(logarray):
       # Append log line
       curr["log"].append(log[1::])
   return ret
+
 
 class ritz():
   """Connect to zino datachannel."""
@@ -394,7 +394,6 @@ class ritz():
     data2 = data.split(" ", 3)
     return int(data2[2])
 
-
   def pmAddInterface(self, from_t, to_t, device, interface):
     # Adds a Maintenance period
     # pm add
@@ -492,15 +491,15 @@ class ritz():
 
     data, header = readcommand(self.s, b"pm details %d\r\n" % (id))
 
-    data2 = data.split(' ',5)
+    data2 = data.split(' ', 5)
     print(data2)
 
     res = {'id': int(data2[0]),
-            'from': datetime.fromtimestamp(int(data2[1])),
-            'to': datetime.fromtimestamp(int(data2[2])),
-            'type': data2[3],
-            'm_type': data2[4],
-            'device': data2[5]}
+           'from': datetime.fromtimestamp(int(data2[1])),
+           'to': datetime.fromtimestamp(int(data2[2])),
+           'type': data2[3],
+           'm_type': data2[4],
+           'device': data2[5]}
 
     return res
 
@@ -521,7 +520,7 @@ class ritz():
     # What to return?
     print(header)
     print(data)
-    #raise NotImplementedError("pmMatching not Implemented")
+    # raise NotImplementedError("pmMatching not Implemented")
 
   def pmAddLog(self, id, message):
     # Adds a log message on this PM
