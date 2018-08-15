@@ -1,4 +1,5 @@
-from ritz import ritz,notifier
+import logging
+from ritz import ritz, notifier
 from pprint import pprint
 from os.path import expanduser
 from time import sleep
@@ -17,6 +18,12 @@ def importconf(file):
   return config
 
 def main():
+
+
+  ritzlog = logging.getLogger("ritz")
+  ritzlog.setLevel(logging.DEBUG)
+  ritzlog.addHandler(logging.FileHandler('comm.log'))
+
   parser = argparse.ArgumentParser(description='Process some integers.')
 
   parser.add_argument('CaseID', metavar='N', type=int,
@@ -35,6 +42,7 @@ def main():
     c_user   = conf["_User(UNINETT-backup)"]
     c_secret = conf["_Secret(UNINETT-backup)"]
   sess = ritz(c_server)
+
   sess.connect()
   sess.authenticate(c_user, c_secret)
   get_caseids = sess.get_caseids()
@@ -75,7 +83,8 @@ def main():
     print("Get Log: %i" % args.CaseID)
     pprint(sess.get_log(args.CaseID))
     #print("Add test message to log: 24014")
-    #pprint(sess.add_history(24014, "Testmelding ifra pyRitz"))
+    print("Add history:")
+    pprint(sess.add_history(args.CaseID, "Testmelding ifra pyRitz"))
     #print("set_state 'open': %i" % args.CaseID)
     #pprint(sess.set_state(args.CaseID, "open"))
 if __name__ == "__main__":
