@@ -559,16 +559,16 @@ class ritz():
         raise TypeError("ID needs to be an integer")
 
     data, header = _read_command(self.s, b"pm matching %d\r\n" % id)
-    print data, header
-    # What to return?
-    # print(header)
-    # print(data)
-    # raise NotImplementedError("pmMatching not Implemented")
 
-    # Return list with element 1: device/portstate  and
+    # Return list with element 1: "device"portstate,
     #                          2: device
-    #                          [3: interface name]
-    return [d.split(" ", 3)[1::] for d in data]
+    #                          or
+    #                          1: portstate,
+    #                          2: device,
+    #                          3: interface ifindex,
+    #                          4: interface name,
+    #                          5: interface descr
+    return [d.split(" ", 5)[1::] for d in data]
 
   def pm_add_log(self, id, message):
     # Adds a log message on this PM
