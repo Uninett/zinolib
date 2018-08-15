@@ -578,9 +578,10 @@ class ritz():
     self.s.settimeout(30)
     data, header = readcommand(self.s, b"pm log %d\r\n" % id)
 
-    print(header)
-    print(data)
-    #raise NotImplementedError("Not Implemented")
+    # print(header)
+    # print(data)
+    return decodeHistory(data)
+    # raise NotImplementedError("Not Implemented")
 
 
 class notifier():
