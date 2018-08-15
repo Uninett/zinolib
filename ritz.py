@@ -112,10 +112,13 @@ def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
         # header = line
         # Crude error detection :)
         if header[0] >= 500:
+          # Die on Error codes
           raise ProtocolError(header)
         if header[0] == 200:
+          # Return to user on 200, 200 doesent add more data
           return header[1], header
         if header[0] == 302:
+          # Return to user on 302, wee need more data
           return header[1], header
       next
 
