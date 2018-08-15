@@ -35,7 +35,7 @@ def main():
     c_user   = conf["_User(UNINETT-backup)"]
     c_secret = conf["_Secret(UNINETT-backup)"]
   sess = ritz(c_server)
-  sess.connect()
+  sess.connect(c_server)
   sess.authenticate(c_user, c_secret)
 
   print("List all PMs:")
@@ -43,38 +43,38 @@ def main():
   print(pm)
   #for i in pm:
   #  print("canceling %d" % i)
-  #  sess.pm_cancel(i)
+  #  sess.pmCancel(i)
 
   print("Schedule test pm:")
   pm = sess.pm_add_device(datetime.now()+timedelta(minutes=1),
-                          datetime.now()+timedelta(minutes=2),
-                          "teknobyen-gw*", m_type='str')
+                          datetime.now()+timedelta(minutes=10),
+                          "teknobyen-gw", m_type='str')
   print("Scheduled")
 
   print("List all PMs:")
   pms = sess.pm_list()
   print(pm)
 
-  print("pm_get_details:")
-  print(sess.pm_get_details(pm))
+  print("pmDetails:")
+  print(sess.pmDetails(pm))
 
-  print("pm_get_log:")
-  print(sess.pm_get_log(pm))
+  print("pmLog:")
+  print(sess.pmLog(122))
 
-  print("pm_add_log:")
-  sess.pm_add_log(pm, "This is a test log :)")
+  print("pmAddLog:")
+  sess.pmAddLog(pm, "This is a test log :)")
 
-  print("pm_get_details:")
-  print(sess.pm_get_details(pm))
+  print("pmDetails:")
+  print(sess.pmDetails(pm))
 
-  print("pm_get_log:")
-  print(sess.pm_get_log(pm))
+  print("pmLog:")
+  print(sess.pmLog(pm))
 
-  print("pm_get_matching:")
-  print(sess.pm_get_matching(pm))
+  print("pmMatching:")
+  print(sess.pmMatching(pm))
 
-  print("pm_cancel:")
-  print(sess.pm_cancel(pm))
+  print("pmCancel:")
+  print(sess.pmCancel(pm))
 
 
   return

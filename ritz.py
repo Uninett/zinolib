@@ -17,12 +17,12 @@ import re
 #   ntie        Connect to notification socket
 #               Status: NOT implemented
 
-#   caseids     Get list of caseids
+#   get_caseids     Get list of get_caseids
 #               Status: Implemented
 
 #   clearflap   doClearFlap $chan $l
 
-#   getattrs    Get attributes of CaseID
+#   get_attributes    Get attributes of CaseID
 #               Status: Crude implementation
 
 #   getlog      Get Logs from CaseID
@@ -83,7 +83,7 @@ class ProtocolError(Exception):
   pass
 
 
-def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
+def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
   # Reads socket buffer until the end of datastructure
   buffer = ''
   data = True
@@ -117,7 +117,7 @@ def readcommand(sock, command, recv_buffer=4096, delim='\r\n'):
   return r, header
 
 
-def decodeHistory(logarray):
+def _decode_history(logarray):
   ret = []
   curr = {}
   for log in logarray:
@@ -179,7 +179,7 @@ class ritz():
     self._buff = self.s.recv(4096)
     rawHeader = self._buff.split(b"\r\n")[0]
     header = rawHeader.split(b" ", 2)
-    print("header:'{}'".format(header))
+    # print("header:'{}'".format(header))
     if header[0] == b"200":
       self.authChallenge = header[1]
       self.connStatus = True
@@ -201,7 +201,7 @@ class ritz():
       return True
     return False
 
-  def auth(self, user, password):
+  def authenticate(self, user, password):
     # Authenticate user
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
@@ -217,13 +217,13 @@ class ritz():
       return
     raise AuthenticationError("Access Denied while authenticating")
 
-  def caseids(self):
+  def get_caseids(self):
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-    data, header = readcommand(self.s, b"caseids\r\n")
+    data, header = _read_command(self.s, b"caseids\r\n")
 
     ids = []
     for id in data:
@@ -232,7 +232,7 @@ class ritz():
 
     return ids
 
-  def getattrs(self, caseid):
+  def get_attributes(self, caseid):
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
@@ -240,7 +240,7 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
     cmd = "getattrs %s\r\n" % caseid
-    data, header = readcommand(self.s, cmd.encode('UTF-8'))
+    data, header = _read_command(self.s, cmd.encode('UTF-8'))
     caseinfo = {}
     for d in data:
       v = d.split(b":", 1)
@@ -262,7 +262,7 @@ class ritz():
 
     return caseinfo
 
-  def gethist(self, caseid):
+  def get_history(self, caseid):
     #   gethist     Get Logs from CaseID
     #   Parameters: caseID
     #   Returns a list of historylines (timestamp, message)??
@@ -272,15 +272,15 @@ class ritz():
       raise AuthenticationError("User not authenticated")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    data, header = readcommand(self.s, "gethist %s\r\n" % caseid)
+    data, header = _read_command(self.s, "gethist %s\r\n" % caseid)
     # caseinfo = {}
     # for d in data:
     #   v = d.split(":",1)
     #   caseinfo[v[0].strip()] = v[1].strip()
 
-    return decodeHistory(data)
+    return _decode_history(data)
 
-  def getlog(self, caseid):
+  def get_log(self, caseid):
     #   getlog      Get Logs from CaseID
     #   Parameters: caseID
     #   Returns a list of loglines (timestamp, message)
@@ -290,16 +290,12 @@ class ritz():
       raise AuthenticationError("User not authenticated")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    # self.s.send("getattrs %d\r\n" % caseid)
-    # print("Getting %s " % caseid)
-    data, header = readcommand(self.s, "getlog %s\r\n" % caseid)
-    # caseinfo = {}
-    # for d in data:
-    #   v = d.split(":",1)
-    #   caseinfo[v[0].strip()] = v[1].strip()
+
+    data, header = _read_command(self.s, "getlog %s\r\n" % caseid)
+
     return data
 
-  def addhist(self, caseid, message):
+  def add_history(self, caseid, message):
     # ZinoServer:
     # paramters: case-id
     # 302 please provide new history entry, termiate with '.'
@@ -325,7 +321,7 @@ class ritz():
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
-  def setstate(self, caseid, state):
+  def set_state(self, caseid, state):
     if state not in ["open", "working",
                      "waiting", "confirm-wait",
                      "ignored", "closed"]:
@@ -340,7 +336,7 @@ class ritz():
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
-  def pollrtr(self, router):
+  def poll_router(self, router):
     self.s.send(b"pollrtr %s\r\n" % router.encode())
 
     # Check returncode
@@ -349,7 +345,7 @@ class ritz():
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
-  def pollintf(self, router, ifindex):
+  def poll_interface(self, router, ifindex):
     if not isinstance(ifindex, int):
         raise TypeError("CaseID needs to be an interger")
     self.s.send(b"pollintf %s %s\r\n" % (router.encode(), ifindex))
@@ -374,7 +370,7 @@ class ritz():
     return True
     pass
 
-  def pmAddDevice(self, from_t, to_t, device, m_type="exact"):
+  def pm_add_device(self, from_t, to_t, device, m_type="exact"):
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp  (unixtime)
@@ -403,7 +399,7 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = readcommand(self.s, b'pm add %d %d device %s %s\r\n' %
+    data, header = _read_command(self.s, b'pm add %d %d device %s %s\r\n' %
                                (from_ts,
                                 to_ts,
                                 m_type.encode(),
@@ -416,7 +412,7 @@ class ritz():
     data2 = data.split(" ", 3)
     return int(data2[2])
 
-  def pmAddInterface(self, from_t, to_t, device, interface):
+  def pm_add_interface(self, from_t, to_t, device, interface):
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp (unixtime)
@@ -443,7 +439,7 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = readcommand(self.s, b'pm add %d %d portstate %s %s\r\n' %
+    data, header = _read_command(self.s, b'pm add %d %d portstate %s %s\r\n' %
                                (from_ts,
                                 to_ts,
                                 device.encode(),
@@ -456,7 +452,7 @@ class ritz():
     data2 = data.split(" ", 3)
     return int(data2[2])
 
-  def pmList(self):
+  def pm_list(self):
     # Lists all Maintenance periods registrered
     # pm list
     # returns 300 with list of all scheduled PM's, exits with ^.$
@@ -470,7 +466,7 @@ class ritz():
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-    data, header = readcommand(self.s, b"pm list\r\n")
+    data, header = _read_command(self.s, b"pm list\r\n")
 
     ids = []
     for id in data:
@@ -479,7 +475,7 @@ class ritz():
 
     return ids
 
-  def pmCancel(self, id):
+  def pm_cancel(self, id):
     # Cansels a Maintenance period
     # pm cancel
     #    [2] id      - id of pm to cancel
@@ -490,7 +486,7 @@ class ritz():
 
     if not isinstance(id, int):
       raise TypeError("ID needs to be an integer")
-    data, header = readcommand(self.s, b"pm cancel %d\r\n" % (id))
+    data, header = _read_command(self.s, b"pm cancel %d\r\n" % (id))
 
     # Check returncode
     if not header[0] == 200:
@@ -498,7 +494,7 @@ class ritz():
     else:
       return True
 
-  def pmDetails(self, id):
+  def pm_get_details(self, id):
     # Get details of a Maintenance period
     # pm details
     #    [2] id      - id of pm
@@ -511,10 +507,10 @@ class ritz():
     if not isinstance(id, int):
       raise TypeError("ID needs to be an integer")
 
-    data, header = readcommand(self.s, b"pm details %d\r\n" % (id))
+    data, header = _read_command(self.s, b"pm details %d\r\n" % (id))
 
     data2 = data.split(' ', 5)
-    print(data2)
+    # print(data2)
 
     res = {'id': int(data2[0]),
            'from': datetime.fromtimestamp(int(data2[1])),
@@ -525,7 +521,7 @@ class ritz():
 
     return res
 
-  def pmMatching(self, id):
+  def pm_get_matching(self, id):
     # Get list of all ports and devices matching a Maintenance id
     # pm matching
     #    [2] id       - id of pm
@@ -537,14 +533,19 @@ class ritz():
     if not isinstance(id, int):
         raise TypeError("ID needs to be an integer")
 
-    data, header = readcommand(self.s, b"pm matching %d\r\n" % id)
+    data, header = _read_command(self.s, b"pm matching %d\r\n" % id)
 
     # What to return?
-    print(header)
-    print(data)
+    # print(header)
+    # print(data)
     # raise NotImplementedError("pmMatching not Implemented")
 
-  def pmAddLog(self, id, message):
+    # Return list with element 1: device/portstate  and
+    #                          2: device
+    #                          [3: interface name]
+    return [d.split(" ", 3)[1::] for d in data]
+
+  def pm_add_log(self, id, message):
     # Adds a log message on this PM
     # pm addlog
     #   [2] id        -  id of PM
@@ -576,7 +577,7 @@ class ritz():
 
     # Check returncode
     self._buff = self.s.recv(4096)
-    print self._buff
+    # print self._buff
 
     if not self._buff[0:3] == b"200":
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
@@ -584,7 +585,7 @@ class ritz():
 
     raise NotImplementedError("pmAddLog not Implemented")
 
-  def pmLog(self, id):
+  def pm_get_log(self, id):
     # Get log of a PM
     # pm log
     #   [2] id       -  ID of pm to gat log from
@@ -598,11 +599,11 @@ class ritz():
     if not self.authenticated:
         raise AuthenticationError("User not authenticated")
     self.s.settimeout(30)
-    data, header = readcommand(self.s, b"pm log %d\r\n" % id)
+    data, header = _read_command(self.s, b"pm log %d\r\n" % id)
 
     # print(header)
     # print(data)
-    return decodeHistory(data)
+    return _decode_history(data)
     # raise NotImplementedError("Not Implemented")
 
 
@@ -644,4 +645,4 @@ class notifier():
 
 
 if "__main__" == __name__:
-    print("This is a library, not a application :)")
+    print("This is a library, not an application :)")

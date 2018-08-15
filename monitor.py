@@ -52,14 +52,14 @@ def main():
     c_server = conf["_Server(UNINETT-backup)"]
     c_user   = conf["_User(UNINETT-backup)"]
     c_secret = conf["_Secret(UNINETT-backup)"]
-  caseids = sess.caseids()
   sess = ritz(c_server)
   sess.connect()
   sess.authenticate(c_user, c_secret)
+  get_caseids = sess.get_caseids()
 
-  for i in caseids:
+  for i in get_caseids:
     print("Case: %i" % i)
-    cases[i] = sess.getattrs(i)
+    cases[i] = sess.get_attributes(i)
 
   show()
 
@@ -73,9 +73,9 @@ def main():
       print(n)
       p = n.split(' ', 2)
       if "attr" in p[1]:
-        pprint(sess.getattrs(int(p[0])))
+        pprint(sess.get_attributes(int(p[0])))
       elif "log" in p[1]:
-        pprint(sess.getlog(int(p[0])))
+        pprint(sess.get_log(int(p[0])))
       elif "state" in p[1]:
         v = p[2].split(' ', 1)
         print("State on %s changed from %s to %s" % (p[0], v[0], v[1]))
@@ -86,20 +86,20 @@ def main():
     sleep(1)
 
 
-  if args.CaseID not in caseids:
-    print(caseids)
+  if args.CaseID not in get_caseids:
+    print(get_caseids)
     print("CaseID %i is not in database" % args.CaseID)
     sys.exit(1)
 
-  pprint(sess.getattrs(args.CaseID))
+  pprint(sess.get_attributes(args.CaseID))
   print("Get History: %i" % args.CaseID)
   pprint(sess.gethist(args.CaseID))
   print("Get Log: %i" % args.CaseID)
-  pprint(sess.getlog(args.CaseID))
+  pprint(sess.get_log(args.CaseID))
   # print("Add test message to log: 24014")
-  # pprint(sess.addhist(24014, "Testmelding ifra pyRitz"))
-  # print("Setstate 'open': %i" % args.CaseID)
-  # pprint(sess.setstate(args.CaseID, "open"))
+  # pprint(sess.add_history(24014, "Testmelding ifra pyRitz"))
+  # print("set_state 'open': %i" % args.CaseID)
+  # pprint(sess.set_state(args.CaseID, "open"))
 
 
 if __name__ == "__main__":
