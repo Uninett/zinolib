@@ -5,6 +5,7 @@ from time import sleep
 import re
 import argparse
 import sys
+import logging
 
 
 def importconf(file):
@@ -31,10 +32,10 @@ def show():
         portState = "LowerDown"
       else:
         portState = case["portstate"]
-
+      
       print("%-10s %-8s %-15s %-24s %-s" % (
             portState, case["state"], case["router"],
-            case["port"], case["descr"]))
+            case["port"], case["descr"] if "descr" in case else "---"))
 
 def main():
   parser = argparse.ArgumentParser(description='Process some integers.')
@@ -52,6 +53,10 @@ def main():
     c_server = conf["_Server(UNINETT-backup)"]
     c_user   = conf["_User(UNINETT-backup)"]
     c_secret = conf["_Secret(UNINETT-backup)"]
+    
+  ritzlog = logging.getLogger("ritz")
+  ritzlog.setLevel(logging.DEBUG)
+  ritzlog.addHandler(logging.FileHandler('comm.log'))
   sess = ritz(c_server)
   sess.connect()
   sess.authenticate(c_user, c_secret)
