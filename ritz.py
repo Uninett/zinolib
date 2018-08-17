@@ -390,8 +390,8 @@ class ritz():
     data, header = _read_command(self.s, b"ntie %s\r\n" % key)
 
     # Check returncode
-    if not header == 200:
-      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+    if not header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % header.__repr__())
     return True
     pass
 
