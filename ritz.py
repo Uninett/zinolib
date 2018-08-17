@@ -22,12 +22,12 @@ logger.setLevel(logging.ERROR)
 #   ntie        Connect to notification socket
 #               Status: NOT implemented
 
-#   get_caseids     Get list of get_caseids
+#   caseids     Get list of get_caseids
 #               Status: Implemented
 
 #   clearflap   doClearFlap $chan $l
 
-#   get_attributes    Get attributes of CaseID
+#   getattrs    Get attributes of CaseID
 #               Status: Crude implementation
 
 #   getlog      Get Logs from CaseID
