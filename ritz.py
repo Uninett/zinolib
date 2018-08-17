@@ -239,7 +239,7 @@ class ritz():
       raise NotConnectedError("Not connected to device")
 
     # Combine Password and authChallenge from Ritz to make authToken
-    genToken = "%s %s" % (self.authChallenge.decode('UTF-8'), password)
+    genToken = "%s %s" % (self.authChallenge, password)
     authToken = hashlib.sha1(genToken.encode('UTF-8')).hexdigest()
     cmd = 'user %s %s  -\r\n' % (user, authToken)
     data, header = _read_command(self.s, cmd.encode('UTF-8'))
@@ -275,7 +275,7 @@ class ritz():
     data, header = _read_command(self.s, cmd.encode('UTF-8'))
     caseinfo = {}
     for d in data:
-      v = d.split(b":", 1)
+      v = d.split(":", 1)
       caseinfo[v[0].strip()] = v[1].strip()
 
     caseinfo['id'] = int(caseinfo['id'])
