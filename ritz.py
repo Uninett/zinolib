@@ -160,7 +160,7 @@ def _decode_history(logarray):
   return ret
 
 
-def importconf(file):
+def parse_config(file):
   config = {}
   with open(expanduser(file), 'r') as f:
     for line in f.readlines():

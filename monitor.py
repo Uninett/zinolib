@@ -1,4 +1,4 @@
-from ritz import ritz, notifier
+from ritz import ritz, notifier, parse_config
 from pprint import pprint
 from os.path import expanduser
 from time import sleep
@@ -43,16 +43,16 @@ def main():
   parser.add_argument('--prod', action='store_true')
 
   args = parser.parse_args()
-  conf = importconf("~/.ritz.tcl")
-  pprint(conf)
+  conf = parse_config("~/.ritz.tcl")
+
   if args.prod:
-    c_server = conf["_Server(UNINETT)"]
-    c_user   = conf["_User(UNINETT)"]
-    c_secret = conf["_Secret(UNINETT)"]
+    c_server = conf["default"]["Server"]
+    c_user   = conf["default"]["User"]
+    c_secret = conf["default"]["Secret"]
   else:
-    c_server = conf["_Server(UNINETT-backup)"]
-    c_user   = conf["_User(UNINETT-backup)"]
-    c_secret = conf["_Secret(UNINETT-backup)"]
+    c_server = conf["UNINETT-backup"]["Server"]
+    c_user   = conf["UNINETT-backup"]["User"]
+    c_secret = conf["UNINETT-backup"]["Secret"]
     
   ritzlog = logging.getLogger("ritz")
   ritzlog.setLevel(logging.DEBUG)
