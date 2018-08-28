@@ -651,7 +651,7 @@ class notifier():
 
   def poll(self):
     try:
-      self._buff += self.s.recv(4096)
+      self._buff += self.s.recv(4096).decode()
     except socket.error as e:
       if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
         # a "real" error occurred
@@ -660,7 +660,7 @@ class notifier():
         raise NotConnectedError("Not connected to server")
 
     if "\r\n" in self._buff:
-      line, self._buff = self._buff.split(b'\r\n', 1)
+      line, self._buff = self._buff.split('\r\n', 1)
       return line
 
 
