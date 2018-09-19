@@ -50,7 +50,7 @@ def collect_interfaces():
         if d:
             device = d.group(1).strip()
 
-        p = re.search("PortID:\W+(\w+)\W+(\w+)$", line)
+        p = re.search("PortID:\W+(\w+)\W+(\S+)$", line)
         if p:
             porttype, port = p.groups()
             if porttype not in ["local", "ifname"]:
