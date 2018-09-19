@@ -7,12 +7,16 @@ from datetime import datetime, timedelta
 
 
 def main():
+    """
+    Script to schedule downtime of interfaces in zino when a server reboots.
+
+    This script tries to detect interface names via LLDP and uses the env
+    variables ZINOUSER and ZINOSECRET to connect to zino as as a ritz client.
+    """
     if "ZINOUSER" in os.environ and "ZINOSECRET" in os.environ:
         user = os.environ["ZINOUSER"]
         secret = os.environ["ZINOSECRET"]
     else:
-        for key in os.environ:
-            print key
         sys.exit("ZINOUSER and/or ZINOSECRET env variable is not set, exiting")
 
     if "ZINOSERVER" in os.environ:
