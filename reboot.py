@@ -32,7 +32,7 @@ def main():
                     id = s.pm_add_interface(datetime.now() + timedelta(seconds=15),
                                             datetime.now() + timedelta(minutes=30),
                                             device,
-                                            port)
+                                            r"^{}(\.\d+)?$".format(port))
                     print("Scheduled maintenance for %s %s : id %s" % (device, port, id))
                 except Exception as e:
                     print("Unable to schedule maintenance for %s %a : %s" (device, port, e))
