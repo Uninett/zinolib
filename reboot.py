@@ -45,12 +45,12 @@ def collect_interfaces():
 
     device = ""
     print("Locating interfaces:")
-    for line in lldp.split("\n"):
-        d = re.search("SysName:(.*)", line)
+    for line in lldp.decode().split("\n"):
+        d = re.search("SysName:(.*)$", line)
         if d:
             device = d.group(1).strip()
 
-        p = re.search("PortID:\W+(\w+)\W+(\w+)", line)
+        p = re.search("PortID:\W+(\w+)\W+(\w+)$", line)
         if p:
             porttype, port = p.groups()
             if porttype not in ["local", "ifname"]:
