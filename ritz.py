@@ -166,7 +166,6 @@ def parse_config(file):
     for line in f.readlines():
       _set = re.findall(r'^\s?set _?([a-zA-Z0-9]+)(?:\((.*)\))? (.*)$', line)
       if _set:
-        print
         group = _set[0][1] if _set[0][1] != '' else 'default'
         key = _set[0][0]
         value = _set[0][2]
@@ -438,6 +437,9 @@ class ritz():
     return int(data2[2])
 
   def pm_add_interface(self, from_t, to_t, device, interface):
+      self.pm_add_interface_byname(from_t, to_t, device, interface)
+
+  def pm_add_interface_byname(self, from_t, to_t, device, interface):
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp (unixtime)
@@ -477,6 +479,43 @@ class ritz():
     data2 = data.split(" ", 3)
     return int(data2[2])
 
+  def pm_add_interface_bydescr(self, from_t, to_t, description):
+    # Adds a Maintenance period
+    # pm add
+    #    [2] from_t   -  start timestamp (unixtime)
+    #    [3] to_t     -  stop  timestamp   (unixtime)
+    #    [4] type     -  "portstate"
+    #    [5] m_type   -  "regexp"
+    #    [6] m_expr   -  interface regexp
+
+    #  Returns 200 with id on PM on sucessfull pm add
+    #  Function returns id of added PM
+    if not self.connStatus:
+      raise NotConnectedError("Not connected to device")
+    if not self.authenticated:
+      raise AuthenticationError("User not authenticated")
+
+    if not isinstance(from_t, datetime):
+        raise TypeError("from_t is not a datetime")
+    if not isinstance(to_t, datetime):
+        raise TypeError("to_t is not a datetime")
+    if from_t > to_t:
+        raise Exception("To timestamp is earlier than From timestamp")
+
+    from_ts = mktime(from_t.timetuple())
+    to_ts = mktime(to_t.timetuple())
+
+    data, header = _read_command(self.s, 'pm add %d %d portstate regexp %s\r\n' %
+                               (from_ts,
+                                to_ts,
+                                description.encode()))
+
+    # Check returncode
+    if not header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+
+    data2 = data.split(" ", 3)
+    return int(data2[2])
   def pm_list(self):
     # Lists all Maintenance periods registrered
     # pm list
