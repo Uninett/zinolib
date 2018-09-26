@@ -338,12 +338,12 @@ class ritz():
       msg = message
 
     # Start Command
-    data, header = _read_command(self.s, b"addhist %s  -\r\n" % (caseid))
+    data, header = _read_command(self.s, b"addhist %d  -\r\n" % (caseid))
     if not header[0] == 302:
       raise ProtocolError("Unknown return from server: %s" % data)
 
     # Send message
-    data, header = _read_command(self.s, "%s\r\n\r\n.\r\n" % msg.encode())
+    data, header = _read_command(self.s, b"%s\r\n\r\n.\r\n" % msg.encode())
     if not header[0] == 200:
       raise ProtocolError("Not getting 200 OK from server: %s" % data)
     return True
@@ -356,7 +356,7 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
 
-    data, header = _read_command(self.s, b"setstate %s %s\r\n" % (caseid, state.encode()))
+    data, header = _read_command(self.s, b"setstate %d %s\r\n" % (caseid, state.encode()))
 
     # Check returncode
     if not header[0] == 200:
