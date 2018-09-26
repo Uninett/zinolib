@@ -38,8 +38,8 @@ def main():
     else:
         fqdn = socket.getfqdn()
 
-    #if not fqdn.endswith(".uninett.no"):
-    #    sys.exit("Wooth? sysname does not end with uninett.no?")
+    if not fqdn.endswith(".uninett.no"):
+        sys.exit("Wooth? sysname does not end with uninett.no?")
 
     print("Creating Maintenance on physical interfaces")
     with ritz(server, username=user, password=secret) as s:
