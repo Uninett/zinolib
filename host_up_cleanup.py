@@ -65,8 +65,9 @@ def main():
                 
                 if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
                   # This case is not tampered with, just close it :)
+                  s.clear_flapping(attr["router"], attr["ifindex"])
+
                   s.add_history(id, "This case is automatically closed by {filename}".format(filename=os.path.basename(__file__)))
-                  s.clear_flapping(id)
                   s.set_state(id, "closed")
                   
 
