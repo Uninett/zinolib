@@ -66,7 +66,7 @@ def main():
                 if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
                   # This case is not tampered with, just close it :)
                   s.add_history(id, "This case is automatically closed by {filename}".format(filename=os.path.basename(__file__)))
-                  s.set_state(id, "working")
+                  s.set_state(id, "closed")
                   
 
         except Exception as e:
