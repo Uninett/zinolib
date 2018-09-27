@@ -58,17 +58,19 @@ def main():
                     #print("case {id} is not a portstate".format(**attr))
                     continue
 
-                print("Checking case {id}: {descr}".format(**attr))
+                #print("Checking case {id}: {descr}".format(**attr))
                 
                 if not re.search(r", {}".format(fqdn.replace(".", r"\.")), attr["descr"]):
                   continue
-                
+                  
+                print("Found case {id}: {descr}".format(**attr))
                 if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
                   # This case is not tampered with, just close it :)
                   s.clear_flapping(attr["router"], attr["ifindex"])
 
                   s.add_history(id, "This case is automatically closed by {filename}".format(filename=os.path.basename(__file__)))
                   s.set_state(id, "closed")
+                  print("  Closed case")
                   
 
         except Exception as e:
