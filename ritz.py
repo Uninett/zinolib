@@ -505,7 +505,7 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = _read_command(self.s, 'pm add %d %d portstate regexp %s\r\n' %
+    data, header = _read_command(self.s, b'pm add %d %d portstate regexp %s\r\n' %
                                (from_ts,
                                 to_ts,
                                 description.encode()))
