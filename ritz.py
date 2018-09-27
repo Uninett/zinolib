@@ -363,6 +363,17 @@ class ritz():
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
+  def clear_flapping(self, caseid):
+    if not isinstance(caseid, int):
+      raise TypeError("CaseID needs to be an integer")
+
+    data, header = _read_command(self.s, b"clearflap %d\r\n" % (caseid))
+
+    # Check returncode
+    if not header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+    return True
+
   def poll_router(self, router):
     data, header = _read_command(self.s, b"pollrtr %s\r\n" % router.encode())
 
