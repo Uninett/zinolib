@@ -677,41 +677,51 @@ class ritz():
     # raise NotImplementedError("Not Implemented")
 
 
-class notifier():
-  def __init__(self):
+class notifier:
+  def __init__(self, zino_session, port=8002, timeout=30):
     self.s = None
     self.connStatus = False
     self._buff = ""
+    self.zino_session=zino_session
+    self.port = port
+    self.timeout = timeout
 
-  def connect(self, server, port=8002, timeout=30):
+  def __enter__(self):
+      self.connect()
+      return self
+
+  def __exit__(self, type, value, traceback):
+      pass
+
+  def connect(self):
     if not self.s:
-      self.s = socket.create_connection((server, port), timeout)
-      self._buff = self.s.recv(4096)
-      self.s.setblocking(False)
-      rawHeader = self._buff.split(b"\r\n")[0]
-      header = rawHeader.split(b" ", 1)
-      # print(len(header[0]))
-      if len(header[0]) == 40:
-        self.connStatus = True
-        self._buff = ''
+        self.s = socket.create_connection((self.zino_session.server, self.port), self.timeout)
+        self._buff = self.s.recv(4096)
+        self.s.setblocking(False)
+        rawHeader = self._buff.split(b"\r\n")[0]
+        header = rawHeader.split(b" ", 1)
+        # print(len(header[0]))
+        if len(header[0]) == 40:
+            self.connStatus = True
+            self._buff = ''
 
-        return header[0]
-      else:
-        raise NotConnectedError("Key not found")
+            self.zino_session.ntie(header[0])
+        else:
+            raise NotConnectedError("Key not found")
 
   def poll(self):
     try:
-      self._buff += self.s.recv(4096).decode()
+        self._buff += self.s.recv(4096).decode()
     except socket.error as e:
-      if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
-        # a "real" error occurred
-        self.s = None
-        self.connStatus = False
-        raise NotConnectedError("Not connected to server")
+        if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
+            # a "real" error occurred
+            self.s = None
+            self.connStatus = False
+            raise NotConnectedError("Not connected to server")
 
     if "\r\n" in self._buff:
-      line, self._buff = self._buff.split('\r\n', 1)
-      return line
+        line, self._buff = self._buff.split('\r\n', 1)
+        return line
 
 
 if "__main__" == __name__:
