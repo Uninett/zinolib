@@ -196,16 +196,15 @@ class ritz():
     self.username = username
     self.password = password
 
-
-
-
   def __enter__(self):
     self.connect()
     return self
 
   def __exit__(self, type, value, traceback):
-    pass
-    # self.close()
+    self.close()
+
+  def __del__(self):
+    self.close()
 
   def connect(self):
     # Opens an connection to the Server
