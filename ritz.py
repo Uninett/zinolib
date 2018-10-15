@@ -223,8 +223,10 @@ class ritz():
 
   def close(self):
     if self.s:
-      pass
-    raise NotImplementedError("close is not implemented")
+      self.s.close()
+      self.s = None
+      self.connStatus = False
+      self.authenticated = False
 
   @property
   def connected(self):
