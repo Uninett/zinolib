@@ -369,7 +369,7 @@ class ritz():
     if state not in ["open", "working",
                      "waiting", "confirm-wait",
                      "ignored", "closed"]:
-      raise Exception("Illegal state")
+      raise TypeError("Illegal state")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
 
@@ -377,7 +377,7 @@ class ritz():
 
     # Check returncode
     if not header[0] == 200:
-      raise Exception("Not getting 200 OK from server: %s" % self._buff)
+      raise ValueError("Unable to change state on %d to %s. error: %s" % (caseid, state, repr(header)))
     return True
 
   def clear_flapping(self, router, ifindex):
@@ -402,7 +402,7 @@ class ritz():
   def poll_interface(self, router, ifindex):
     if not isinstance(ifindex, int):
         raise TypeError("CaseID needs to be an interger")
-    data, header = _read_command(self.s, b"pollintf %s %s\r\n" % (router.encode(), ifindex))
+    data, header = _read_command(self.s, b"pollintf %s %d\r\n" % (router.encode(), ifindex))
 
     # Check returncode
     if not header[0] == 200:
@@ -414,6 +414,13 @@ class ritz():
     # Tie to notification channel
     # Parameters: key:
     #   key is key reported by notification channel.
+    if isinstance(key, str):
+      key = key.encode()
+    elif isinstance(key, bytes):
+      pass
+    else:
+      raise ValueError("key needs to be string or bytes")
+    print(type(key))
     data, header = _read_command(self.s, b"ntie %s\r\n" % key)
 
     # Check returncode
