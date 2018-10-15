@@ -420,7 +420,6 @@ class ritz():
       pass
     else:
       raise ValueError("key needs to be string or bytes")
-    print(type(key))
     data, header = _read_command(self.s, b"ntie %s\r\n" % key)
 
     # Check returncode
