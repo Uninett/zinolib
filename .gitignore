@@ -1,5 +1,6 @@
 *.pyc
 *.conf
 *.log
+*.bak
 
 .mypy_cache/*
