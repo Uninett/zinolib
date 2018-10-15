@@ -320,7 +320,7 @@ class ritz():
       raise AuthenticationError("User not authenticated")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    data, header = _read_command(self.s, "gethist %s\r\n" % caseid)
+    data, header = _read_command(self.s, b"gethist %d\r\n" % caseid)
     # caseinfo = {}
     # for d in data:
     #   v = d.split(":",1)
@@ -339,7 +339,7 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
 
-    data, header = _read_command(self.s, "getlog %s\r\n" % caseid)
+    data, header = _read_command(self.s, b"getlog %d\r\n" % caseid)
 
     return data
 
