@@ -176,6 +176,7 @@ def parse_config(file):
         config[group][key] = value
   return config
 
+
 class ritz():
   """Connect to zino datachannel."""
   def __init__(self,
@@ -435,10 +436,10 @@ class ritz():
     to_ts = mktime(to_t.timetuple())
 
     data, header = _read_command(self.s, b'pm add %d %d device %s %s\r\n' %
-                               (from_ts,
-                                to_ts,
-                                m_type.encode(),
-                                device.encode()))
+                                 (from_ts,
+                                  to_ts,
+                                  m_type.encode(),
+                                  device.encode()))
 
     # Check returncode
     if not header[0] == 200:
@@ -478,10 +479,10 @@ class ritz():
     to_ts = mktime(to_t.timetuple())
 
     data, header = _read_command(self.s, b'pm add %d %d portstate intf-regexp %s %s\r\n' %
-                               (from_ts,
-                                to_ts,
-                                device.encode(),
-                                interface.encode()))
+                                 (from_ts,
+                                  to_ts,
+                                  device.encode(),
+                                  interface.encode()))
 
     # Check returncode
     if not header[0] == 200:
@@ -517,9 +518,9 @@ class ritz():
     to_ts = mktime(to_t.timetuple())
 
     data, header = _read_command(self.s, b'pm add %d %d portstate regexp %s\r\n' %
-                               (from_ts,
-                                to_ts,
-                                description.encode()))
+                                 (from_ts,
+                                  to_ts,
+                                  description.encode()))
 
     # Check returncode
     if not header[0] == 200:
@@ -527,6 +528,7 @@ class ritz():
 
     data2 = data.split(" ", 3)
     return int(data2[2])
+    
   def pm_list(self):
     # Lists all Maintenance periods registrered
     # pm list
@@ -682,7 +684,7 @@ class notifier:
     self.s = None
     self.connStatus = False
     self._buff = ""
-    self.zino_session=zino_session
+    self.zino_session = zino_session
     self.port = port
     self.timeout = timeout
 
