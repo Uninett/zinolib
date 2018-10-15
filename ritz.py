@@ -99,21 +99,28 @@ def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
   if command:
     sock.send(command)
   while data:
-    data = sock.recv(recv_buffer)
+    try:
+        data = sock.recv(recv_buffer)
+    except socket.timeout as e:
+        raise TimeoutError("Timed out waiting for data. command: %s buffer: %s" % (repr(command), repr(buffer)))
     logger.debug("recv: %s" % data.__repr__())
     # buffer += data.decode('UTF-8')
     buffer += data.decode('latin-1')
 
     if not header:
       if buffer.find(delim) != -1:
-        line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
-        rawh = line.split(' ', 1)  # ' ' is not a byte
-        header = (int(rawh[0]), rawh[1])
+        try:
+          line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
+          rawh = line.split(' ', 1)  # ' ' is not a byte
+          header = (int(rawh[0]), rawh[1])
+        except ValueError as e:
+            raise ProtocolError("Illegal response from server detected: %s" % repr(line))
         # header = line
         # Crude error detection :)
         if header[0] >= 500:
           # Die on Error codes
-          raise ProtocolError(header)
+          return header[1], header
+          # raise ProtocolError("Errorcode '%s %s' reported from server" % (header[0], header[1]))
         if header[0] == 200:
           # Return to user on 200, 200 doesent add more data
           return header[1], header
@@ -127,6 +134,8 @@ def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
       if line == ".":
         return r, header
       r.append(line)
+  if not header:
+      raise ProtocolError("No header info detected for command %s, buffer %s" % (repr(command), repr(buffer)))
   return r, header
 
 
@@ -243,12 +252,18 @@ class ritz():
     genToken = "%s %s" % (self.authChallenge, password)
     authToken = hashlib.sha1(genToken.encode('UTF-8')).hexdigest()
     cmd = 'user %s %s  -\r\n' % (user, authToken)
-    data, header = _read_command(self.s, cmd.encode('UTF-8'))
-
-    if header[0] == 200:
-      self.authenticated = True
-      return
-    raise AuthenticationError("Access Denied while authenticating")
+    #  try:
+    try:
+      data, header = _read_command(self.s, cmd.encode('UTF-8'))
+    #  except ProtocolError as e:
+    #    raise AuthenticationError(e)
+      if header[0] == 200:
+        self.authenticated = True
+        return
+      else:
+          raise AuthenticationError("Unable to authenticate user, '%s'" % repr(header))
+    except TypeError as e:
+      raise ProtocolError("Got an illegal response from the server")
 
   def get_caseids(self):
     if not self.connStatus:
