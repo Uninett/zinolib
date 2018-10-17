@@ -108,7 +108,11 @@ class caseType(enum.Enum):
     ALARM = 'alarm'
 
 def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
-  # Reads socket buffer until the end of datastructure
+  """Read a command from the ritz TCP socket
+
+  This code neds a rewrite, maby use socket file object?
+  everything is \r\n terminated
+  """
   global logger
   buffer = ''
   data = True
@@ -159,6 +163,10 @@ def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
 
 
 def _decode_history(logarray):
+  """Decode history
+
+  Decodes a history "object" from the tcp socket and returns a list with history dict objects
+  """
   ret = []
   curr = {}
   for log in logarray:
@@ -189,6 +197,10 @@ def _decode_history(logarray):
 
 
 def parse_config(file):
+  """Parse a .ritz.tcl config file
+
+  Used to fetch a users connection information to connect to zino
+  """
   config = {}
   with open(expanduser(file), 'r') as f:
     for line in f.readlines():
@@ -281,7 +293,7 @@ class ritz():
                timeout=10,
                username=None,
                password=None):
-    """Initialize."""
+    """Initialize"""
     global logger
 
     self.s = None
@@ -293,16 +305,20 @@ class ritz():
     self.password = password
 
   def __enter__(self):
+    """Wrapper for with to automaticly connect to zino"""
     self.connect()
     return self
 
   def __exit__(self, type, value, traceback):
+    """Wrapper for with to close zino connection"""
     self.close()
 
   def __del__(self):
+    """Zino object deletion"""
     self.close()
 
   def connect(self):
+    """Connect to zino datachannel"""
     # Opens an connection to the Server
     # To do things you need to authenticate after connection
     self.s = socket.create_connection((self.server, self.port), self.timeout)
@@ -318,6 +334,7 @@ class ritz():
       self.authenticate(self.username, self.password)
 
   def close(self):
+    """Disconnect zino datachennel"""
     if self.s:
       self.s.close()
       self.s = None
@@ -326,11 +343,13 @@ class ritz():
 
   @property
   def connected(self):
+    """Returns True when datachannel is connected"""
     if self.s and self.connStatus and self.authenticated:
       return True
     return False
 
   def authenticate(self, user, password):
+    """Authenticate a user on the zino datachannel"""
     # Authenticate user
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
@@ -366,6 +385,7 @@ class ritz():
       yield Case(self, k)
 
   def get_caseids(self):
+    """Get list of CaseID's that exists in zino"""
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
@@ -381,6 +401,7 @@ class ritz():
     return ids
 
   def get_attributes(self, caseid):
+    """Collect all attributes of a zino CaseID object"""
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
     if not self.authenticated:
@@ -419,6 +440,7 @@ class ritz():
     return caseinfo
 
   def get_history(self, caseid):
+    """Return all history elements of a CaseID"""
     #   gethist     Get Logs from CaseID
     #   Parameters: caseID
     #   Returns a list of historylines (timestamp, message)??
@@ -437,6 +459,7 @@ class ritz():
     return _decode_history(data)
 
   def get_log(self, caseid):
+    """Return all log elements of a CaseID"""
     #   getlog      Get Logs from CaseID
     #   Parameters: caseID
     #   Returns a list of loglines (timestamp, message)
@@ -452,6 +475,7 @@ class ritz():
     return data
 
   def add_history(self, caseid, message):
+    """Add a history element on a CaseID"""
     # ZinoServer:
     # paramters: case-id
     # 302 please provide new history entry, termiate with '.'
@@ -489,6 +513,7 @@ class ritz():
     return True
 
   def clear_flapping(self, router, ifindex):
+    """Clear port flapping information on a interface"""
     if not isinstance(ifindex, int):
       raise TypeError("CaseID needs to be an integer")
 
@@ -500,6 +525,7 @@ class ritz():
     return True
 
   def poll_router(self, router):
+    """Poll a router for new data"""
     data, header = _read_command(self.s, b"pollrtr %s\r\n" % router.encode())
 
     # Check returncode
@@ -508,6 +534,7 @@ class ritz():
     return True
 
   def poll_interface(self, router, ifindex):
+    """Poll interface for new information"""
     if not isinstance(ifindex, int):
         raise TypeError("CaseID needs to be an interger")
     data, header = _read_command(self.s, b"pollintf %s %d\r\n" % (router.encode(), ifindex))
@@ -519,6 +546,11 @@ class ritz():
     pass
 
   def ntie(self, key):
+    """Tie to notification notification channel
+
+    Connect datachannel and notification channel together,
+    used by connect function on the notifier() object
+    """
     # Tie to notification channel
     # Parameters: key:
     #   key is key reported by notification channel.
@@ -537,6 +569,12 @@ class ritz():
     pass
 
   def pm_add_device(self, from_t, to_t, device, m_type="exact"):
+    """Add Maintenance window on a device level
+
+    m_type:
+      exact: excact match on one device
+
+    """
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp  (unixtime)
@@ -582,6 +620,14 @@ class ritz():
       self.pm_add_interface_byname(from_t, to_t, device, interface)
 
   def pm_add_interface_byname(self, from_t, to_t, device, interface):
+    """Adds Maintenance window for interfaces based on interface name
+
+    Does a regex match on interfaces on a device
+    from_t:    from timestamp
+    to_t:      to_timestamp
+    device:    exact device name
+    interface: regex on interface names
+    """
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp (unixtime)
@@ -622,6 +668,15 @@ class ritz():
     return int(data2[2])
 
   def pm_add_interface_bydescr(self, from_t, to_t, description):
+    """ Add Maintenance window on interface level by interface description
+    
+    Does a regex global match on all interfaces in zino
+    from_t:   from timestamp
+    to_t:     to timestamp
+    description: interface description regex
+    """
+    
+    
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp (unixtime)
@@ -658,8 +713,9 @@ class ritz():
 
     data2 = data.split(" ", 3)
     return int(data2[2])
-    
+
   def pm_list(self):
+    """List ID of all active Maintenance windows"""
     # Lists all Maintenance periods registrered
     # pm list
     # returns 300 with list of all scheduled PM's, exits with ^.$
@@ -683,6 +739,7 @@ class ritz():
     return ids
 
   def pm_cancel(self, id):
+    """Cancel a Maintenance window"""
     # Cansels a Maintenance period
     # pm cancel
     #    [2] id      - id of pm to cancel
@@ -702,6 +759,7 @@ class ritz():
       return True
 
   def pm_get_details(self, id):
+    """Get details of a Maintenance window"""
     # Get details of a Maintenance period
     # pm details
     #    [2] id      - id of pm
@@ -729,6 +787,8 @@ class ritz():
     return res
 
   def pm_get_matching(self, id):
+    """Get elements matching a Maintenance window"""
+    # TODO: OUTPUT NEEDS A REWRITE!
     # Get list of all ports and devices matching a Maintenance id
     # pm matching
     #    [2] id       - id of pm
@@ -753,6 +813,7 @@ class ritz():
     return [d.split(" ", 5)[1::] for d in data]
 
   def pm_add_log(self, id, message):
+    """Add log entry to a Maintenance window"""
     # Adds a log message on this PM
     # pm addlog
     #   [2] id        -  id of PM
@@ -788,6 +849,7 @@ class ritz():
     return True
 
   def pm_get_log(self, id):
+    """List all log entries of a Maintenance window"""
     # Get log of a PM
     # pm log
     #   [2] id       -  ID of pm to gat log from
@@ -810,6 +872,7 @@ class ritz():
 
 
 class notifier:
+  """Zino notifier socket"""
   def __init__(self, zino_session, port=8002, timeout=30):
     self.s = None
     self.connStatus = False
@@ -842,6 +905,7 @@ class notifier:
             raise NotConnectedError("Key not found")
 
   def poll(self):
+    """Poll the notifier socket for new data"""
     try:
         self._buff += self.s.recv(4096).decode()
     except socket.error as e:
@@ -854,6 +918,7 @@ class notifier:
     if "\r\n" in self._buff:
         line, self._buff = self._buff.split('\r\n', 1)
         return line
+
 
 
 if "__main__" == __name__:
