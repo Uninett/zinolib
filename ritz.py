@@ -1,6 +1,8 @@
 import logging
 import socket
 import hashlib
+import enum
+import ipaddress
 from pprint import pprint
 from datetime import datetime
 import errno
@@ -87,6 +89,23 @@ class NotConnectedError(Exception):
 class ProtocolError(Exception):
   pass
 
+
+class caseState(enum.Enum):
+    """State field of a ritz.Case object"""
+    OPEN = 'open'
+    WORKING = 'working'
+    WAITING = 'waiting'
+    CONFIRM = 'confirm-wait'
+    IGNORED = 'ignored'
+    CLOSED = 'closed'
+
+class caseType(enum.Enum):
+    """Type field of a ritz.Case object"""
+    PORTSTATE = 'portstate'
+    BGP = 'bgp'
+    BFD = 'bfd'
+    REACHABILITY = 'reachability'
+    ALARM = 'alarm'
 
 def _read_command(sock, command, recv_buffer=4096, delim='\r\n'):
   # Reads socket buffer until the end of datastructure
@@ -186,6 +205,74 @@ def parse_config(file):
   return config
 
 
+class Case():
+  """Zino case element
+
+  Returns a case object with all attributes and functions of the zino case object
+  """
+
+  def __init__(self, zino, caseid):
+    self._zino = zino
+    self._caseid = caseid
+    self._attrs = self._zino.get_attributes(caseid)
+
+  def __repr__(self):
+    return "%s(%s)" % (str(self.__class__), self._caseid)
+
+  def clear_flapping(self):
+    """Clear flapping state if this case object"""
+    if self.type == "portstate":
+      return self._zino.clear_flapping(self._attrs["router"],
+                                       self._attrs["ifindex"])
+    else:
+      raise AttributeError("clear_flapping is only supported when type is portstate")
+
+  def add_history(self, message):
+    """Add a history line to this case object"""
+    return self._zino.add_history(self._caseid, message)
+
+  def set_state(self, state):
+    """Set case to new state"""
+    return self._zino.set_state(self._caseid, state)
+
+  def poll(self):
+      if self.type == caseType.PORTSTATE:
+          return self._zino.poll_interface(self._attrs["router"],
+                                           self._attr["ifindex"])
+      elif self.type == [caseType.RECABILITY, caseType.ALARM, caseType.BGP]:
+          return self._zino_poll_device(self._attrs["router"])
+      else:
+          raise TypeError("poll_interface is not supported under case type '%s'" % str(self._attr["type"]))
+
+  def __getattr__(self, name):
+    """Wrapper to get all attributbutes of the object as python attributes"""
+    if name in self._attrs:
+      return self._attrs[name]
+    elif 'history' == name:
+      return self._zino.get_history(self._caseid)
+    elif 'log' == name:
+      return self._zino.get_log(self._caseid)
+    else:
+      raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
+    return self
+
+  def __getitem__(self, key):
+      """Wrapper to dict
+
+      Makes the object act as a dict object, used when the key is a string
+      """
+      return self.__getattr__(key)
+
+  def keys(self):
+      k = [k for k in self._attrs.keys()]
+      k.append('history')
+      k.append('log')
+      return k
+
+  def has_key(self, k):
+              return k in self._attrs
+
+
 class ritz():
   """Connect to zino datachannel."""
   def __init__(self,
@@ -265,6 +352,19 @@ class ritz():
     except TypeError as e:
       raise ProtocolError("Got an illegal response from the server")
 
+  def case(self, id):
+    """Get a zino Case object"""
+    return Case(self, id)
+
+  def cases(self):
+    """Get a list with all cases in zino"""
+    return list(self.cases_iter())
+
+  def cases_iter(self):
+    """Return list with cases from zino as a iter"""
+    for k in self.get_caseids():
+      yield Case(self, k)
+
   def get_caseids(self):
     if not self.connStatus:
       raise NotConnectedError("Not connected to device")
@@ -307,6 +407,14 @@ class ritz():
       caseinfo['flaps'] = int(caseinfo['flaps'])
     if 'ac-down' in caseinfo:
       caseinfo['ac-down'] = int(caseinfo['ac-down'])
+    if 'state' in caseinfo:
+      caseinfo['state'] = caseState(caseinfo['state'])
+    if 'type' in caseinfo:
+      caseinfo['type'] = caseType(caseinfo['type'])
+    if 'polladdr' in caseinfo:
+      caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
+    if 'remote-addr' in caseinfo:
+      caseinfo['remote-addr'] = ipaddress.ip_address(caseinfo['remote-addr'])
 
     return caseinfo
 
