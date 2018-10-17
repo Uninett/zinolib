@@ -494,14 +494,18 @@ class ritz():
     return True
 
   def set_state(self, caseid, state):
-    if state not in ["open", "working",
-                     "waiting", "confirm-wait",
-                     "ignored", "closed"]:
-      raise TypeError("Illegal state")
+    """Change state of a CaseID"""
+    if isinstance(state, str):
+      state = caseState(state)
+    elif isinstance(state, caseState):
+      pass
+    else:
+      raise TypeError("State needs to be a string or caseState")
+
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
 
-    data, header = _read_command(self.s, b"setstate %d %s\r\n" % (caseid, state.encode()))
+    data, header = _read_command(self.s, b"setstate %d %s\r\n" % (caseid, state.value.encode()))
 
     # Check returncode
     if not header[0] == 200:
