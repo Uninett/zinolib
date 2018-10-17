@@ -1,4 +1,4 @@
-from ritz import ritz, notifier, parse_config
+from ritz import ritz, notifier, parse_config, caseType
 from pprint import pprint
 from os.path import expanduser
 from time import sleep
@@ -16,7 +16,7 @@ def show():
   print(chr(27) + "[2J")      # Clear screen
   for c in cases:
     case = cases[c]
-    if "portstate" in case["type"]:
+    if case["type"] == caseType.PORTSTATE:
       # LowerLayerDown state is quite long... shorten it
       if "lowerLayerDown" in case["portstate"]:
         portState = "LowerDown"
