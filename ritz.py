@@ -451,10 +451,6 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
     data, header = _read_command(self.s, b"gethist %d\r\n" % caseid)
-    # caseinfo = {}
-    # for d in data:
-    #   v = d.split(":",1)
-    #   caseinfo[v[0].strip()] = v[1].strip()
 
     return _decode_history(data)
 
