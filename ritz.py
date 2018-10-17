@@ -596,7 +596,7 @@ class ritz():
     if not isinstance(to_t, datetime):
         raise TypeError("to_t is not a datetime")
     if from_t > to_t:
-        raise Exception("To timestamp is earlier than From timestamp")
+        raise ValueError("To timestamp is earlier than From timestamp")
     if m_type not in ("exact", "str", "regexp"):
         raise Exception("Unknown m_type, needs to be exact, str or regexp")
 
