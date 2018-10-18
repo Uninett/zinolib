@@ -66,12 +66,14 @@ def main():
                 print("Found case {id}: {descr}".format(**attr))
                 if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
                   # This case is not tampered with, just close it :)
-                  s.clear_flapping(attr["router"], attr["ifindex"])
+                  try:
+                      s.clear_flapping(attr["router"], attr["ifindex"])
 
-                  s.add_history(id, "This case is automatically closed by {filename}".format(filename=os.path.basename(__file__)))
-                  s.set_state(id, "closed")
-                  print("  Closed case")
-                  
+                      s.add_history(id, "This case is automatically closed by {filename}".format(filename=os.path.basename(__file__)))
+                      s.set_state(id, "closed")
+                      print("  Closed")
+                  except Exception as e:
+                    print("  Error closing: %s" % e)
 
         except Exception as e:
             print("Unable to clean : %s" % (traceback.format_exc()))
