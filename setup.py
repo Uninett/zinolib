@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
-
+from ritz import __version__
 setup(
     name='PyRitz',
-    version='0.1',
+    version=__version__,
     author='Runar Borge',
     author_email='runar.borge@uninett.no',
     packages=find_packages(),
@@ -16,4 +16,9 @@ setup(
     long_description=open('README.md').read(),
     include_package_data=True,
     install_requires=[],
+    CLASSIFIERS=[
+        "Programming Language :: Python :: 3.5",
+        "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+    ]
 )
