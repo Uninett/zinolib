@@ -1,10 +1,11 @@
-from ritz import ritz, ProtocolError, AuthenticationError
-from zino_emu import zinoemu
+from ritz import ritz, ProtocolError, AuthenticationError, caseState, caseType
+from ritz.zino_emu import zinoemu
 from time import sleep
 from pprint import pprint
 import logging
 import datetime
 import unittest
+from ipaddress import ip_address
 ritzlog = logging.getLogger("ritz")
 ritzlog.setLevel(logging.DEBUG)
 ritzlog.addHandler(logging.FileHandler('test1.log'))
@@ -14,16 +15,16 @@ ritzlog.addHandler(logging.FileHandler('test1.log'))
 def dict_diff(x, y):
     # keys in x not in y
     a = [k for k in x.keys() if k not in y.keys()]
-    if a: 
+    if a:
       raise KeyError("keys %s not in y" % repr(a))
-    
+
     b = [k for k in y.keys() if k not in x.keys()]
     if b:
       raise KeyError("keys %s not in x" % repr(b))
 
     for k in x.keys():
       if x[k] != y[k]:
-        raise ValueError("Values in %s differs, x='%s', y='%s'" % (k, repr(x[k]), repr(y[k])))
+        raise ValueError("Values in %s differs, x=%s, y=%s" % (k, repr(x[k]), repr(y[k])))
     return True
 
 def dict_diff2(x, y):
@@ -56,8 +57,8 @@ def executor(client):
          'user illegal-first-response 85970fa23a2f5aa06c22b60f04013fe072319ebd  -\r\n': ['something-gurba-happened'],
          'user no_login_response 87101b4944f4200fce90f519ddae5eacffeeadf6  -\r\n': [''],
          'caseids\r\n': ["304 list of active cases follows, terminated with '.'\r\n", '32802\r\n34978\r\n.\r\n'],
-         'getattrs 32802\r\n': ["303 simple attributes follow, terminated with '.'\r\n", 'state: working\r\nrouter: uninett-gsw2\r\ntype: bgp\r\nopened: 1524465142\r\nremote-addr: 2001:700:0:4515::5: 11\r\nid: 32802\r\npeer-uptime: 0\r\nupdated: 1533116751\r\npolladdr: 128.39.103.25\r\npriority: 100\r\nbgpOS: down\r\nbgpAS: halted\r\nremote-AS: 64666\r\nlastevent: peer is admin turned off\r\n.\r\n'],
-         'getattrs 34978\r\n': ["303 simple attributes follow, terminated with '.'\r\n", 'router: bergen-sw1\r\nstate: working\r\ntype: alarm\r\nalarm-count: 1\r\nopened: 1529156235\r\nalarm-type: yellow\r\nid: 34978\r\nupdated: 1529156235\r\npolladdr: 158.38.234.180\r\npriority: 100\r\nlastevent: alarms went     from 0 to 1\r\n.\r\n'],
+         'getattrs 32802\r\n': ["303 simple attributes follow, terminated with '.'\r\n", 'state: working\r\nrouter: uninett-gsw2\r\ntype: bgp\r\nopened: 1524465142\r\nremote-addr: 2001:700:0:4515::5:11\r\nid: 32802\r\npeer-uptime: 0\r\nupdated: 1533116751\r\npolladdr: 128.39.103.25\r\npriority: 100\r\nbgpOS: down\r\nbgpAS: halted\r\nremote-AS: 64666\r\nlastevent: peer is admin turned off\r\n.\r\n'],
+         'getattrs 34978\r\n': ["303 simple attributes follow, terminated with '.'\r\n", 'router: bergen-sw1\r\nstate: working\r\ntype: alarm\r\nalarm-count: 1\r\nopened: 1529156235\r\nalarm-type: yellow\r\nid: 34978\r\nupdated: 1529156235\r\npolladdr: 158.38.234.180\r\npriority: 100\r\nlastevent: alarms went from 0 to 1\r\n.\r\n'],
          'getattrs 40959\r\n': ["303 simple attributes follow, terminated with '.'\r\n", 'state: open\r\nrouter: oslo-gw1\r\ntype: bgp\r\nopened: 1539480952\r\nremote-addr: 193.108.152.34\r\nid: 40959\r\npeer-uptime: 503\r\nupdated: 1539485757\r\npolladdr: 128.39.0.1\r\npriority: 500\r\nbgpOS: established\r\nremote-AS: 21357\r\nbgpAS: running\r\nlastevent: peer was reset (now up)\r\n.\r\n'],
          'gethist 40959\r\n': ["301 history follows, terminated with '.'\r\n", '1539480952 state change embryonic -> open (monitor)\r\n1539509123 runarb\r\n Testmelding ifra pyRitz\r\n \r\n.\r\n'],
          'getlog 40959\r\n': ["300 log follows, terminated with '.'\r\n", '1539480952 oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)\r\n1539484557 oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)\r\n1539485757 oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)\r\n.\r\n'],
@@ -144,26 +145,26 @@ class DefaultTest(unittest.TestCase):
                 'lastevent': 'peer is admin turned off',
                 'opened': datetime.datetime(2018, 4, 23, 8, 32, 22),
                 'peer-uptime': '0',
-                'polladdr': '128.39.103.25',
+                'polladdr': ip_address('128.39.103.25'),
                 'priority': 100,
                 'remote-AS': '64666',
-                'remote-addr': '2001:700:0:4515::5: 11',
+                'remote-addr': ip_address('2001:700:0:4515::5:11'),
                 'router': 'uninett-gsw2',
-                'state': 'working',
-                'type': 'bgp',
+                'state': caseState.WORKING,
+                'type': caseType.BGP,
                 'updated': datetime.datetime(2018, 8, 1, 11, 45, 51)}
         self.assertTrue(dict_diff(sess.get_attributes(32802), test))
 
         test = {'alarm-count': '1',
                 'alarm-type': 'yellow',
                 'id': 34978,
-                'lastevent': 'alarms went     from 0 to 1',
+                'lastevent': 'alarms went from 0 to 1',
                 'opened': datetime.datetime(2018, 6, 16, 15, 37, 15),
-                'polladdr': '158.38.234.180',
+                'polladdr': ip_address('158.38.234.180'),
                 'priority': 100,
                 'router': 'bergen-sw1',
-                'state': 'working',
-                'type': 'alarm',
+                'state': caseState.WORKING,
+                'type': caseType.ALARM,
                 'updated': datetime.datetime(2018, 6, 16, 15, 37, 15)}
         self.assertTrue(dict_diff(sess.get_attributes(34978), test))
 
