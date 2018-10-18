@@ -4,3 +4,6 @@
 *.bak
 
 .mypy_cache/*
+PyRitz.egg-info/*
+build/*
+dist/*
