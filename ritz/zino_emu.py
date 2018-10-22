@@ -91,7 +91,7 @@ class zinoemu:
         self.stop_event = threading.Event()
         self.server_ready = threading.Event()
         self.exception = ""
-        self.traceback = [""]  # type: List[str]
+        self.traceback = []
 
     def __enter__(self):
         self.serve()
