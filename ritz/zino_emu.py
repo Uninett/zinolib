@@ -3,7 +3,7 @@ import socket
 import threading
 import traceback
 from time import sleep
-from typing import Callable, Dict, List, Tuple, Union, Any, Sequence
+from typing import Callable, Dict, List, Tuple, Union, Any, Sequence, Optional
 import sys
 import os
 
@@ -91,7 +91,7 @@ class zinoemu:
         self.stop_event = threading.Event()
         self.server_ready = threading.Event()
         self.exception = ""
-        self.traceback = []
+        self.traceback = []  # type: List[str]
 
     def __enter__(self):
         self.serve()
