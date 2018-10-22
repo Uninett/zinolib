@@ -1,6 +1,5 @@
 from ritz import ritz, ProtocolError, AuthenticationError, caseState, caseType
 from ritz.zino_emu import zinoemu
-from time import sleep
 from pprint import pprint
 import logging
 import datetime
@@ -9,7 +8,6 @@ from ipaddress import ip_address
 ritzlog = logging.getLogger("ritz")
 ritzlog.setLevel(logging.DEBUG)
 ritzlog.addHandler(logging.FileHandler('test1.log'))
-
 
 
 def dict_diff(x, y):
@@ -26,6 +24,7 @@ def dict_diff(x, y):
       if x[k] != y[k]:
         raise ValueError("Values in %s differs, x=%s, y=%s" % (k, repr(x[k]), repr(y[k])))
     return True
+
 
 def dict_diff2(x, y):
     # keys in x not in y
@@ -232,6 +231,7 @@ class DefaultTest(unittest.TestCase):
         self.assertTrue(sess.ntie(b'909e90c2eda89a09819ee7fe9b3f67cadb31449f'))
         with self.assertRaises(ValueError):
           sess.ntie(123456789)
+
 
 if __name__ == '__main__':
         unittest.main()

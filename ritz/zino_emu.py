@@ -90,6 +90,8 @@ class zinoemu:
         self.bind_port = bind_port
         self.stop_event = threading.Event()
         self.server_ready = threading.Event()
+        self.exception = ""
+        self.traceback = [""]  # type: List[str]
 
     def __enter__(self):
         self.serve()
@@ -136,7 +138,7 @@ class zinoemu:
 
             print("Exception in server '{}'".format(repr(e)))
             traceback.print_exc()
-            self.exception = e
+            self.exception = str(e)
             self.traceback = traceback.format_tb(exc_traceback)
         clientsock.close()
         sock.close()
