@@ -31,7 +31,7 @@ class clientobj:
         buff = ""
         try:
           while True:
-            if self.stop_signal.isSet():
+            if self.stop_signal.is_set():
               return
             buff += self.sock.recv(4096).decode('latin-1')
             dprint(repr(buff))
@@ -44,7 +44,7 @@ class clientobj:
                     self.send(autodict[k])
                     buff = ""
         except socket.timeout as e:
-          if self.stop_signal.isSet():
+          if self.stop_signal.is_set():
             return
           dprint("EMU: executor: Timeout in buffer:      %s" % repr(buff))
 
@@ -81,7 +81,7 @@ class clientobj:
 
 class zinoemu:
     def __init__(self,
-                 client_callback: Callable[[clientobj, str, threading.Event], None],
+                 client_callback: Callable[[clientobj], None],
                  bind_ip="0.0.0.0",
                  bind_port=8001,
                  timeout=10) -> None:
@@ -90,8 +90,6 @@ class zinoemu:
         self.bind_port = bind_port
         self.stop_event = threading.Event()
         self.server_ready = threading.Event()
-        self.exception = ""
-        self.traceback = ""
 
     def __enter__(self):
         self.serve()
