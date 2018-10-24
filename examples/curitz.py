@@ -4,7 +4,9 @@ import curses
 from math import ceil
 from time import sleep
 from pprint import pprint
+from collections import namedtuple
 
+from culistbox import listbox
 
 
 
