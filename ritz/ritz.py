@@ -213,7 +213,8 @@ class Case():
     elif 'log' == name:
       return self._zino.get_log(self._caseid)
     else:
-      raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
+      self.__getattribute__(name)
+      #raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
     return self
 
   def __getitem__(self, key):
@@ -222,6 +223,9 @@ class Case():
       Makes the object act as a dict object, used when the key is a string
       """
       return self.__getattr__(key)
+
+  def get(self, key, default=None):
+      return self._attrs.get(key, default)
 
   def keys(self):
       k = [k for k in self._attrs.keys()]
@@ -295,7 +299,7 @@ class ritz():
             rawh = line.split(' ', 1)  # ' ' is not a byte
             header = (int(rawh[0]), rawh[1])
           except ValueError as e:
-              raise ProtocolError("Illegal response from server detected: %s" % repr(line))
+              raise ProtocolError("Illegal response from server detected: %s" % repr(buffer))
           # header = line
           # Crude error detection :)
           if header[0] >= 500:
@@ -671,14 +675,14 @@ class ritz():
 
   def pm_add_interface_bydescr(self, from_t, to_t, description):
     """ Add Maintenance window on interface level by interface description
-    
+
     Does a regex global match on all interfaces in zino
     from_t:   from timestamp
     to_t:     to timestamp
     description: interface description regex
     """
-    
-    
+
+
     # Adds a Maintenance period
     # pm add
     #    [2] from_t   -  start timestamp (unixtime)
