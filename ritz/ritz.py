@@ -9,6 +9,7 @@ import errno
 from time import mktime
 import re
 from os.path import expanduser
+from typing import NamedTuple
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -88,6 +89,11 @@ class NotConnectedError(Exception):
 
 class ProtocolError(Exception):
   pass
+
+
+notifierEntry = NamedTuple("notifierEntry", [('id': int),
+                                             ('type': str),
+                                             ('info': str)])
 
 
 class caseState(enum.Enum):
@@ -923,7 +929,11 @@ class notifier:
 
     if "\r\n" in self._buff:
         line, self._buff = self._buff.split('\r\n', 1)
-        return line
+        element = line.split(" ", 2)
+        id = int(elemenet[0])
+        type = element[1]
+        text = element[2]
+        return notifierEntry(id, type, text)
 
 
 if "__main__" == __name__:
