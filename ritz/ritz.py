@@ -91,9 +91,9 @@ class ProtocolError(Exception):
   pass
 
 
-notifierEntry = NamedTuple("notifierEntry", [('id': int),
-                                             ('type': str),
-                                             ('info': str)])
+notifierEntry = NamedTuple("notifierEntry", [('id', int),
+                                             ('type', str),
+                                             ('info', str)])
 
 
 class caseState(enum.Enum):
