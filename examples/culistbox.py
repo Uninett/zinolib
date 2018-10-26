@@ -44,6 +44,12 @@ class listbox():
 
         # Run until screen is full of elements or we are at the bottom of list
         for i in range(page_start, self.pagesize + page_start ):
+            if isinstance(self.elements[i], BoxElement):
+              curr_element = self.elements[i]
+            elif isinstance(self.elements[i], str):
+              curr_element = BoxElement(i, self.elements[i])
+            else:
+              raise ValueError("LogLine is not a string or BoxElement")
             if len(self.elements) == 0:
                 self.box.addstr(1, 1, "Nothing to display", self.highlightText)
             else:
@@ -51,13 +57,13 @@ class listbox():
                     # This is the current active element
                     self.box.addstr(i + 1 - page_start,
                                     1,
-                                    "%s" % (self.elements[i].text)[0:self.size.length - 2],
+                                    "%s" % (curr_element.text)[0:self.size.length - 2],
                                     self.highlightText)
                 else:
                     # This is a normal element
                     self.box.addstr(i + 1 - page_start,
                                     1,
-                                    ("%s" % self.elements[i].text)[0:self.size.length - 2],
+                                    ("%s" % curr_element.text)[0:self.size.length - 2],
                                     self.normalText)
                 if i == len(self) - 1:     # Len(self) returns the current length of the list
                     break
