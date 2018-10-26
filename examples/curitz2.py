@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from ritz import ritz, parse_config, notifier, caseType, Case
+from ritz import ritz, parse_config, notifier, caseType, Case, caseState
 import curses
 import curses.textpad
 from math import ceil
@@ -319,6 +319,8 @@ def uiSetStateWindow(screen, number):
                 box.active_element = 5
             elif x == curses.KEY_ENTER or x == 13 or x == 10:
                 return box.active.lower()
+            elif x == 27:  # ESC
+                raise KeyboardInterrupt("ESC pressed")
 
             box.draw()
 
