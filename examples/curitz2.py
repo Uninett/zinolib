@@ -15,7 +15,6 @@ log = logging.getLogger("cuRitz")
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.FileHandler('curitz.log'))
 
-status = "Initiated"
 
 def interfaceRenamer(s):
     s = s.replace("HundredGigE", "Hu")
@@ -31,6 +30,7 @@ def interfaceRenamer(s):
 
     return s
 
+
 def uiShowLogWindow(screen, heading, lines):
     (screen_y, screen_x) = screen.getmaxyx()
 
@@ -42,18 +42,18 @@ def uiShowLogWindow(screen, heading, lines):
     else:
         box_h = 30
     box = listbox(box_h,
-                       80,
-                       1, 
-                       center_x - 40)
-    
+                  80,
+                  3,
+                  center_x - 40)
+
     # Display box on the midle of screen
     box.heading = heading
     box.clear()
     for l in lines:
         box.add(l)
-    
+
     box.draw()
-    
+
     while True:
         x = screen.getch()
         if x == -1:
@@ -109,13 +109,12 @@ def main(screen):
     screen.clear()
     screen.refresh()
 
-    
     conf = parse_config("~/.ritz.tcl")
     c_server = conf["default"]["Server"]
-    c_user   = conf["default"]["User"]
+    c_user = conf["default"]["User"]
     c_secret = conf["default"]["Secret"]
 
-    table_structure = "{selected:1} {opstate:10} {admstate:8} {age:8} {router:16} {port:15} {description}"
+    table_structure = "{selected:1} {opstate:10} {admstate:8} {age:9} {router:16} {port:13} {description}"
 
     with ritz(c_server, username=c_user, password=c_secret) as session:
         with notifier(session) as notifier:
@@ -168,28 +167,38 @@ def runner(screen):
     # Get all data for the first time
     cases = {}
     cases_selected = []
-    for case in session.cases_iter():
-        cases[case.id] = case
-        screen.addstr(10, 10, "Loaded {} cases!".format(len(cases)))
-        screen.refresh()
-        
-    create_case_list()
+
     draw(screen)
+    caselist = session.get_caseids()
+    for c in caselist:
+        case = session.case(c)
+        cases[case.id] = case
+        elements = int((len(cases) / len(caselist)) * 20)
+        screen.addstr(9, 10,
+                      "[{:-<20}] Loaded {} of {} cases".format(
+                          "=" * elements,
+                          len(cases),
+                          len(caselist)))
+        screen.refresh()
+
+    create_case_list()
 
     while True:
         x = screen.getch()
-        
+
         if curses.is_term_resized(*screen_size):
+            # Screen is resized
             screen_size = BoxSize(*screen.getmaxyx())
             lb.resize(screen_size.height - 8, screen_size.length)
-            
-        screen.addstr(0, screen_size.length - 8, "ch:{:3}".format(x))
 
-        
+        screen.addstr(0, screen_size.length - 8, "ch:{:3}".format(x))
+        if poll():
+            create_case_list()
+
         if x == -1:
             # Nothing happened, check for changes
-            if poll():
-                create_case_list()
+            pass
+
         elif x == ord('q'):
             # Q pressed, Exit application
             return
@@ -243,23 +252,18 @@ def runner(screen):
             else:
                 uiSetState(screen, [lb.active.id])
             curses.flash()
-        elif x == curses.KEY_ENTER or x == 10 or x == 13: #[ENTER], CR or LF
+        elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
             uiShowLog(screen, lb.active.id)
-        elif x == curses.KEY_RESIZE:
-            pass
-            # Resize of window
-            #screen_size = BoxSize(*screen.getmaxyx())
-            #lb.resize(screen_size.height - 8, screen_size.length)
 
         draw(screen)
 
+
 def draw(screen):
     screen.addstr(0, 0, "cuRitz 0.1 Alpha Devel version")
-    screen.addstr(screen_size.height - 1, 0, status[:screen_size.length - 1])
 
-    screen.addstr(screen_size.height - 1, 0, "q=Quit  x=(de)select  c=Clear sel s=Set State  u=Update History <ENTER>=Show history <UP/DOWN> = Navigate"[:screen_size.length - 1])
-
+    screen.addstr(screen_size.height - 1, 0, "q=Quit  x=(de)select  c=Clear sel  s=Set State  u=Update History  <ENTER>=Show history <UP/DOWN> = Navigate"[:screen_size.length - 1])
     lb.draw()
+
 
 def uiUpdateCases(screen, caseids):
     update = uiUpdateCaseWindow(screen, len(caseids))
@@ -267,13 +271,14 @@ def uiUpdateCases(screen, caseids):
         for case in caseids:
             cases[case].add_history(update)
 
+
 def uiSetState(screen, caseids):
     update = uiSetStateWindow(screen, len(caseids))
     if update:
         for case in caseids:
             cases[case].set_state(update)
-            
-            
+
+
 def uiSetStateWindow(screen, number):
     try:
         box = listbox(9, 62, 4, 9)
@@ -285,7 +290,7 @@ def uiSetStateWindow(screen, number):
         box.add("Ignored")
         box.add("Closed")
         box.draw()
-        
+
         while True:
             x = screen.getch()
             if x == -1:
@@ -320,6 +325,7 @@ def uiSetStateWindow(screen, number):
     except KeyboardInterrupt:
         box.clear()
     return ""
+
 
 def uiUpdateCaseWindow(screen, number):
     border = curses.newwin(9, 62, 4, 9)
