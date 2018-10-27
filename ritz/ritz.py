@@ -427,7 +427,7 @@ class ritz():
     caseinfo = {}
     for d in data:
       v = d.split(":", 1)
-      caseinfo[v[0].strip()] = v[1].strip()
+      caseinfo[v[0].strip().lower().replace("-","_")] = v[1].strip()
 
     caseinfo['id'] = int(caseinfo['id'])
     caseinfo['opened'] = datetime.fromtimestamp(int(caseinfo['opened']))
@@ -440,24 +440,18 @@ class ritz():
       caseinfo['lasttrans'] = datetime.fromtimestamp(int(caseinfo['lasttrans']))
     if 'flaps' in caseinfo:
       caseinfo['flaps'] = int(caseinfo['flaps'])
-    if 'ac-down' in caseinfo:
-      caseinfo['ac-down'] = int(caseinfo['ac-down'])
-      # "-" is parsed as a minus operator in the interpretor
-      caseinfo['ac_down'] = caseinfo['ac-down']
+    if 'ac_down' in caseinfo:
+      caseinfo['ac_down'] = int(caseinfo['ac_down'])
     if 'state' in caseinfo:
       caseinfo['state'] = caseState(caseinfo['state'])
     if 'type' in caseinfo:
       caseinfo['type'] = caseType(caseinfo['type'])
     if 'polladdr' in caseinfo:
       caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
-    if 'remote-addr' in caseinfo:
-      caseinfo['remote-addr'] = ipaddress.ip_address(caseinfo['remote-addr'])
-      # "-" is parsed as a minus operator in the interpretor
-      caseinfo['remote_addr'] = caseinfo['remote-addr']
-    if 'remote-AS' in caseinfo:
-      caseinfo['remote-AS'] = int(caseinfo["remote-AS"])
-      # "-" is parsed as a minus operator in the interpretor
-      caseinfo['remote_as'] = caseinfo["remote-AS"]
+    if 'remote_addr' in caseinfo:
+      caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote-addr'])
+    if 'remote_as' in caseinfo:
+      caseinfo['remote_as'] = int(caseinfo["remote_as"])
     return caseinfo
 
   def get_history(self, caseid):
