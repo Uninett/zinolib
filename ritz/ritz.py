@@ -458,6 +458,13 @@ class ritz():
       caseinfo['remote_as'] = int(caseinfo["remote_as"])
     if 'peer_uptime' in caseinfo:
       caseinfo['peer_uptime'] = int(caseinfo['peer_uptime'])
+    if 'alarm_count' in caseinfo:
+      caseinfo['alarm_count'] = int(caseinfo['alarm_count'])
+    if 'bfdix' in caseinfo:
+      caseinfo['bfdix'] = int(caseinfo['bfdix'])
+    if 'bfddiscr' in caseinfo:
+      caseinfo['bfddiscr'] = int(caseinfo['bfddiscr'])
+
     return caseinfo
 
   def get_history(self, caseid):
