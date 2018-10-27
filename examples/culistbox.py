@@ -25,11 +25,11 @@ class listbox():
       self.active_element = 0
 
       self.elements = []  # Type: List[BoxElement]
-    
+
     @property
     def pagesize(self):
         return self.size.height - 2
-        
+
     def draw(self):
         self.box.clear()
         self.box.box()
@@ -38,9 +38,6 @@ class listbox():
         # Get current page
         page = self.active_element // self.pagesize
         page_start = self.pagesize * page
-        log.debug("page: %s" % page)
-        log.debug("page_start: %s" % page_start)
-        log.debug("pagesize: %s" % self.pagesize)
 
         if len(self.elements) > 0:   # Allow us to draw a empty listobx
           # Run until screen is full of elements or we are at the bottom of list
@@ -70,7 +67,7 @@ class listbox():
                       break
 
         self.box.refresh()
-        
+
     def __len__(self):
         return len(self.elements)
 
@@ -89,7 +86,7 @@ class listbox():
 
     def select_prev(self):
         pass
-        
+
     def resize(self, nlines, ncols):
         self.box.resize(nlines, ncols)
         self.size = BoxSize(*self.box.getmaxyx())
