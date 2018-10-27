@@ -457,7 +457,7 @@ class ritz():
     if 'remote-AS' in caseinfo:
       caseinfo['remote-AS'] = int(caseinfo["remote-AS"])
       # "-" is parsed as a minus operator in the interpretor
-      caseinfo['remote_AS'] = caseinfo["remote-AS"]
+      caseinfo['remote_as'] = caseinfo["remote-AS"]
     return caseinfo
 
   def get_history(self, caseid):
