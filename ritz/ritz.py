@@ -456,6 +456,8 @@ class ritz():
       caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote_addr'])
     if 'remote_as' in caseinfo:
       caseinfo['remote_as'] = int(caseinfo["remote_as"])
+    if 'peer_uptime' in caseinfo:
+      caseinfo['peer_uptime'] = int(caseinfo['peer_uptime'])
     return caseinfo
 
   def get_history(self, caseid):
