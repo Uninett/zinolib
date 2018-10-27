@@ -449,7 +449,7 @@ class ritz():
     if 'polladdr' in caseinfo:
       caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
     if 'remote_addr' in caseinfo:
-      caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote-addr'])
+      caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote_addr'])
     if 'remote_as' in caseinfo:
       caseinfo['remote_as'] = int(caseinfo["remote_as"])
     return caseinfo
