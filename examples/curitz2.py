@@ -148,7 +148,8 @@ def create_case_list():
     for c in sorted_cases:
         if c in visible_cases:
             case = cases[c]
-            if case.type == caseType.PORTSTATE:
+            try:
+              if case.type == caseType.PORTSTATE:
                 age = datetime.datetime.now() - case.opened
                 log.debug("list of cases: %s" % repr(cases_selected))
                 lb.add(BoxElement(case.id,
@@ -160,7 +161,22 @@ def create_case_list():
                                       port=interfaceRenamer(case.port),
                                       description=case.get("descr", ""),
                                       age=strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}"))))
-
+              if case.type == caseType.BGP:
+                age = datetime.datetime.now() - case.opened
+                lb.add(BoxElement(case.id,
+                                  table_structure.format(
+                                      selected="*" if case.id in cases_selected else " ",
+                                      opstate="BGP %s" % case.bgpos[0:5],
+                                      admstate=case.state.value[:7],
+                                      router=case.router,
+                                      port="AS{}".format(case.remote_as), #str(case.remote_addr),
+                                      description=case.get("lastevent", ""),
+                                      age=strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}"))))
+            except Exception as e:
+                log.exception("Unable to create table entry for case {}".format(case.id))
+                log.fatal(repr(case._attrs))
+                log.fatal(repr(case._attrs["remote_addr"]))
+                raise
 
 def runner(screen):
     global cases, cases_selected, screen_size
