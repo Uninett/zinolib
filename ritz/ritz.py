@@ -440,6 +440,8 @@ class ritz():
       caseinfo['flaps'] = int(caseinfo['flaps'])
     if 'ac-down' in caseinfo:
       caseinfo['ac-down'] = int(caseinfo['ac-down'])
+      # "-" is parsed as a minus operator in the interpretor
+      caseinfo['ac_down'] = caseinfo['ac-down']
     if 'state' in caseinfo:
       caseinfo['state'] = caseState(caseinfo['state'])
     if 'type' in caseinfo:
@@ -448,7 +450,12 @@ class ritz():
       caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
     if 'remote-addr' in caseinfo:
       caseinfo['remote-addr'] = ipaddress.ip_address(caseinfo['remote-addr'])
-
+      # "-" is parsed as a minus operator in the interpretor
+      caseinfo['remote_addr'] = caseinfo['remote-addr']
+    if 'remote-AS' in caseinfo:
+      caseinfo['remote-AS'] = int(caseinfo["remote-AS"])
+      # "-" is parsed as a minus operator in the interpretor
+      caseinfo['remote_AS'] = caseinfo["remote-AS"]
     return caseinfo
 
   def get_history(self, caseid):
