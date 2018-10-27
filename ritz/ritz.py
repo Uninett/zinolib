@@ -132,11 +132,13 @@ def _decode_history(logarray):
       header = log.split(" ", 1)
       curr["header"] = header
       curr["date"] = datetime.fromtimestamp(int(header[0]))
+      curr["system"] = False
 
       if header[1].count(" ") is not 0:
         # this is a short system log
         curr["log"] = [header[1]]
         curr["user"] = re.match(".*\((\w+)\)$", header[1]).group(1)
+        curr["system"] = True
         ret.append(curr)
       else:
         curr["user"] = header[1]
@@ -937,7 +939,7 @@ class notifier:
     if "\r\n" in self._buff:
         line, self._buff = self._buff.split('\r\n', 1)
         element = line.split(" ", 2)
-        id = int(elemenet[0])
+        id = int(element[0])
         type = element[1]
         text = element[2]
         return notifierEntry(id, type, text)
