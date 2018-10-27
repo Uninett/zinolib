@@ -297,8 +297,12 @@ class ritz():
       except socket.timeout as e:
           raise TimeoutError("Timed out waiting for data. command: %s buffer: %s" % (repr(command), repr(buffer)))
       logger.debug("recv: %s" % data.__repr__())
-      # buffer += data.decode('UTF-8')
-      buffer += data.decode('latin-1')
+
+      # Try a crude detection of norwegian utf-8 characters <-- this needs to be worked on
+      if any(x in data for x in [b'\xc3\xa6', b'\xc3\xb8', b'\xc3\xa5']):
+          buffer += data.decode('UTF-8')
+      else:
+          buffer += data.decode('latin-1')
 
       if not header:
         if buffer.find(delim) != -1:
@@ -452,6 +456,8 @@ class ritz():
       caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote_addr'])
     if 'remote_as' in caseinfo:
       caseinfo['remote_as'] = int(caseinfo["remote_as"])
+    if 'peer_uptime' in caseinfo:
+      caseinfo['peer_uptime'] = int(caseinfo['peer_uptime'])
     return caseinfo
 
   def get_history(self, caseid):

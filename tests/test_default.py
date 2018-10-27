@@ -138,24 +138,24 @@ class DefaultTest(unittest.TestCase):
         self.assertTrue(32802 in caseids)
         self.assertTrue(34978 in caseids)
         self.assertFalse(999 in caseids)
-        test = {'bgpAS': 'halted',
-                'bgpOS': 'down',
+        test = {'bgpas': 'halted',
+                'bgpos': 'down',
                 'id': 32802,
                 'lastevent': 'peer is admin turned off',
                 'opened': datetime.datetime(2018, 4, 23, 8, 32, 22),
-                'peer-uptime': '0',
+                'peer_uptime': 0,
                 'polladdr': ip_address('128.39.103.25'),
                 'priority': 100,
-                'remote-AS': '64666',
-                'remote-addr': ip_address('2001:700:0:4515::5:11'),
+                'remote_as': 64666,
+                'remote_addr': ip_address('2001:700:0:4515::5:11'),
                 'router': 'uninett-gsw2',
                 'state': caseState.WORKING,
                 'type': caseType.BGP,
                 'updated': datetime.datetime(2018, 8, 1, 11, 45, 51)}
         self.assertTrue(dict_diff(sess.get_attributes(32802), test))
 
-        test = {'alarm-count': '1',
-                'alarm-type': 'yellow',
+        test = {'alarm_count': '1',
+                'alarm_type': 'yellow',
                 'id': 34978,
                 'lastevent': 'alarms went from 0 to 1',
                 'opened': datetime.datetime(2018, 6, 16, 15, 37, 15),
@@ -175,13 +175,15 @@ class DefaultTest(unittest.TestCase):
                   'header': ['1539480952',
                              'state change embryonic -> open (monitor)'],
                   'user': 'monitor',
-                  'log': ['state change embryonic -> open (monitor)']}
+                  'log': ['state change embryonic -> open (monitor)'],
+                  'system': True}
           self.assertTrue(dict_diff(hist[0], test))
 
           test = {'date': datetime.datetime(2018, 10, 14, 11, 25, 23),
                   'header': ['1539509123', 'runarb'],
                   'user': 'runarb',
-                  'log': ['Testmelding ifra pyRitz']}
+                  'log': ['Testmelding ifra pyRitz'],
+                  'system': False}
           self.assertTrue(dict_diff(hist[1], test))
 
   def test_I_add_history(self):
