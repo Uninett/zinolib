@@ -149,33 +149,60 @@ def create_case_list():
         if c in visible_cases:
             case = cases[c]
             try:
-              if case.type == caseType.PORTSTATE:
                 age = datetime.datetime.now() - case.opened
-                log.debug("list of cases: %s" % repr(cases_selected))
-                lb.add(BoxElement(case.id,
-                                  table_structure.format(
-                                      selected="*" if case.id in cases_selected else " ",
-                                      opstate="port %s" % case.portstate[0:5],
-                                      admstate=case.state.value[:7],
-                                      router=case.router,
-                                      port=interfaceRenamer(case.port),
-                                      description=case.get("descr", ""),
-                                      age=strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}"))))
-              if case.type == caseType.BGP:
-                age = datetime.datetime.now() - case.opened
-                lb.add(BoxElement(case.id,
-                                  table_structure.format(
-                                      selected="*" if case.id in cases_selected else " ",
-                                      opstate="BGP %s" % case.bgpos[0:5],
-                                      admstate=case.state.value[:7],
-                                      router=case.router,
-                                      port="AS{}".format(case.remote_as), #str(case.remote_addr),
-                                      description=case.get("lastevent", ""),
-                                      age=strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}"))))
+                common = {}
+                common['selected'] = "*" if case.id in cases_selected else " "
+                common['router'] = case.router
+                common['admstate'] = case.state.value[:7]
+                common['age'] = strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}")
+                common['priority'] = case.priority
+                if case.type == caseType.PORTSTATE:
+                    lb.add(BoxElement(case.id,
+                                      table_structure.format(
+                                          **common,
+                                          opstate="PORT %s" % case.portstate[0:5],
+                                          port=interfaceRenamer(case.port),
+                                          description=case.get("descr", ""),
+                                          )))
+                elif case.type == caseType.BGP:
+                    lb.add(BoxElement(case.id,
+                                      table_structure.format(
+                                          **common,
+                                          opstate="BGP %s" % case.bgpos[0:5],
+                                          port="AS{}".format(case.remote_as), #str(case.remote_addr),
+                                          description=case.get("lastevent", ""),
+                                          )))
+                elif case.type == caseType.BFD:
+                    lb.add(BoxElement(case.id,
+                                    table_structure.format(
+                                        **common,
+                                        opstate="BFD %s" % case.bfdstate[0:5],
+                                        port=str(case.bfdaddr),
+                                        description="{}, {}".format(case.get('neigh_rdns'),
+                                                                    case.get('lastevent')),
+                                        )))
+                elif case.type == caseType.REACHABILITY:
+                    lb.add(BoxElement(case.id,
+                                    table_structure.format(
+                                        **common,
+                                        opstate=case.reachability,
+                                        port="",
+                                        description="",
+                                        )))
+                elif case.type == caseType.ALARM:
+                    lb.add(BoxElement(case.id,
+                                      table_structure.format(
+                                          **common,
+                                          opstate="ALM {}".format(case.alarm_type),
+                                          port="",
+                                          description=case.lastevent,
+                                          )))
+                else:
+                  log.error("Unable to create table for case {}".format(case.id))
+                  log.error(repr(case._attrs))
             except Exception as e:
-                log.exception("Unable to create table entry for case {}".format(case.id))
+                log.exception("Exception while createing table entry for case {}".format(case.id))
                 log.fatal(repr(case._attrs))
-                log.fatal(repr(case._attrs["remote_addr"]))
                 raise
 
 def runner(screen):
