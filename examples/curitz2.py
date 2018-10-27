@@ -9,12 +9,15 @@ from typing import NamedTuple
 import logging
 from culistbox import listbox, BoxSize, BoxElement
 import datetime
+import argparse
+import sys
 
 
 log = logging.getLogger("cuRitz")
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.FileHandler('curitz.log'))
 
+__version__ = "0.2.0"
 
 def interfaceRenamer(s):
     s = s.replace("HundredGigE", "Hu")
@@ -95,11 +98,12 @@ def strfdelta(tdelta, fmt):
 
 def main(screen):
     global lb, session, notifier, cases, table_structure, screen_size
+
     curses.noecho()
     curses.cbreak()
     curses.start_color()
     screen.keypad(1)
-    screen.timeout(1000)
+    screen.timeout(10000)
 
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
     curses.curs_set(0)
@@ -109,12 +113,8 @@ def main(screen):
     screen.clear()
     screen.refresh()
 
-    conf = parse_config("~/.ritz.tcl")
-    c_server = conf["default"]["Server"]
-    c_user = conf["default"]["User"]
-    c_secret = conf["default"]["Secret"]
 
-    table_structure = "{selected:1} {opstate:10} {admstate:8} {age:9} {router:16} {port:13} {description}"
+    table_structure = "{selected:1} {opstate:11} {admstate:8} {age:9} {router:16} {port:14} {description}"
 
     with ritz(c_server, username=c_user, password=c_secret) as session:
         with notifier(session) as notifier:
@@ -168,7 +168,7 @@ def create_case_list():
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
-                                          opstate="BGP %s" % case.bgpos[0:5],
+                                          opstate="BGP  %s" % case.bgpos[0:5],
                                           port="AS{}".format(case.remote_as), #str(case.remote_addr),
                                           description=case.get("lastevent", ""),
                                           )))
@@ -176,7 +176,7 @@ def create_case_list():
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
-                                        opstate="BFD %s" % case.bfdstate[0:5],
+                                        opstate="BFD  %s" % case.bfdstate[0:5],
                                         port=str(case.bfdaddr),
                                         description="{}, {}".format(case.get('neigh_rdns'),
                                                                     case.get('lastevent')),
@@ -193,7 +193,7 @@ def create_case_list():
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
-                                          opstate="ALM {}".format(case.alarm_type),
+                                          opstate="ALRM {}".format(case.alarm_type),
                                           port="",
                                           description=case.lastevent,
                                           )))
@@ -225,6 +225,7 @@ def runner(screen):
         screen.refresh()
 
     create_case_list()
+    draw(screen)
 
     while True:
         x = screen.getch()
@@ -302,7 +303,7 @@ def runner(screen):
 
 
 def draw(screen):
-    screen.addstr(0, 0, "cuRitz 0.1 Alpha Devel version")
+    screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server))
 
     screen.addstr(screen_size.height - 1, 0, "q=Quit  x=(de)select  c=Clear sel  s=Set State  u=Update History  <ENTER>=Show history <UP/DOWN> = Navigate"[:screen_size.length - 1])
     lb.draw()
@@ -416,4 +417,34 @@ def poll():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-p', '--profile', default='default',
+                        help='use Zino profile')
+    parser.add_argument('--profiles', action='store_true',
+                        help='List Zino profiles')
+    parser.add_argument('-c', '--config', nargs=1, default='~/.ritz.tcl',
+                        help='zino config file')
+    args = parser.parse_args()
+
+
+    conf = parse_config("~/.ritz.tcl")
+
+
+    if args.profile:
+      if not args.profile in conf.keys():
+        print("List of zino profiles:")
+        for profile in conf.keys():
+          print("  {}".format(profile))
+        sys.exit("Unable to find profile {}".format(args.profile))
+
+
+    if args.profiles:
+      print("List of zino profiles:")
+      for profile in conf.keys():
+        print("  {}".format(profile))
+      sys.exit(0)
+
+    c_server = conf[args.profile]["Server"]
+    c_user = conf[args.profile]["User"]
+    c_secret = conf[args.profile]["Secret"]
     curses.wrapper(main)
