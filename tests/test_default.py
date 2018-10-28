@@ -154,7 +154,7 @@ class DefaultTest(unittest.TestCase):
                 'updated': datetime.datetime(2018, 8, 1, 11, 45, 51)}
         self.assertTrue(dict_diff(sess.get_attributes(32802), test))
 
-        test = {'alarm_count': '1',
+        test = {'alarm_count': 1,
                 'alarm_type': 'yellow',
                 'id': 34978,
                 'lastevent': 'alarms went from 0 to 1',
