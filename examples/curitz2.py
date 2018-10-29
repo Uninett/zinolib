@@ -191,7 +191,7 @@ def create_case_list():
                                                                     case.get('lastevent')),
                                         ), color))
                 elif case.type == caseType.REACHABILITY:
-                    if case.reachability == 'unrechable' and case.state == caseState.OPEN:
+                    if case.reachability == 'no-response' and case.state == caseState.OPEN:
                         color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
@@ -201,7 +201,7 @@ def create_case_list():
                                         description="",
                                         ), color))
                 elif case.type == caseType.ALARM:
-                    if case.alarm_type == 'red' and case.state == caseState.OPEN:
+                    if case.state == caseState.OPEN and case.alarm_count > 0:
                         color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(

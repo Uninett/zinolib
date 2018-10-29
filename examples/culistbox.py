@@ -47,7 +47,7 @@ class listbox():
               if isinstance(self.elements[i], BoxElement):
                 curr_element = self.elements[i]
               elif isinstance(self.elements[i], str):
-                curr_element = BoxElement(i, self.elements[i])
+                curr_element = BoxElement(i, self.elements[i], [])
               else:
                 raise ValueError("LogLine is not a string or BoxElement")
               if len(self.elements) == 0:
