@@ -85,6 +85,14 @@ def uiShowLog(screen, caseid):
                 lines.append("  {}".format(l))
     uiShowLogWindow(screen, "Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
 
+def uiShowAttr(screen, caseid):
+    global cases
+    lines = []
+    for line in cases[caseid]._attrs:
+        lines.append("{:<15} : {:>}".format(line, repr(cases[caseid]._attrs[line])))
+
+    uiShowLogWindow(screen, "Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
+
 
 def strfdelta(tdelta, fmt):
     """
@@ -309,6 +317,8 @@ def runner(screen):
             else:
                 uiSetState(screen, [lb.active.id])
             curses.flash()
+        elif x == ord("="):
+          uiShowAttr(screen, lb.active.id)
         elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
             uiShowLog(screen, lb.active.id)
 
@@ -390,7 +400,8 @@ def uiUpdateCaseWindow(screen, number):
     border = curses.newwin(9, 62, 4, 9)
     textbox = curses.newwin(5, 60, 6, 10)
     border.box()
-    border.addstr(0, 1, "Add new history line - ctrl+g=send abort=ctrl+c")
+    border.addstr(0, 1, "Add new history line")
+    border.addstr(8,1, "abort=ctrl+c    ctrl+g=send")
     border.addstr(1, 1, "{} case(s) selected for update".format(number))
     border.refresh()
     p = curses.textpad.Textbox(textbox)
