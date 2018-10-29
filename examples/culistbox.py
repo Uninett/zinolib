@@ -1,5 +1,5 @@
 import curses
-from typing import NamedTuple
+from typing import NamedTuple, List
 import logging
 log = logging.getLogger("cuRitz")
 
@@ -7,7 +7,9 @@ log = logging.getLogger("cuRitz")
 BoxSize = NamedTuple('boxSize', [('height', int),
                                  ('length', int)])
 BoxElement = NamedTuple('boxElement', [('id', int),
-                                       ('text', str)])
+                                       ('text', str),
+                                       ('font_args', List)])
+
 
 class listbox():
     """
@@ -58,11 +60,13 @@ class listbox():
                                       "%s" % (curr_element.text)[0:self.size.length - 2],
                                       self.highlightText)
                   else:
+                      # Support colors
+                      c = curr_element.font_args if curr_element.font_args else [self.normalText]
                       # This is a normal element
                       self.box.addstr(i + 1 - page_start,
                                       1,
                                       ("%s" % curr_element.text)[0:self.size.length - 2],
-                                      self.normalText)
+                                      *c)
                   if i == len(self) - 1:     # Len(self) returns the current length of the list
                       break
 

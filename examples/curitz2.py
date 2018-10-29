@@ -106,6 +106,8 @@ def main(screen):
     screen.timeout(10000)
 
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
+    curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
+
     curses.curs_set(0)
 
     screen_size = BoxSize(*screen.getmaxyx())
@@ -156,23 +158,30 @@ def create_case_list():
                 common['admstate'] = case.state.value[:7]
                 common['age'] = strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}")
                 common['priority'] = case.priority
+                color = []
                 if case.type == caseType.PORTSTATE:
+                    if case.portstate == 'down' and case.state == caseState.OPEN:
+                        color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
                                           opstate="PORT %s" % case.portstate[0:5],
                                           port=interfaceRenamer(case.port),
                                           description=case.get("descr", ""),
-                                          )))
+                                          ), color))
                 elif case.type == caseType.BGP:
+                    if case.bgpos == 'down' and case.state == caseState.OPEN:
+                        color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
                                           opstate="BGP  %s" % case.bgpos[0:5],
                                           port="AS{}".format(case.remote_as), #str(case.remote_addr),
                                           description=case.get("lastevent", ""),
-                                          )))
+                                          ), color))
                 elif case.type == caseType.BFD:
+                    if case.bfdstate == 'down' and case.state == caseState.OPEN:
+                        color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
@@ -180,23 +189,27 @@ def create_case_list():
                                         port=str(case.bfdaddr),
                                         description="{}, {}".format(case.get('neigh_rdns'),
                                                                     case.get('lastevent')),
-                                        )))
+                                        ), color))
                 elif case.type == caseType.REACHABILITY:
+                    if case.reachability == 'unrechable' and case.state == caseState.OPEN:
+                        color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
                                         opstate=case.reachability,
                                         port="",
                                         description="",
-                                        )))
+                                        ), color))
                 elif case.type == caseType.ALARM:
+                    if case.alarm_type == 'red' and case.state == caseState.OPEN:
+                        color = [curses.color_pair(10)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
                                           opstate="ALRM {}".format(case.alarm_type),
                                           port="",
                                           description=case.lastevent,
-                                          )))
+                                          ), color))
                 else:
                   log.error("Unable to create table for case {}".format(case.id))
                   log.error(repr(case._attrs))
