@@ -185,7 +185,7 @@ def create_case_list():
                                           **common,
                                           opstate="BGP  %s" % case.bgpos[0:5],
                                           port="AS{}".format(case.remote_as), #str(case.remote_addr),
-                                          description=case.get("lastevent", ""),
+                                          description="%s %s" % (str(case.remote_addr), case.get("lastevent", "")),
                                           ), color))
                 elif case.type == caseType.BFD:
                     if case.bfdstate == 'down' and case.state == caseState.OPEN:
