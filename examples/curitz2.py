@@ -169,11 +169,17 @@ def create_case_list():
                 common['age'] = strfdelta(age, "{days:2d}d {hours:02}:{minutes:02}")
                 common['priority'] = case.priority
                 color = []
+                if args.nocolor:
+                  cRed = [curses.A_BOLD]
+                  cYellow = []
+                else:
+                  cRed = [curses.color_pair(10)]
+                  cYellow = [curses.color_pair(11)]
                 if case.type == caseType.PORTSTATE:
                     if case.portstate == 'down' and case.state == caseState.OPEN:
-                        color = [curses.color_pair(10)]
+                        color = cRed
                     elif case.portstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
-                        color = [curses.color_pair(11)]
+                        color = cYellow
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
@@ -183,9 +189,9 @@ def create_case_list():
                                           ), color))
                 elif case.type == caseType.BGP:
                     if case.bgpos == 'down' and case.state == caseState.OPEN:
-                        color = [curses.color_pair(10)]
+                        color = cRed
                     elif case.bgpos == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
-                        color = [curses.color_pair(11)]
+                        color = cYellow
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
@@ -195,9 +201,9 @@ def create_case_list():
                                           ), color))
                 elif case.type == caseType.BFD:
                     if case.bfdstate == 'down' and case.state == caseState.OPEN:
-                        color = [curses.color_pair(10)]
+                        color = cRed
                     elif case.bfdstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
-                        color = [curses.color_pair(11)]
+                        color = cYellow
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
@@ -208,9 +214,9 @@ def create_case_list():
                                         ), color))
                 elif case.type == caseType.REACHABILITY:
                     if case.reachability == 'no-response' and case.state == caseState.OPEN:
-                        color = [curses.color_pair(10)]
+                        color = cRed
                     elif case.reachability == 'no-response' and case.state in [caseState.WORKING, caseState.WAITING]:
-                        color = [curses.color_pair(11)]
+                        color = cYellow
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
@@ -220,9 +226,9 @@ def create_case_list():
                                         ), color))
                 elif case.type == caseType.ALARM:
                     if case.alarm_count > 0 and case.state == caseState.OPEN:
-                        color = [curses.color_pair(10)]
+                        color = cRed
                     elif case.alarm_count > 0 and case.state in [caseState.WORKING, caseState.WAITING]:
-                        color = [curses.color_pair(11)]
+                        color = cYellow
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
@@ -338,7 +344,7 @@ def runner(screen):
 
 
 def draw(screen):
-    screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server))
+    screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server), curses.A_BOLD)
 
     screen.addstr(screen_size.height - 1, 0, "q=Quit  x=(de)select  c=Clear sel  s=Set State  u=Update History  <ENTER>=Show history <UP/DOWN> = Navigate"[:screen_size.length - 1])
     lb.draw()
@@ -460,6 +466,8 @@ if __name__ == "__main__":
                         help='List Zino profiles')
     parser.add_argument('-c', '--config', nargs=1, default='~/.ritz.tcl',
                         help='zino config file')
+    parser.add_argument('--nocolor', action='store_true',
+                        help='Show client in black-n-white mode')
     args = parser.parse_args()
 
 
