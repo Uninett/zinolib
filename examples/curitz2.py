@@ -115,6 +115,8 @@ def main(screen):
 
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
     curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
+    curses.init_pair(11, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+
 
     curses.curs_set(0)
 
@@ -170,6 +172,8 @@ def create_case_list():
                 if case.type == caseType.PORTSTATE:
                     if case.portstate == 'down' and case.state == caseState.OPEN:
                         color = [curses.color_pair(10)]
+                    elif case.portstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
+                        color = [curses.color_pair(11)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
@@ -180,6 +184,8 @@ def create_case_list():
                 elif case.type == caseType.BGP:
                     if case.bgpos == 'down' and case.state == caseState.OPEN:
                         color = [curses.color_pair(10)]
+                    elif case.bgpos == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
+                        color = [curses.color_pair(11)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
@@ -190,6 +196,8 @@ def create_case_list():
                 elif case.type == caseType.BFD:
                     if case.bfdstate == 'down' and case.state == caseState.OPEN:
                         color = [curses.color_pair(10)]
+                    elif case.bfdstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
+                        color = [curses.color_pair(11)]
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
@@ -201,6 +209,8 @@ def create_case_list():
                 elif case.type == caseType.REACHABILITY:
                     if case.reachability == 'no-response' and case.state == caseState.OPEN:
                         color = [curses.color_pair(10)]
+                    elif case.reachability == 'no-response' and case.state in [caseState.WORKING, caseState.WAITING]:
+                        color = [curses.color_pair(11)]
                     lb.add(BoxElement(case.id,
                                     table_structure.format(
                                         **common,
@@ -209,8 +219,10 @@ def create_case_list():
                                         description="",
                                         ), color))
                 elif case.type == caseType.ALARM:
-                    if case.state == caseState.OPEN and case.alarm_count > 0:
+                    if case.alarm_count > 0 and case.state == caseState.OPEN:
                         color = [curses.color_pair(10)]
+                    elif case.alarm_count > 0 and case.state in [caseState.WORKING, caseState.WAITING]:
+                        color = [curses.color_pair(11)]
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
                                           **common,
