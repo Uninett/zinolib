@@ -7,6 +7,7 @@ from culistbox import listbox, BoxSize, BoxElement
 import datetime
 import argparse
 import sys
+import textwrap
 
 
 log = logging.getLogger("cuRitz")
@@ -71,15 +72,26 @@ def uiShowLogWindow(screen, heading, lines):
         box.draw()
 
 
-def uiShowLog(screen, caseid):
+def uiShowHistory(screen, caseid):
     global cases
     lines = []
     for line in cases[caseid].history:
-        lines.append("{} {}".format(line["date"], line["header"][1]))
-        if not line["system"]:
-            for l in line["log"]:
-                lines.append("  {}".format(l))
-    uiShowLogWindow(screen, "Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
+        lines.append("{} {}".format(line["date"], line["header"]))
+        for l in line["log"]:
+            for wrapped_line in textwrap.wrap(l, 78, break_long_words=False):
+                lines.append("  {}".format(wrapped_line))
+    uiShowLogWindow(screen, "History Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
+
+
+def uiShowLog(screen, caseid):
+    global cases
+    lines = []
+    for line in cases[caseid].log:
+        lines.append("{}".format(line["date"]))
+        for l in textwrap.wrap(line["header"], 78, break_long_words=False):
+            lines.append("  {}".format(l))
+
+    uiShowLogWindow(screen, "System Log Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
 
 
 def uiShowAttr(screen, caseid):
@@ -334,6 +346,8 @@ def runner(screen):
         elif x == ord("="):
             uiShowAttr(screen, lb.active.id)
         elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
+            uiShowHistory(screen, lb.active.id)
+        elif x == ord('l'):  # [ENTER], CR or LF
             uiShowLog(screen, lb.active.id)
 
         draw(screen)
@@ -341,8 +355,9 @@ def runner(screen):
 
 def draw(screen):
     screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server), curses.A_BOLD)
+    screen.addstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1])
 
-    screen.addstr(screen_size.height - 1, 0, "q=Quit  x=(de)select  c=Clear sel  s=Set State  u=Update History  <ENTER>=Show history <UP/DOWN> = Navigate"[:screen_size.length - 1])
+    screen.addstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1])
     lb.draw()
 
 

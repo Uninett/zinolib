@@ -130,15 +130,15 @@ def _decode_history(logarray):
       curr["log"] = []
 
       header = log.split(" ", 1)
-      curr["header"] = header
+      # curr["raw_line"] = log
+      # curr["raw_header"] = header
       curr["date"] = datetime.fromtimestamp(int(header[0]))
-      curr["system"] = False
+      curr["header"] = header[1]
 
       if header[1].count(" ") is not 0:
         # this is a short system log
-        curr["log"] = [header[1]]
-        curr["user"] = re.match(".*\((\w+)\)$", header[1]).group(1)
-        curr["system"] = True
+        curr["log"] = []
+        curr["user"] = "system"  # re.match(".*\((\w+)\)$", header[1]).group(1)
         ret.append(curr)
       else:
         curr["user"] = header[1]
@@ -496,7 +496,7 @@ class ritz():
 
     data, header = self._read_command(b"getlog %d\r\n" % caseid)
 
-    return data
+    return _decode_history(data)
 
   def add_history(self, caseid, message):
     """Add a history element on a CaseID"""
