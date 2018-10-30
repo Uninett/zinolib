@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-from ritz import ritz, parse_config, notifier, caseType, Case, caseState
+from ritz import ritz, parse_config, notifier, caseType, caseState
 import curses
 import curses.textpad
-from math import ceil
-from time import sleep
-from pprint import pprint
-from typing import NamedTuple
 import logging
 from culistbox import listbox, BoxSize, BoxElement
 import datetime
@@ -19,6 +15,7 @@ log.addHandler(logging.FileHandler('curitz.log'))
 
 __version__ = "0.2.0"
 
+
 def interfaceRenamer(s):
     s = s.replace("HundredGigE", "Hu")
     s = s.replace("GigabitEthernet", "Gi")
@@ -30,7 +27,6 @@ def interfaceRenamer(s):
     s = s.replace("Tunnel", "Tu")
     s = s.replace("Ethernet", "Eth")
     s = s.replace("Vlan", "Vl")
-
     return s
 
 
@@ -85,6 +81,7 @@ def uiShowLog(screen, caseid):
                 lines.append("  {}".format(l))
     uiShowLogWindow(screen, "Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
 
+
 def uiShowAttr(screen, caseid):
     global cases
     lines = []
@@ -117,14 +114,12 @@ def main(screen):
     curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
     curses.init_pair(11, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
-
     curses.curs_set(0)
 
     screen_size = BoxSize(*screen.getmaxyx())
     lb = listbox(screen_size.height - 8, screen_size.length, 1, 0)
     screen.clear()
     screen.refresh()
-
 
     table_structure = "{selected:1} {opstate:11} {admstate:8} {age:9} {router:16} {port:14} {description}"
 
@@ -170,11 +165,11 @@ def create_case_list():
                 common['priority'] = case.priority
                 color = []
                 if args.nocolor:
-                  cRed = [curses.A_BOLD]
-                  cYellow = []
+                    cRed = [curses.A_BOLD]
+                    cYellow = []
                 else:
-                  cRed = [curses.color_pair(10)]
-                  cYellow = [curses.color_pair(11)]
+                    cRed = [curses.color_pair(10)]
+                    cYellow = [curses.color_pair(11)]
                 if case.type == caseType.PORTSTATE:
                     if case.portstate == 'down' and case.state == caseState.OPEN:
                         color = cRed
@@ -186,7 +181,7 @@ def create_case_list():
                                           opstate="PORT %s" % case.portstate[0:5],
                                           port=interfaceRenamer(case.port),
                                           description=case.get("descr", ""),
-                                          ), color))
+                                      ), color))
                 elif case.type == caseType.BGP:
                     if case.bgpos == 'down' and case.state == caseState.OPEN:
                         color = cRed
@@ -196,34 +191,34 @@ def create_case_list():
                                       table_structure.format(
                                           **common,
                                           opstate="BGP  %s" % case.bgpos[0:5],
-                                          port="AS{}".format(case.remote_as), #str(case.remote_addr),
+                                          port="AS{}".format(case.remote_as),
                                           description="%s %s" % (str(case.remote_addr), case.get("lastevent", "")),
-                                          ), color))
+                                      ), color))
                 elif case.type == caseType.BFD:
                     if case.bfdstate == 'down' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.bfdstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
                     lb.add(BoxElement(case.id,
-                                    table_structure.format(
-                                        **common,
-                                        opstate="BFD  %s" % case.bfdstate[0:5],
-                                        port=str(case.bfdaddr),
-                                        description="{}, {}".format(case.get('neigh_rdns'),
-                                                                    case.get('lastevent')),
-                                        ), color))
+                                      table_structure.format(
+                                          **common,
+                                          opstate="BFD  %s" % case.bfdstate[0:5],
+                                          port=str(case.bfdaddr),
+                                          description="{}, {}".format(case.get('neigh_rdns'),
+                                                                      case.get('lastevent'))
+                                      ), color))
                 elif case.type == caseType.REACHABILITY:
                     if case.reachability == 'no-response' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.reachability == 'no-response' and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
                     lb.add(BoxElement(case.id,
-                                    table_structure.format(
-                                        **common,
-                                        opstate=case.reachability,
-                                        port="",
-                                        description="",
-                                        ), color))
+                                      table_structure.format(
+                                          **common,
+                                          opstate=case.reachability,
+                                          port="",
+                                          description="",
+                                      ), color))
                 elif case.type == caseType.ALARM:
                     if case.alarm_count > 0 and case.state == caseState.OPEN:
                         color = cRed
@@ -235,7 +230,7 @@ def create_case_list():
                                           opstate="ALRM {}".format(case.alarm_type),
                                           port="",
                                           description=case.lastevent,
-                                          ), color))
+                                      ), color))
                 else:
                   log.error("Unable to create table for case {}".format(case.id))
                   log.error(repr(case._attrs))
@@ -243,6 +238,7 @@ def create_case_list():
                 log.exception("Exception while createing table entry for case {}".format(case.id))
                 log.fatal(repr(case._attrs))
                 raise
+
 
 def runner(screen):
     global cases, cases_selected, screen_size
@@ -336,7 +332,7 @@ def runner(screen):
                 uiSetState(screen, [lb.active.id])
             curses.flash()
         elif x == ord("="):
-          uiShowAttr(screen, lb.active.id)
+            uiShowAttr(screen, lb.active.id)
         elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
             uiShowLog(screen, lb.active.id)
 
@@ -419,7 +415,7 @@ def uiUpdateCaseWindow(screen, number):
     textbox = curses.newwin(5, 60, 6, 10)
     border.box()
     border.addstr(0, 1, "Add new history line")
-    border.addstr(8,1, "abort=ctrl+c    ctrl+g=send")
+    border.addstr(8, 1, "Ctrl+C to Abort    Ctrl+G to send    Ctrl+H = Backspace")
     border.addstr(1, 1, "{} case(s) selected for update".format(number))
     border.refresh()
     p = curses.textpad.Textbox(textbox)
@@ -470,23 +466,20 @@ if __name__ == "__main__":
                         help='Show client in black-n-white mode')
     args = parser.parse_args()
 
-
     conf = parse_config("~/.ritz.tcl")
 
-
     if args.profile:
-      if not args.profile in conf.keys():
-        print("List of zino profiles:")
-        for profile in conf.keys():
-          print("  {}".format(profile))
-        sys.exit("Unable to find profile {}".format(args.profile))
-
+        if args.profile not in conf.keys():
+            print("List of zino profiles:")
+            for profile in conf.keys():
+                print("  {}".format(profile))
+            sys.exit("Unable to find profile {}".format(args.profile))
 
     if args.profiles:
-      print("List of zino profiles:")
-      for profile in conf.keys():
-        print("  {}".format(profile))
-      sys.exit(0)
+        print("List of zino profiles:")
+        for profile in conf.keys():
+            print("  {}".format(profile))
+        sys.exit(0)
 
     c_server = conf[args.profile]["Server"]
     c_user = conf[args.profile]["User"]
