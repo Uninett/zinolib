@@ -78,7 +78,7 @@ def uiShowHistory(screen, caseid):
     for line in cases[caseid].history:
         lines.append("{} {}".format(line["date"], line["header"]))
         for l in line["log"]:
-            for wrapped_line in textwrap.wrap(l, 78, break_long_words=False):
+            for wrapped_line in textwrap.wrap(l, 76, break_long_words=False):
                 lines.append("  {}".format(wrapped_line))
     uiShowLogWindow(screen, "History Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
 
@@ -88,7 +88,7 @@ def uiShowLog(screen, caseid):
     lines = []
     for line in cases[caseid].log:
         lines.append("{}".format(line["date"]))
-        for l in textwrap.wrap(line["header"], 78, break_long_words=False):
+        for l in textwrap.wrap(line["header"], 76, break_long_words=False):
             lines.append("  {}".format(l))
 
     uiShowLogWindow(screen, "System Log Case {} - {}".format(caseid, cases[caseid].get("descr", "")), lines)
