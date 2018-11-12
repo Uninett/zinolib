@@ -41,7 +41,7 @@ def main():
     if not fqdn.endswith(".uninett.no"):
         sys.exit("Wooth? sysname does not end with uninett.no?")
 
-    print("Creating Maintenance on physical interfaces")
+    print("Removing Maintenance on physical interfaces")
     with ritz(server, username=user, password=secret) as s:
         try:
             # Actually searching for ', fqdn.domain.ext'
