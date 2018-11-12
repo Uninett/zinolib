@@ -55,13 +55,14 @@ def main():
                     continue
 
                 if attr["type"] not in ["portstate"]:
-                    #print("case {id} is not a portstate".format(**attr))
+                    print("case {id} is not a portstate".format(**attr))
                     continue
 
                 #print("Checking case {id}: {descr}".format(**attr))
 
                 if not re.search(r", {}".format(fqdn.replace(".", r"\.")), attr["descr"]):
-                  continue
+                    print("Did not match: {}".format(attr["descr"]))
+                    continue
 
                 print("Found case {id}: {descr}".format(**attr))
                 if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
