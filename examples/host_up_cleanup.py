@@ -59,10 +59,10 @@ def main():
                     continue
 
                 #print("Checking case {id}: {descr}".format(**attr))
-                
+
                 if not re.search(r", {}".format(fqdn.replace(".", r"\.")), attr["descr"]):
                   continue
-                  
+
                 print("Found case {id}: {descr}".format(**attr))
                 if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
                   # This case is not tampered with, just close it :)
