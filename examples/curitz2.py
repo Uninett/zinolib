@@ -163,7 +163,7 @@ def create_case_list():
         router="Router",
         port="Port",
         description="Description",
-        age="Age")
+        age=" Age")
     for c in sorted_cases:
         if c in visible_cases:
             case = cases[c]
