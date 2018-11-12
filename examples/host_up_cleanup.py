@@ -4,7 +4,7 @@ import re
 import sys
 import os
 import socket
-from ritz import ritz
+from ritz import ritz, caseType, caseState
 from datetime import datetime, timedelta
 import traceback
 import re
@@ -54,7 +54,7 @@ def main():
                     #print("Invalid case {id}".format(id=id))
                     continue
 
-                if attr["type"] not in ["portstate"]:
+                if attr["type"] not in [caseType.PORTSTATE]:
                     print("case {id} is not a portstate".format(**attr))
                     continue
 
@@ -65,7 +65,7 @@ def main():
                     continue
 
                 print("Found case {id}: {descr}".format(**attr))
-                if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
+                if attr["portstate"] == "up" and attr["state"] in [caseState.IGNORED, caseState.OPEN]:
                   # This case is not tampered with, just close it :)
                   try:
                       s.clear_flapping(attr["router"], attr["ifindex"])
