@@ -163,7 +163,7 @@ def create_case_list():
         router="Router",
         port="Port",
         description="Description",
-        age="Age")
+        age=" Age")
     for c in sorted_cases:
         if c in visible_cases:
             case = cases[c]
@@ -183,9 +183,9 @@ def create_case_list():
                     cRed = [curses.color_pair(10)]
                     cYellow = [curses.color_pair(11)]
                 if case.type == caseType.PORTSTATE:
-                    if case.portstate == 'down' and case.state == caseState.OPEN:
+                    if case.portstate in ['down', 'lowerLayerDown'] and case.state == caseState.OPEN:
                         color = cRed
-                    elif case.portstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
+                    elif case.portstate in ['down', 'lowerLayerDown'] and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
                     lb.add(BoxElement(case.id,
                                       table_structure.format(
