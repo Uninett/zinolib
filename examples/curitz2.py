@@ -369,10 +369,15 @@ def uiUpdateCases(screen, caseids):
 
 
 def uiSetState(screen, caseids):
-    update = uiSetStateWindow(screen, len(caseids))
-    if update:
+    new_state = uiSetStateWindow(screen, len(caseids))
+    if new_state:
         for case in caseids:
-            cases[case].set_state(update)
+            cases[case].set_state(new_state)
+        # Remove selection when case is closed
+        # It's not posilbe to change the case when it's closed on the server
+        if new_state in ['closed']:
+            cases_selected.clear()
+            create_case_list()
 
 
 def uiSetStateWindow(screen, number):
