@@ -4,7 +4,7 @@ import re
 import sys
 import os
 import socket
-from ritz import ritz
+from ritz import ritz, caseType, caseState
 from datetime import datetime, timedelta
 import traceback
 import re
@@ -41,7 +41,7 @@ def main():
     if not fqdn.endswith(".uninett.no"):
         sys.exit("Wooth? sysname does not end with uninett.no?")
 
-    print("Creating Maintenance on physical interfaces")
+    print("Removing Maintenance on physical interfaces")
     with ritz(server, username=user, password=secret) as s:
         try:
             # Actually searching for ', fqdn.domain.ext'
@@ -49,25 +49,29 @@ def main():
             ids = s.get_caseids()
             for id in ids:
                 try:
-                    attr = s.get_attributes(id)
+                    attr = s.case(id)
                 except Exception as e:
+                    print(e)
                     #print("Invalid case {id}".format(id=id))
                     continue
-
-                if attr["type"] not in ["portstate"]:
-                    #print("case {id} is not a portstate".format(**attr))
+                if attr.type not in [caseType.PORTSTATE]:
+                    print("case {id} is not a portstate".format(**attr))
                     continue
 
                 #print("Checking case {id}: {descr}".format(**attr))
-                
-                if not re.search(r", {}".format(fqdn.replace(".", r"\.")), attr["descr"]):
-                  continue
-                  
+                #Check if case has a descr
+                if not attr.has_key("descr"):
+                    continue
+
+                if not re.search(r", {}".format(fqdn.replace(".", r"\.")), attr.descr):
+                    print("Did not match: {}".format(attr.descr))
+                    continue
+
                 print("Found case {id}: {descr}".format(**attr))
-                if attr["portstate"] == "up" and attr["state"] in ["ignored", "open"]:
+                if attr.portstate == "up" and attr.state in [caseState.IGNORED, caseState.OPEN]:
                   # This case is not tampered with, just close it :)
                   try:
-                      s.clear_flapping(attr["router"], attr["ifindex"])
+                      s.clear_flapping(attr.router, attr.ifindex)
 
                       s.add_history(id, "This case is automatically closed by {filename}".format(filename=os.path.basename(__file__)))
                       s.set_state(id, "closed")
