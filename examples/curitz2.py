@@ -286,8 +286,9 @@ def runner(screen):
         screen.addstr(0, screen_size.length - 8, "ch:{:3}".format(x))
 
         while poll():
+            screen.addstr(0, screen_size.length - 16, "Polling")
             update_ui = 999
-            
+        screen.addstr(0, screen_size.length - 16, "        ")
 
         if x == -1:
             # Nothing happened, check for changes
