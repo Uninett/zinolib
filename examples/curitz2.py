@@ -65,7 +65,7 @@ def uiShowLogWindow(screen, heading, lines):
 
         elif x == curses.KEY_DOWN:
             # Move down one element in list
-            if box.active_element < len(lb) - 1:
+            if box.active_element < len(lines) - 1:
                 box.active_element += 1
         else:
             return
