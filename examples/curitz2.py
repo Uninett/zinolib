@@ -153,7 +153,7 @@ def sortCases(casedict, field="lasttrans"):
 def create_case_list():
     global cases, visible_cases, lb, cases_selected
     visible_cases = cases.keys()
-    sorted_cases = sortCases(cases, field="id")
+    sorted_cases = sortCases(cases, field="updated")
 
     lb.clear()
     lb.heading = table_structure.format(
