@@ -273,6 +273,7 @@ def runner(screen):
 
     create_case_list()
     draw(screen)
+    update_ui = 0
 
     while True:
         x = screen.getch()
@@ -285,7 +286,8 @@ def runner(screen):
         screen.addstr(0, screen_size.length - 8, "ch:{:3}".format(x))
 
         while poll():
-            create_case_list()
+            update_ui = 999
+            
 
         if x == -1:
             # Nothing happened, check for changes
@@ -325,12 +327,12 @@ def runner(screen):
                 cases_selected.remove(lb.active.id)
             else:
                 cases_selected.append(lb.active.id)
-            create_case_list()
+            update_ui = 999
 
         elif x == ord('c'):
             # Clear selection
             cases_selected.clear()
-            create_case_list()
+            update_ui = 999
         elif x == ord('u'):
             # Update selected cases
             if cases_selected:
@@ -350,6 +352,11 @@ def runner(screen):
             uiShowHistory(screen, lb.active.id)
         elif x == ord('l'):  # [ENTER], CR or LF
             uiShowLog(screen, lb.active.id)
+
+        if update_ui > 12:
+            create_case_list()
+            update_ui = 0
+        update_ui += 1
 
         draw(screen)
 
