@@ -120,7 +120,7 @@ def main(screen):
     curses.cbreak()
     curses.start_color()
     screen.keypad(1)
-    screen.timeout(10000)
+    screen.timeout(5 * 1000)  # mSec timeout
 
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
     curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -283,7 +283,8 @@ def runner(screen):
             lb.resize(screen_size.height - 8, screen_size.length)
 
         screen.addstr(0, screen_size.length - 8, "ch:{:3}".format(x))
-        if poll():
+
+        while poll():
             create_case_list()
 
         if x == -1:
@@ -472,6 +473,7 @@ def poll():
             log.debug("unknown notify entry: %s for id %s" % (update.type, update.id))
             return False
         return True
+    return False
 
 
 if __name__ == "__main__":
