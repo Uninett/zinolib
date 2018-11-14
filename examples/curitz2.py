@@ -346,6 +346,16 @@ def runner(screen):
             else:
                 uiSetState(screen, [lb.active.id])
             curses.flash()
+        elif x == ord('y'):
+            cases_to_delete = []
+            for id in cases:
+                if cases[id].state == caseState.CLOSED:
+                    cases_to_delete.append(id)
+                    update_ui = 999
+            for id in cases_to_delete:
+                cases.pop(id, None)
+                if id in cases_selected:
+                    cases_selected.remove(id)
         elif x == ord("="):
             uiShowAttr(screen, lb.active.id)
         elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
@@ -363,6 +373,12 @@ def runner(screen):
 
 def draw(screen):
     screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server), curses.A_BOLD)
+    screen.addstr(screen_size.height - 6, 0, " " * screen_size.length)
+    screen.addstr(screen_size.height - 5, 0, " " * screen_size.length)
+    screen.addstr(screen_size.height - 4, 0, " " * screen_size.length)
+
+    screen.addstr(screen_size.height - 3, 0, "y=Remove Cloded"[:screen_size.length - 1])
+
     screen.addstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1])
 
     screen.addstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1])
