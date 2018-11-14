@@ -120,7 +120,7 @@ def main(screen):
     curses.cbreak()
     curses.start_color()
     screen.keypad(1)
-    screen.timeout(5 * 1000)  # mSec timeout
+    screen.timeout(1 * 1000)  # mSec timeout
 
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
     curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
