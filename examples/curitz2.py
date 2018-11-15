@@ -114,7 +114,7 @@ def strfdelta(tdelta, fmt):
 
 
 def main(screen):
-    global lb, session, notifier, cases, table_structure, screen_size
+    global lb, infobox, session, notifier, cases, table_structure, screen_size
 
     curses.noecho()
     curses.cbreak()
@@ -127,9 +127,10 @@ def main(screen):
     curses.init_pair(11, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
     curses.curs_set(0)
-
     screen_size = BoxSize(*screen.getmaxyx())
-    lb = listbox(screen_size.height - 8, screen_size.length, 1, 0)
+    infobox = listbox(8, screen_size.length, screen_size.height-8, 0)
+    lb = listbox(screen_size.height - 6, screen_size.length, 1, 0)
+
     screen.clear()
     screen.refresh()
 
@@ -281,7 +282,7 @@ def runner(screen):
         if curses.is_term_resized(*screen_size):
             # Screen is resized
             screen_size = BoxSize(*screen.getmaxyx())
-            lb.resize(screen_size.height - 8, screen_size.length)
+            lb.resize(screen_size.height - 6, screen_size.length)
 
         screen.addstr(0, screen_size.length - 8, "ch:{:3}".format(x))
 
@@ -374,15 +375,14 @@ def runner(screen):
 
 def draw(screen):
     screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server), curses.A_BOLD)
-    screen.addstr(screen_size.height - 6, 0, " " * screen_size.length)
-    screen.addstr(screen_size.height - 5, 0, " " * screen_size.length)
-    screen.addstr(screen_size.height - 4, 0, " " * screen_size.length)
+    infobox.clear()
+    screen.addnstr(screen_size.height - 4, 0, " " * screen_size.length, screen_size.length)
 
-    screen.addstr(screen_size.height - 3, 0, "y=Remove Cloded"[:screen_size.length - 1])
+    screen.addnstr(screen_size.height - 3, 0, "y=Remove Closed"[:screen_size.length - 1], screen_size.length)
 
-    screen.addstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1])
+    screen.addnstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1], screen_size.length)
 
-    screen.addstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1])
+    screen.addnstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1], screen_size.length)
     lb.draw()
 
 
