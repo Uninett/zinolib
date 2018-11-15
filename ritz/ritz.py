@@ -105,6 +105,7 @@ class caseState(enum.Enum):
     IGNORED = 'ignored'
     CLOSED = 'closed'
 
+
 class caseType(enum.Enum):
     """Type field of a ritz.Case object"""
     PORTSTATE = 'portstate'
@@ -112,8 +113,6 @@ class caseType(enum.Enum):
     BFD = 'bfd'
     REACHABILITY = 'reachability'
     ALARM = 'alarm'
-
-
 
 
 def _decode_history(logarray):
@@ -222,7 +221,7 @@ class Case():
       return self._zino.get_log(self._caseid)
     else:
       self.__getattribute__(name)
-      #raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
+      # raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
     return self
 
   def __getitem__(self, key):
@@ -431,7 +430,7 @@ class ritz():
     caseinfo = {}
     for d in data:
       v = d.split(":", 1)
-      caseinfo[v[0].strip().lower().replace("-","_")] = v[1].strip()
+      caseinfo[v[0].strip().lower().replace("-", "_")] = v[1].strip()
 
     caseinfo['id'] = int(caseinfo['id'])
     caseinfo['opened'] = datetime.fromtimestamp(int(caseinfo['opened']))
@@ -632,10 +631,10 @@ class ritz():
     to_ts = mktime(to_t.timetuple())
 
     data, header = self._read_command(b'pm add %d %d device %s %s\r\n' %
-                                 (from_ts,
-                                  to_ts,
-                                  m_type.encode(),
-                                  device.encode()))
+                                      (from_ts,
+                                       to_ts,
+                                       m_type.encode(),
+                                       device.encode()))
 
     # Check returncode
     if not header[0] == 200:
@@ -683,10 +682,10 @@ class ritz():
     to_ts = mktime(to_t.timetuple())
 
     data, header = self._read_command(b'pm add %d %d portstate intf-regexp %s %s\r\n' %
-                                 (from_ts,
-                                  to_ts,
-                                  device.encode(),
-                                  interface.encode()))
+                                      (from_ts,
+                                       to_ts,
+                                       device.encode(),
+                                       interface.encode()))
 
     # Check returncode
     if not header[0] == 200:
@@ -703,7 +702,6 @@ class ritz():
     to_t:     to timestamp
     description: interface description regex
     """
-
 
     # Adds a Maintenance period
     # pm add
@@ -731,9 +729,9 @@ class ritz():
     to_ts = mktime(to_t.timetuple())
 
     data, header = self._read_command(b'pm add %d %d portstate regexp %s\r\n' %
-                                 (from_ts,
-                                  to_ts,
-                                  description.encode()))
+                                      (from_ts,
+                                       to_ts,
+                                       description.encode()))
 
     # Check returncode
     if not header[0] == 200:
