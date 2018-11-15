@@ -944,12 +944,18 @@ class notifier:
             raise NotConnectedError("Not connected to server")
 
     if "\r\n" in self._buff:
-        line, self._buff = self._buff.split('\r\n', 1)
-        element = line.split(" ", 2)
-        id = int(element[0])
-        type = element[1]
-        text = element[2]
-        return notifierEntry(id, type, text)
+        try:
+            line, self._buff = self._buff.split('\r\n', 1)
+            element = line.split(" ", 2)
+            id = int(element[0])
+            type = element[1]
+            try:
+                text = element[2]
+            except IndexError:
+                text = ""
+            return notifierEntry(id, type, text)
+        except Exception:
+            raise ProtocolError("line: %s , _buff: %s".format(line, self._buff))
 
 
 if "__main__" == __name__:
