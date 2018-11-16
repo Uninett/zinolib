@@ -493,7 +493,7 @@ def poll():
             pass
         elif update.type == "scavenged":
             cases.pop(update.id, None)
-            if update.case in cases_selected:
+            if update.id in cases_selected:
                 cases_selected.remove(update.id)
         else:
             log.debug("unknown notify entry: %s for id %s" % (update.type, update.id))
