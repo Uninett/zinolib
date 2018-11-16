@@ -415,9 +415,10 @@ def draw(screen):
     screen.addstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1])
 
     screen.addstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1])
-
-    screen.refresh()
+    screen.noutrefresh()
     lb.draw()
+    curses.doupdate()
+
 
 
 def uiUpdateCases(screen, caseids):
