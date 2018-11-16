@@ -172,18 +172,17 @@ class DefaultTest(unittest.TestCase):
       with ritz("127.0.0.1", username="testuser", password="test") as sess:
           hist = sess.get_history(40959)
           test = {'date': datetime.datetime(2018, 10, 14, 3, 35, 52),
-                  'header': ['1539480952',
-                             'state change embryonic -> open (monitor)'],
-                  'user': 'monitor',
-                  'log': ['state change embryonic -> open (monitor)'],
-                  'system': True}
+                  'header': 'state change embryonic -> open (monitor)',
+                  'user': 'system',
+                  'log': [],
+                  }
           self.assertTrue(dict_diff(hist[0], test))
 
           test = {'date': datetime.datetime(2018, 10, 14, 11, 25, 23),
-                  'header': ['1539509123', 'runarb'],
+                  'header': 'runarb',
                   'user': 'runarb',
                   'log': ['Testmelding ifra pyRitz'],
-                  'system': False}
+                  }
           self.assertTrue(dict_diff(hist[1], test))
 
   def test_I_add_history(self):
@@ -194,9 +193,16 @@ class DefaultTest(unittest.TestCase):
   def test_J_get_log(self):
     with zinoemu(executor):
       with ritz("127.0.0.1", username="testuser", password="test") as sess:
-        test = ['1539480952 oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)',
-                '1539484557 oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)',
-                '1539485757 oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)']
+        test = [{'user': 'system',
+                 'header': 'oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)',
+                 'date': datetime.datetime(2018, 10, 14, 3, 35, 52), 'log': []},
+                {'user': 'system',
+                 'header': 'oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)',
+                 'date': datetime.datetime(2018, 10, 14, 4, 35, 57),
+                 'log': []},
+                {'user': 'system',
+                 'header': 'oslo-gw1 peer 193.108.152.34 AS 21357 was reset (now up)',
+                 'date': datetime.datetime(2018, 10, 14, 4, 55, 57), 'log': []}]
         self.assertTrue(sess.get_log(40959) == test)
 
   def test_K_set_state(self):
