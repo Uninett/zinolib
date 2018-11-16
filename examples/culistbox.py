@@ -33,7 +33,7 @@ class listbox():
         return self.size.height - 2
 
     def draw(self):
-        self.box.clear()
+        self.box.erase()
         self.box.box()
         self.box.addstr(0, 1, self.heading)
 
