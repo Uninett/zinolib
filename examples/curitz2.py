@@ -277,8 +277,13 @@ def runner(screen):
                           len(caselist)))
         screen.refresh()
 
+    screen.clear()
+    screen.refresh()
+
     create_case_list()
+    lb.draw()
     draw(screen)
+
     update_ui = 0
 
     while True:
@@ -384,10 +389,15 @@ def runner(screen):
         elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
             update_ui = 999
             uiShowHistory(screen, lb.active.id)
-            
-        elif x == ord('l'):  # [ENTER], CR or LF
+
+        elif x == ord('l'):
+            # [ENTER], CR or LF
             update_ui = 999
             uiShowLog(screen, lb.active.id)
+
+        elif x == 12:
+            # CTRL + L
+            update_ui = 999
 
         if update_ui > 12:
             create_case_list()
@@ -398,14 +408,15 @@ def runner(screen):
 
 
 def draw(screen):
+    screen.erase()
     screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server), curses.A_BOLD)
-    screen.addnstr(screen_size.height - 4, 0, " " * screen_size.length, screen_size.length)
+    screen.addstr(screen_size.height - 3, 0, "y=Remove Closed"[:screen_size.length - 1])
 
-    screen.addnstr(screen_size.height - 3, 0, "y=Remove Closed"[:screen_size.length - 1], screen_size.length)
+    screen.addstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1])
 
-    screen.addnstr(screen_size.height - 2, 0, "x=(de)select  c=Clear selection  s=Set State  u=Update History"[:screen_size.length - 1], screen_size.length)
+    screen.addstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1])
 
-    screen.addnstr(screen_size.height - 1, 0, "q=Quit  l=Show Logs   <ENTER>=Show history  <UP/DOWN>=Navigate "[:screen_size.length - 1], screen_size.length)
+    screen.refresh()
     lb.draw()
 
 
