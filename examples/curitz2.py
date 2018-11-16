@@ -5,7 +5,6 @@ import curses.textpad
 import logging
 from culistbox import listbox, BoxSize, BoxElement
 import datetime
-import time
 import argparse
 import sys
 import textwrap
@@ -372,7 +371,6 @@ def runner(screen):
         update_ui += 1
 
         draw(screen)
-        time.sleep( 10 )
 
 
 def draw(screen):
