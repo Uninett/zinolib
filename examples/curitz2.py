@@ -128,7 +128,7 @@ def main(screen):
 
     curses.curs_set(0)
     screen_size = BoxSize(*screen.getmaxyx())
-    infobox = listbox(8, screen_size.length, screen_size.height-8, 0)
+    infobox = listbox(8, screen_size.length, screen_size.height - 8, 0)
     lb = listbox(screen_size.height - 6, screen_size.length, 1, 0)
 
     screen.clear()
