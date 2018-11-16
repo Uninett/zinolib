@@ -114,7 +114,7 @@ def strfdelta(tdelta, fmt):
 
 
 def main(screen):
-    global lb, infobox, session, notifier, cases, table_structure, screen_size
+    global lb, session, notifier, cases, table_structure, screen_size
 
     curses.noecho()
     curses.cbreak()
@@ -134,7 +134,6 @@ def main(screen):
     except Exception:
         pass
     screen_size = BoxSize(*screen.getmaxyx())
-    infobox = listbox(8, screen_size.length, screen_size.height - 8, 0)
     lb = listbox(screen_size.height - 6, screen_size.length, 1, 0)
 
     screen.clear()
@@ -400,7 +399,6 @@ def runner(screen):
 
 def draw(screen):
     screen.addstr(0, 0, "cuRitz version {}  -  {}".format(__version__, c_server), curses.A_BOLD)
-    infobox.clear()
     screen.addnstr(screen_size.height - 4, 0, " " * screen_size.length, screen_size.length)
 
     screen.addnstr(screen_size.height - 3, 0, "y=Remove Closed"[:screen_size.length - 1], screen_size.length)
