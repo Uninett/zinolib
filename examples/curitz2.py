@@ -128,7 +128,7 @@ def main(screen):
 
     curses.curs_set(0)
     screen_size = BoxSize(*screen.getmaxyx())
-    infobox = listbox(8, screen_size.length, screen_size.height-8, 0)
+    infobox = listbox(8, screen_size.length, screen_size.height - 8, 0)
     lb = listbox(screen_size.height - 6, screen_size.length, 1, 0)
 
     screen.clear()
@@ -343,6 +343,7 @@ def runner(screen):
             update_ui = 999
             # Clear selection
             cases_selected.clear()
+            
         elif x == ord('u'):
             update_ui = 999
             # Update selected cases
@@ -350,6 +351,7 @@ def runner(screen):
                 uiUpdateCases(screen, cases_selected)
             else:
                 uiUpdateCases(screen, [lb.active.id])
+                
         elif x == ord('s'):
             update_ui = 999
             # Update selected cases
@@ -358,6 +360,7 @@ def runner(screen):
             else:
                 uiSetState(screen, [lb.active.id])
             curses.flash()
+            
         elif x == ord('y'):
             update_ui = 999
             cases_to_delete = []
@@ -368,12 +371,15 @@ def runner(screen):
                 cases.pop(id, None)
                 if id in cases_selected:
                     cases_selected.remove(id)
+                    
         elif x == ord("="):
             update_ui = 999
             uiShowAttr(screen, lb.active.id)
+            
         elif x == curses.KEY_ENTER or x == 10 or x == 13:  # [ENTER], CR or LF
             update_ui = 999
             uiShowHistory(screen, lb.active.id)
+            
         elif x == ord('l'):  # [ENTER], CR or LF
             update_ui = 999
             uiShowLog(screen, lb.active.id)
