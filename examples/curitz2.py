@@ -126,13 +126,13 @@ def main(screen):
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
         curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(11, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-
     except curses.error:
-        curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
-        curses.init_pair(10, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(11, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        pass
 
-    curses.curs_set(0)
+    try:
+        curses.curs_set(0)
+    except Exception:
+        pass
     screen_size = BoxSize(*screen.getmaxyx())
     infobox = listbox(8, screen_size.length, screen_size.height - 8, 0)
     lb = listbox(screen_size.height - 6, screen_size.length, 1, 0)
@@ -489,11 +489,19 @@ def uiUpdateCaseWindow(screen, number):
     border.addstr(1, 1, "{} case(s) selected for update".format(number))
     border.refresh()
     p = curses.textpad.Textbox(textbox)
-    curses.curs_set(1)
+    try:
+        curses.curs_set(1)
+    except Exception:
+        pass
     try:
         text = p.edit()
     except KeyboardInterrupt:
         return ""
+    try:
+        curses.curs_set(0)
+    except Exception:
+        pass
+
     return text
 
 
