@@ -118,17 +118,17 @@ def main(screen):
 
     curses.noecho()
     curses.cbreak()
-    curses.start_color()
     screen.keypad(1)
     screen.timeout(1 * 1000)  # mSec timeout
-
     try:
+        curses.start_color()
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_CYAN)
         curses.init_pair(10, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(11, curses.COLOR_YELLOW, curses.COLOR_BLACK)
     except curses.error:
-        pass
-
+        sys.stderr.write("You need a color terminal to run cuRitz\n")
+        return
+        
     try:
         curses.curs_set(0)
     except Exception:
