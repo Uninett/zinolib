@@ -216,7 +216,7 @@ def create_case_list():
                         color = cBlue
                     elif case.state in [caseState.CLOSED]:
                         color = cGreen
-                    if case.bgpos == 'down' and case.state == caseState.OPEN:
+                    elif case.bgpos == 'down' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.bgpos == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
@@ -232,7 +232,7 @@ def create_case_list():
                         color = cBlue
                     elif case.state in [caseState.CLOSED]:
                         color = cGreen
-                    if case.bfdstate == 'down' and case.state == caseState.OPEN:
+                    elif case.bfdstate == 'down' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.bfdstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
@@ -249,7 +249,7 @@ def create_case_list():
                         color = cBlue
                     elif case.state in [caseState.CLOSED]:
                         color = cGreen
-                    if case.reachability == 'no-response' and case.state == caseState.OPEN:
+                    elif case.reachability == 'no-response' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.reachability == 'no-response' and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
@@ -265,7 +265,7 @@ def create_case_list():
                         color = cBlue
                     elif case.state in [caseState.CLOSED]:
                         color = cGreen
-                    if case.alarm_count > 0 and case.state == caseState.OPEN:
+                    elif case.alarm_count > 0 and case.state == caseState.OPEN:
                         color = cRed
                     elif case.alarm_count > 0 and case.state in [caseState.WORKING, caseState.WAITING]:
                         color = cYellow
