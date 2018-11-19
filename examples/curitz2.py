@@ -212,6 +212,10 @@ def create_case_list():
                                           description=case.get("descr", ""),
                                       ), color))
                 elif case.type == caseType.BGP:
+                    if case.state in [caseState.IGNORED]:
+                        color = cBlue
+                    elif case.state in [caseState.CLOSED]:
+                        color = cGreen
                     if case.bgpos == 'down' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.bgpos == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
@@ -224,6 +228,10 @@ def create_case_list():
                                           description="%s %s" % (str(case.remote_addr), case.get("lastevent", "")),
                                       ), color))
                 elif case.type == caseType.BFD:
+                    if case.state in [caseState.IGNORED]:
+                        color = cBlue
+                    elif case.state in [caseState.CLOSED]:
+                        color = cGreen
                     if case.bfdstate == 'down' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.bfdstate == 'down' and case.state in [caseState.WORKING, caseState.WAITING]:
@@ -237,6 +245,10 @@ def create_case_list():
                                                                       case.get('lastevent'))
                                       ), color))
                 elif case.type == caseType.REACHABILITY:
+                    if case.state in [caseState.IGNORED]:
+                        color = cBlue
+                    elif case.state in [caseState.CLOSED]:
+                        color = cGreen
                     if case.reachability == 'no-response' and case.state == caseState.OPEN:
                         color = cRed
                     elif case.reachability == 'no-response' and case.state in [caseState.WORKING, caseState.WAITING]:
@@ -249,6 +261,10 @@ def create_case_list():
                                           description="",
                                       ), color))
                 elif case.type == caseType.ALARM:
+                    if case.state in [caseState.IGNORED]:
+                        color = cBlue
+                    elif case.state in [caseState.CLOSED]:
+                        color = cGreen
                     if case.alarm_count > 0 and case.state == caseState.OPEN:
                         color = cRed
                     elif case.alarm_count > 0 and case.state in [caseState.WORKING, caseState.WAITING]:
