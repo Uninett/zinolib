@@ -70,7 +70,7 @@ class listbox():
                   if i == len(self) - 1:     # Len(self) returns the current length of the list
                       break
 
-        self.box.refresh()
+        self.box.noutrefresh()
 
     def __len__(self):
         return len(self.elements)
