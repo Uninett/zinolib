@@ -70,6 +70,7 @@ def uiShowLogWindow(screen, heading, lines):
         else:
             return
         box.draw()
+        curses.doupdate()
 
 
 def uiShowHistory(screen, caseid):
@@ -128,7 +129,7 @@ def main(screen):
     except curses.error:
         sys.stderr.write("You need a color terminal to run cuRitz\n")
         return
-        
+
     try:
         curses.curs_set(0)
     except Exception:
@@ -484,6 +485,7 @@ def uiSetStateWindow(screen, number):
                 raise KeyboardInterrupt("ESC pressed")
 
             box.draw()
+            curses.doupdate()
 
     except KeyboardInterrupt:
         box.clear()
