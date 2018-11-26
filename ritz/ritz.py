@@ -551,6 +551,9 @@ class ritz():
       caseinfo['bfdix'] = int(caseinfo['bfdix'])
     if 'bfddiscr' in caseinfo:
       caseinfo['bfddiscr'] = int(caseinfo['bfddiscr'])
+    if 'bfdaddr' in caseinfo:
+      caseinfo['bfdaddr'] = ipaddress.ip_address(caseinfo['bfdaddr'])
+
 
     return caseinfo
 
