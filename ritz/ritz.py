@@ -399,7 +399,10 @@ class ritz():
     """
     # Opens an connection to the Server
     # To do things you need to authenticate after connection
-    self._sock = socket.create_connection((self.server, self.port), self.timeout)
+    try:
+        self._sock = socket.create_connection((self.server, self.port), self.timeout)
+    except socket.gaierror as E:
+        raise NotConnectedError(E)
     data, header = self._read_command(None)
     if header[0] == 200:
       self.authChallenge = header[1].split(' ', 1)[0]
@@ -524,6 +527,8 @@ class ritz():
       raise TypeError("CaseID needs to be an integer")
     cmd = "getattrs %s\r\n" % caseid
     data, header = self._read_command(cmd.encode('UTF-8'))
+    if header[0]>=500:
+        raise ProtocolError(header)
     caseinfo = {}
     for d in data:
       v = d.split(":", 1)
