@@ -16,8 +16,10 @@ try:
   import dns.reversename
   resolver = dns.resolver.Resolver()
   resolver.lifetime = 1
-except ImportError:
-  pass
+  resolver.timeout = 1
+except ImportError as E:
+  log.error("Failed to load DNSPython {}".format(E))
+
 
 
 logger = logging.getLogger(__name__)
@@ -555,14 +557,14 @@ class ritz():
       caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
       try:
         # This will fail if DNSPython is not installed
-        caseinfo['polladdr_host'] = str(dns.resolver.query(dns.reversename.from_address(str(caseinfo['polladdr'])),"PTR")[0])
+        caseinfo['polladdr_host'] = str(resolver.query(dns.reversename.from_address(str(caseinfo['polladdr'])),"PTR")[0])
       except Exception:
         caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
     if 'remote_addr' in caseinfo:
       caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote_addr'])
       try:
         # This will fail if DNSPython is not installed
-        caseinfo['remote_addr_host'] = str(dns.resolver.query(dns.reversename.from_address(str(caseinfo['remote_addr'])),"PTR")[0])
+        caseinfo['remote_addr_host'] = str(resolver.query(dns.reversename.from_address(str(caseinfo['remote_addr'])),"PTR")[0])
       except Exception:
         caseinfo['remote_addr_host'] = ipaddress.ip_address(caseinfo['remote_addr'])
     if 'remote_as' in caseinfo:
