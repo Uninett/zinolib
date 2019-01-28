@@ -11,6 +11,9 @@ import re
 from os.path import expanduser
 from typing import NamedTuple
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
+
 try:
   import dns.resolver
   import dns.reversename
@@ -18,12 +21,10 @@ try:
   resolver.lifetime = 1
   resolver.timeout = 1
 except ImportError as E:
-  log.error("Failed to load DNSPython {}".format(E))
+  logger.error("Failed to load DNSPython {}".format(E))
 
 
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
 
 
 # Things to implement
