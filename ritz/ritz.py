@@ -560,14 +560,14 @@ class ritz():
         # This will fail if DNSPython is not installed
         caseinfo['polladdr_host'] = str(resolver.query(dns.reversename.from_address(str(caseinfo['polladdr'])),"PTR")[0])
       except Exception:
-        caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
+        caseinfo['polladdr_host'] = str(ipaddress.ip_address(caseinfo['polladdr']))
     if 'remote_addr' in caseinfo:
       caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote_addr'])
       try:
         # This will fail if DNSPython is not installed
         caseinfo['remote_addr_host'] = str(resolver.query(dns.reversename.from_address(str(caseinfo['remote_addr'])),"PTR")[0])
       except Exception:
-        caseinfo['remote_addr_host'] = ipaddress.ip_address(caseinfo['remote_addr'])
+        caseinfo['remote_addr_host'] = str(ipaddress.ip_address(caseinfo['remote_addr']))
     if 'remote_as' in caseinfo:
       caseinfo['remote_as'] = int(caseinfo["remote_as"])
     if 'peer_uptime' in caseinfo:
@@ -583,7 +583,7 @@ class ritz():
       try:
         caseinfo['bfdaddr_host'] = str(dns.resolver.query(dns.reversename.from_address(str(caseinfo['bfdaddr'])),"PTR")[0])
       except Exception:
-        caseinfo['bfdaddr_host'] = ipaddress.ip_address(caseinfo['bfdaddr'])
+        caseinfo['bfdaddr_host'] = str(ipaddress.ip_address(caseinfo['bfdaddr']))
 
 
     return caseinfo
