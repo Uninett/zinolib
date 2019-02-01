@@ -4,7 +4,7 @@ import hashlib
 import enum
 import ipaddress
 from pprint import pprint
-from datetime import datetime
+from datetime import datetime, timedelta
 import errno
 from time import mktime
 import re
@@ -265,6 +265,8 @@ class Case():
       return self._zino.get_history(self._caseid)
     elif 'log' == name:
       return self._zino.get_log(self._caseid)
+    elif 'downtime' == name:
+        return self.downtime()
     else:
       self.__getattribute__(name)
       # raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
@@ -283,10 +285,30 @@ class Case():
   def get(self, key, default=None):
       return self._attrs.get(key, default)
 
+  def downtime(self):
+      # Calculate downtime on this object
+      # This is only supported on portstate
+      if self.type is not caseType.PORTSTATE:
+          raise TypeError("get_downtime is not supported under case type '%s'" % str(self.attr["type"]))
+
+      # If no transition is detected, use now.
+      lasttrans = self._attrs.get("lasttrans", datetime.now())
+      # Return timedelta 0 if ac_down is non_existant
+      accumulated =  self._attrs.get("ac_down", timedelta(seconds=0))
+
+      if self.portstate in ["lowerLayerDown", "down"]:
+          return accumulated + datetime.now() - lasttrans
+      else:
+          return accumulated
+
+
+
   def keys(self):
       k = [k for k in self._attrs.keys()]
       k.append('history')
       k.append('log')
+      if self.type == caseType.PORTSTATE:
+          k.append('downtime')
       return k
 
   def has_key(self, k):
@@ -549,7 +571,7 @@ class ritz():
     if 'flaps' in caseinfo:
       caseinfo['flaps'] = int(caseinfo['flaps'])
     if 'ac_down' in caseinfo:
-      caseinfo['ac_down'] = int(caseinfo['ac_down'])
+      caseinfo['ac_down'] = timedelta(seconds=int(caseinfo['ac_down']))
     if 'state' in caseinfo:
       caseinfo['state'] = caseState(caseinfo['state'])
     if 'type' in caseinfo:
