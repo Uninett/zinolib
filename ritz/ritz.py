@@ -266,7 +266,7 @@ class Case():
     elif 'log' == name:
       return self._zino.get_log(self._caseid)
     elif 'downtime' == name:
-        return self.downtime()
+        return self.get_downtime()
     else:
       self.__getattribute__(name)
       # raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
@@ -285,7 +285,7 @@ class Case():
   def get(self, key, default=None):
       return self._attrs.get(key, default)
 
-  def downtime(self):
+  def get_downtime(self):
       # Calculate downtime on this object
       # This is only supported on portstate
       if self.type is not caseType.PORTSTATE:
