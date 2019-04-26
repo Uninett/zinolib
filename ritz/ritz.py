@@ -248,7 +248,7 @@ class Case():
       if self.type == caseType.PORTSTATE:
           return self._zino.poll_interface(self._attrs["router"],
                                            self._attr["ifindex"])
-      elif self.type == [caseType.RECABILITY, caseType.ALARM, caseType.BGP]:
+      elif self.type == [caseType.REACHABILITY, caseType.ALARM, caseType.BGP]:
           return self._zino_poll_device(self._attrs["router"])
       else:
           raise TypeError("poll_interface is not supported under case type '%s'" % str(self._attr["type"]))
