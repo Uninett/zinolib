@@ -374,7 +374,7 @@ class ritz():
     while data:
       try:
           data = self._sock.recv(recv_buffer)
-      except socket.timeout as e:
+      except socket.timeout:
           raise TimeoutError("Timed out waiting for data. command: %s buffer: %s" % (repr(command), repr(buffer)))
       logger.debug("recv: %s" % data.__repr__())
 
@@ -390,7 +390,7 @@ class ritz():
             line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
             rawh = line.split(' ', 1)  # ' ' is not a byte
             header = (int(rawh[0]), rawh[1])
-          except ValueError as e:
+          except ValueError:
               raise ProtocolError("Illegal response from server detected: %s" % repr(buffer))
           # header = line
           # Crude error detection :)
@@ -745,7 +745,6 @@ class ritz():
     if not header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
-    pass
 
   def ntie(self, key):
     """Tie to notification notification channel
@@ -778,7 +777,6 @@ class ritz():
     if not header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % header.__repr__())
     return True
-    pass
 
   def pm_add_device(self, from_t, to_t, device, m_type="exact"):
     """Add Maintenance window on a device level
