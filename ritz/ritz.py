@@ -342,6 +342,7 @@ class ritz():
     self.timeout = timeout
     self.username = username
     self.password = password
+    self._buff = ''
 
   def __enter__(self):
     """Wrapper for with to automaticly connect to zino"""
