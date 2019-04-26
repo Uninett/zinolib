@@ -1160,7 +1160,7 @@ class notifier:
                 text = ""
             return notifierEntry(id, type, text)
         except Exception:
-            raise ProtocolError("line: %s , _buff: %s".format(line, self._buff))
+            raise ProtocolError("line: {} , _buff: {}".format(line, self._buff))
 
 
 if "__main__" == __name__:
