@@ -17,7 +17,7 @@ class listbox():
       Based on code from:
       https://stackoverflow.com/questions/30828804/how-to-make-a-scrolling-menu-in-python-curses
     """
-    def __init__(self, nlines, ncols, begin_y=None, begin_x=None, current_selected_arrow=""):
+    def __init__(self, nlines, ncols, begin_y=None, begin_x=None, current_selected_arrow="", lr_border=True):
       self.box = curses.newwin(nlines, ncols, begin_y, begin_x)
       self.size = BoxSize(*self.box.getmaxyx())
       self.highlightText = curses.color_pair(1)
@@ -26,6 +26,7 @@ class listbox():
       self.arrow = current_selected_arrow
 
       self.active_element = 0
+      self.lr_border = lr_border
 
       self.elements = []  # Type: List[BoxElement]
 
@@ -35,7 +36,12 @@ class listbox():
 
     def draw(self):
         self.box.erase()
-        self.box.box()
+        if not self.lr_border:
+          pass
+          self.box.border(' ', ' ',curses.ACS_HLINE, curses.ACS_HLINE,
+                          curses.ACS_HLINE, curses.ACS_HLINE, curses.ACS_HLINE, curses.ACS_HLINE)
+        else:
+          self.box.border()
         self.box.addstr(0, 1, self.heading)
 
         # Get current page
