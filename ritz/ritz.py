@@ -107,6 +107,9 @@ notifierEntry = NamedTuple("notifierEntry", [('id', int),
                                              ('type', str),
                                              ('info', str)])
 
+zinoDataEntry = NamedTuple("zinoDataEntry", [('data', str),
+                                             ('header',str)])
+
 
 class caseState(enum.Enum):
     """State field of a ritz.Case object"""
@@ -248,7 +251,7 @@ class Case():
       if self.type == caseType.PORTSTATE:
           return self._zino.poll_interface(self._attrs["router"],
                                            self._attr["ifindex"])
-      elif self.type == [caseType.RECABILITY, caseType.ALARM, caseType.BGP]:
+      elif self.type == [caseType.REACHABILITY, caseType.ALARM, caseType.BGP]:
           return self._zino_poll_device(self._attrs["router"])
       else:
           raise TypeError("poll_interface is not supported under case type '%s'" % str(self._attr["type"]))
@@ -348,6 +351,7 @@ class ritz():
     self.timeout = timeout
     self.username = username
     self.password = password
+    self._buff = ''
 
   def __enter__(self):
     """Wrapper for with to automaticly connect to zino"""
@@ -379,7 +383,7 @@ class ritz():
     while data:
       try:
           data = self._sock.recv(recv_buffer)
-      except socket.timeout as e:
+      except socket.timeout:
           raise TimeoutError("Timed out waiting for data. command: %s buffer: %s" % (repr(command), repr(buffer)))
       logger.debug("recv: %s" % data.__repr__())
 
@@ -395,30 +399,30 @@ class ritz():
             line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
             rawh = line.split(' ', 1)  # ' ' is not a byte
             header = (int(rawh[0]), rawh[1])
-          except ValueError as e:
+          except ValueError:
               raise ProtocolError("Illegal response from server detected: %s" % repr(buffer))
           # header = line
           # Crude error detection :)
           if header[0] >= 500:
             # Die on Error codes
-            return header[1], header
+            return zinoDataEntry(header[1], header)
             # raise ProtocolError("Errorcode '%s %s' reported from server" % (header[0], header[1]))
           if header[0] == 200:
             # Return to user on 200, 200 doesent add more data
-            return header[1], header
+            return zinoDataEntry(header[1], header)
           if header[0] == 302:
             # Return to user on 302, wee need more data
-            return header[1], header
+            return zinoDataEntry(header[1], header)
         next
 
       while buffer.find(delim) != -1:
         line, buffer = buffer.split('\r\n', 1)  # '\r\n' is not a byte
         if line == ".":
-          return r, header
+          return zinoDataEntry(r, header)
         r.append(line)
     if not header:
         raise ProtocolError("No header info detected for command %s, buffer %s" % (repr(command), repr(buffer)))
-    return r, header
+    return zinoDataEntry(r, header)
 
   def connect(self):
     """Connect to zino datachannel
@@ -434,9 +438,9 @@ class ritz():
         self._sock = socket.create_connection((self.server, self.port), self.timeout)
     except socket.gaierror as E:
         raise NotConnectedError(E)
-    data, header = self._read_command(None)
-    if header[0] == 200:
-      self.authChallenge = header[1].split(' ', 1)[0]
+    response = self._read_command(None)
+    if response.header[0] == 200:
+      self.authChallenge = response.header[1].split(' ', 1)[0]
       self.connStatus = True
     else:
       raise NotConnectedError("Did not get a status code 200")
@@ -482,15 +486,15 @@ class ritz():
     cmd = 'user %s %s  -\r\n' % (user, authToken)
     #  try:
     try:
-      data, header = self._read_command(cmd.encode('UTF-8'))
+      response = self._read_command(cmd.encode('UTF-8'))
     #  except ProtocolError as e:
     #    raise AuthenticationError(e)
-      if header[0] == 200:
+      if response.header[0] == 200:
         self.authenticated = True
         return
       else:
-          raise AuthenticationError("Unable to authenticate user, '%s'" % repr(header))
-    except TypeError as e:
+          raise AuthenticationError("Unable to authenticate user, '%s'" % repr(response.header))
+    except TypeError:
       raise ProtocolError("Got an illegal response from the server")
 
   def case(self, id):
@@ -532,10 +536,10 @@ class ritz():
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-    data, header = self._read_command(b"caseids\r\n")
+    response = self._read_command(b"caseids\r\n")
 
     ids = []
-    for id in data:
+    for id in response.data:
       if id.isdigit():
         ids.append(int(id))
 
@@ -557,11 +561,11 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
     cmd = "getattrs %s\r\n" % caseid
-    data, header = self._read_command(cmd.encode('UTF-8'))
-    if header[0]>=500:
-        raise ProtocolError(header)
+    response = self._read_command(cmd.encode('UTF-8'))
+    if response.header[0]>=500:
+        raise ProtocolError(response.header)
     caseinfo = {}
-    for d in data:
+    for d in response.data:
       v = d.split(":", 1)
       caseinfo[v[0].strip().lower().replace("-", "_")] = v[1].strip()
 
@@ -631,9 +635,9 @@ class ritz():
       raise AuthenticationError("User not authenticated")
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
-    data, header = self._read_command(b"gethist %d\r\n" % caseid)
+    response = self._read_command(b"gethist %d\r\n" % caseid)
 
-    return _decode_history(data)
+    return _decode_history(response.data)
 
   def get_log(self, caseid):
     """Return all log elements of a CaseID
@@ -651,9 +655,9 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
 
-    data, header = self._read_command(b"getlog %d\r\n" % caseid)
+    response = self._read_command(b"getlog %d\r\n" % caseid)
 
-    return _decode_history(data)
+    return _decode_history(response.data)
 
   def add_history(self, caseid, message):
     """Add a history element on a CaseID
@@ -672,14 +676,14 @@ class ritz():
       msg = message
 
     # Start Command
-    data, header = self._read_command(b"addhist %d  -\r\n" % (caseid))
-    if not header[0] == 302:
-      raise ProtocolError("Unknown return from server: %s" % data)
+    response = self._read_command(b"addhist %d  -\r\n" % (caseid))
+    if not response.header[0] == 302:
+      raise ProtocolError("Unknown return from server: %s" % response.data)
 
     # Send message
-    data, header = self._read_command(b"%s\r\n\r\n.\r\n" % msg.encode())
-    if not header[0] == 200:
-      raise ProtocolError("Not getting 200 OK from server: %s" % data)
+    response = self._read_command(b"%s\r\n\r\n.\r\n" % msg.encode())
+    if not response.header[0] == 200:
+      raise ProtocolError("Not getting 200 OK from server: %s" % response.data)
     return True
 
   def set_state(self, caseid, state):
@@ -699,11 +703,11 @@ class ritz():
     if not isinstance(caseid, int):
       raise TypeError("CaseID needs to be an integer")
 
-    data, header = self._read_command(b"setstate %d %s\r\n" % (caseid, state.value.encode()))
+    response = self._read_command(b"setstate %d %s\r\n" % (caseid, state.value.encode()))
 
     # Check returncode
-    if not header[0] == 200:
-      raise ValueError("Unable to change state on %d to %s. error: %s" % (caseid, state, repr(header)))
+    if not response.header[0] == 200:
+      raise ValueError("Unable to change state on %d to %s. error: %s" % (caseid, state, repr(response.header)))
     return True
 
   def clear_flapping(self, router, ifindex):
@@ -715,10 +719,10 @@ class ritz():
     if not isinstance(ifindex, int):
       raise TypeError("CaseID needs to be an integer")
 
-    data, header = self._read_command(b"clearflap %s %d\r\n" % (router.encode(), ifindex))
+    response = self._read_command(b"clearflap %s %d\r\n" % (router.encode(), ifindex))
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
@@ -728,10 +732,10 @@ class ritz():
     Usage:
         zino_session.poll_router("routername")
     """
-    data, header = self._read_command(b"pollrtr %s\r\n" % router.encode())
+    response = self._read_command(b"pollrtr %s\r\n" % router.encode())
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
@@ -744,13 +748,12 @@ class ritz():
     """
     if not isinstance(ifindex, int):
         raise TypeError("CaseID needs to be an interger")
-    data, header = self._read_command(b"pollintf %s %d\r\n" % (router.encode(), ifindex))
+    response = self._read_command(b"pollintf %s %d\r\n" % (router.encode(), ifindex))
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
-    pass
 
   def ntie(self, key):
     """Tie to notification notification channel
@@ -777,13 +780,12 @@ class ritz():
       pass
     else:
       raise ValueError("key needs to be string or bytes")
-    data, header = self._read_command(b"ntie %s\r\n" % key)
+    response = self._read_command(b"ntie %s\r\n" % key)
 
     # Check returncode
-    if not header[0] == 200:
-      raise Exception("Not getting 200 OK from server: %s" % header.__repr__())
+    if not response.header[0] == 200:
+      raise Exception("Not getting 200 OK from server: %s" % response.header.__repr__())
     return True
-    pass
 
   def pm_add_device(self, from_t, to_t, device, m_type="exact"):
     """Add Maintenance window on a device level
@@ -820,17 +822,17 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = self._read_command(b'pm add %d %d device %s %s\r\n' %
+    response = self._read_command(b'pm add %d %d device %s %s\r\n' %
                                       (from_ts,
                                        to_ts,
                                        m_type.encode(),
                                        device.encode()))
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
 
-    data2 = data.split(" ", 3)
+    data2 = response.data.split(" ", 3)
     return int(data2[2])
 
   def pm_add_interface(self, from_t, to_t, device, interface):
@@ -871,17 +873,17 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = self._read_command(b'pm add %d %d portstate intf-regexp %s %s\r\n' %
+    response = self._read_command(b'pm add %d %d portstate intf-regexp %s %s\r\n' %
                                       (from_ts,
                                        to_ts,
                                        device.encode(),
                                        interface.encode()))
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
 
-    data2 = data.split(" ", 3)
+    data2 = response.data.split(" ", 3)
     return int(data2[2])
 
   def pm_add_interface_bydescr(self, from_t, to_t, description):
@@ -918,16 +920,16 @@ class ritz():
     from_ts = mktime(from_t.timetuple())
     to_ts = mktime(to_t.timetuple())
 
-    data, header = self._read_command(b'pm add %d %d portstate regexp %s\r\n' %
+    response = self._read_command(b'pm add %d %d portstate regexp %s\r\n' %
                                       (from_ts,
                                        to_ts,
                                        description.encode()))
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
 
-    data2 = data.split(" ", 3)
+    data2 = response.data.split(" ", 3)
     return int(data2[2])
 
   def pm_list(self):
@@ -945,10 +947,10 @@ class ritz():
     if not self.authenticated:
       raise AuthenticationError("User not authenticated")
 
-    data, header = self._read_command(b"pm list\r\n")
+    response = self._read_command(b"pm list\r\n")
 
     ids = []
-    for id in data:
+    for id in response.data:
       if id.isdigit():
         ids.append(int(id))
 
@@ -966,10 +968,10 @@ class ritz():
 
     if not isinstance(id, int):
       raise TypeError("ID needs to be an integer")
-    data, header = self._read_command(b"pm cancel %d\r\n" % (id))
+    response = self._read_command(b"pm cancel %d\r\n" % (id))
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     else:
       return True
@@ -988,9 +990,9 @@ class ritz():
     if not isinstance(id, int):
       raise TypeError("ID needs to be an integer")
 
-    data, header = self._read_command(b"pm details %d\r\n" % (id))
+    response = self._read_command(b"pm details %d\r\n" % (id))
 
-    data2 = data.split(' ', 5)
+    data2 = response.data.split(' ', 5)
     # print(data2)
 
     res = {'id': int(data2[0]),
@@ -1016,7 +1018,7 @@ class ritz():
     if not isinstance(id, int):
         raise TypeError("ID needs to be an integer")
 
-    data, header = self._read_command(b"pm matching %d\r\n" % id)
+    response = self._read_command(b"pm matching %d\r\n" % id)
 
     # Return list with element 1: "device"portstate,
     #                          2: device
@@ -1026,7 +1028,7 @@ class ritz():
     #                          3: interface ifindex,
     #                          4: interface name,
     #                          5: interface descr
-    return [d.split(" ", 5)[1::] for d in data]
+    return [d.split(" ", 5)[1::] for d in response.data]
 
   def pm_add_log(self, id, message):
     """Add log entry to a Maintenance window"""
@@ -1045,9 +1047,9 @@ class ritz():
     if not isinstance(id, int):
         raise TypeError("ID needs to be an integer")
 
-    data, header = self._read_command(b"pm addlog %d  -\r\n" % (id))
+    response = self._read_command(b"pm addlog %d  -\r\n" % (id))
 
-    if not header[0] == 302:
+    if not response.header[0] == 302:
       raise Exception("Unknown return from server: %s" % self._buff)
 
     # Generate Message to zino
@@ -1057,10 +1059,10 @@ class ritz():
       msg = message
 
     # Send message
-    data, header = self._read_command(b"%s\r\n\r\n.\r\n" % msg.encode())
+    response = self._read_command(b"%s\r\n\r\n.\r\n" % msg.encode())
 
     # Check returncode
-    if not header[0] == 200:
+    if not response.header[0] == 200:
       raise Exception("Not getting 200 OK from server: %s" % self._buff)
     return True
 
@@ -1079,11 +1081,11 @@ class ritz():
     if not self.authenticated:
         raise AuthenticationError("User not authenticated")
     self._sock.settimeout(30)
-    data, header = self._read_command(b"pm log %d\r\n" % id)
+    response = self._read_command(b"pm log %d\r\n" % id)
 
     # print(header)
     # print(data)
-    return _decode_history(data)
+    return _decode_history(response.data)
     # raise NotImplementedError("Not Implemented")
 
 
@@ -1165,7 +1167,7 @@ class notifier:
                 text = ""
             return notifierEntry(id, type, text)
         except Exception:
-            raise ProtocolError("line: %s , _buff: %s".format(line, self._buff))
+            raise ProtocolError("line: {} , _buff: {}".format(line, self._buff))
 
 
 if "__main__" == __name__:

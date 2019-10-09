@@ -7,3 +7,5 @@
 PyRitz.egg-info/*
 build/*
 dist/*
+
+/debian/changelog
