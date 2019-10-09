@@ -286,8 +286,10 @@ class Case():
       return self._attrs.get(key, default)
 
   def get_downtime(self):
-      # Calculate downtime on this object
-      # This is only supported on portstate
+      """Calculate downtime on this object
+      
+      This is only supported on portstate
+      """
       if self.type is not caseType.PORTSTATE:
           raise TypeError("get_downtime is not supported under case type '%s'" % str(self.attr["type"]))
 
@@ -304,6 +306,10 @@ class Case():
 
 
   def keys(self):
+      """List keys of this object
+
+      This wil mimmic the keys attribyte of a dict, returns all attributes available
+      """
       k = [k for k in self._attrs.keys()]
       k.append('history')
       k.append('log')
