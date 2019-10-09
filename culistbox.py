@@ -17,7 +17,7 @@ class listbox():
       Based on code from:
       https://stackoverflow.com/questions/30828804/how-to-make-a-scrolling-menu-in-python-curses
     """
-    def __init__(self, nlines, ncols, begin_y=None, begin_x=None):
+    def __init__(self, nlines, ncols, begin_y=0, begin_x=0):
       self.box = curses.newwin(nlines, ncols, begin_y, begin_x)
       self.size = BoxSize(*self.box.getmaxyx())
       self.highlightText = curses.color_pair(1)
