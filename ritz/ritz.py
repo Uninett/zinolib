@@ -10,6 +10,7 @@ from time import mktime
 import re
 from os.path import expanduser
 from typing import NamedTuple
+import codecs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -110,6 +111,51 @@ notifierEntry = NamedTuple("notifierEntry", [('id', int),
 zinoDataEntry = NamedTuple("zinoDataEntry", [('data', str),
                                              ('header',str)])
 
+
+def windows_codepage_cp1251(error):
+    """Windows Codepage 1251 decoder fallback
+    
+    This function could be used as a failback for UnicodeEncodeError to fail
+    back to windows codepage 1251 decoding when eg. utf-8 failes
+
+    All valid windows codepage 1251 elements will be returned with their
+    representative unicode characters and failes back to unicode unknown char
+    when no valid character is found
+
+    All illegal characters are replaced with unicode 0xFFFD
+    """
+
+    # This only works on UnicodeDecodeError, will not work on encoding
+    if not isinstance(error, UnicodeDecodeError):
+        raise error
+
+    # 0xFFFD is the unicode char for illegal character.
+    # these characters are not an valid printable cp1251 character
+
+    cp1251_map = [
+        0x20AC, 0xFFFD, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, #0x80-0x87
+        0x02c6, 0x2030, 0x0160, 0x2039, 0x0152, 0xFFFD, 0x017d, 0xFFFD, #0x88-0x8F
+        0xFFFD, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, #0x90-0x97
+        0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0xFFFD, 0x017E, 0x0178  #0x98-0x9F
+    ]
+
+    result = []
+    for i in range(error.start, error.end):
+        byte = error.object[i]
+
+        if byte >= 0x80 and byte <= 0x9F:
+            # We try to use windows codepage 1251 on this char
+            result.append(chr(cp1251_map[byte - 0x80]))
+
+        else:
+            # This looks like a valid latin-1 char
+            # It correspons to the same unicode char
+            result.append(chr(0x00 + byte))
+
+    return ''.join(result), error.end
+
+
+codecs.register_error("windows_codepage_cp1251", windows_codepage_cp1251)
 
 class caseState(enum.Enum):
     """State field of a ritz.Case object"""
@@ -387,11 +433,7 @@ class ritz():
           raise TimeoutError("Timed out waiting for data. command: %s buffer: %s" % (repr(command), repr(buffer)))
       logger.debug("recv: %s" % data.__repr__())
 
-      # Try a crude detection of norwegian utf-8 characters <-- this needs to be worked on
-      if any(x in data for x in [b'\xc3\xa6', b'\xc3\xb8', b'\xc3\xa5']):
-          buffer += data.decode('UTF-8')
-      else:
-          buffer += data.decode('latin-1')
+      buffer += data.decode('UTF-8', errors='windows_codepage_cp1251')
 
       if not header:
         if buffer.find(delim) != -1:
