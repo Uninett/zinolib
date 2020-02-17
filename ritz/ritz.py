@@ -15,19 +15,6 @@ import codecs
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
-try:
-  import dns.resolver
-  import dns.reversename
-  resolver = dns.resolver.Resolver()
-  resolver.lifetime = 1
-  resolver.timeout = 1
-except ImportError as E:
-  logger.error("Failed to load DNSPython {}".format(E))
-
-
-
-
-
 # Things to implement
 # /local/src/zino/zino/server.tcl
 #   user        Authenticate user
@@ -630,18 +617,8 @@ class ritz():
       caseinfo['type'] = caseType(caseinfo['type'])
     if 'polladdr' in caseinfo:
       caseinfo['polladdr'] = ipaddress.ip_address(caseinfo['polladdr'])
-      try:
-        # This will fail if DNSPython is not installed
-        caseinfo['polladdr_host'] = str(resolver.query(dns.reversename.from_address(str(caseinfo['polladdr'])),"PTR")[0])
-      except Exception:
-        caseinfo['polladdr_host'] = str(ipaddress.ip_address(caseinfo['polladdr']))
     if 'remote_addr' in caseinfo:
       caseinfo['remote_addr'] = ipaddress.ip_address(caseinfo['remote_addr'])
-      try:
-        # This will fail if DNSPython is not installed
-        caseinfo['remote_addr_host'] = str(resolver.query(dns.reversename.from_address(str(caseinfo['remote_addr'])),"PTR")[0])
-      except Exception:
-        caseinfo['remote_addr_host'] = str(ipaddress.ip_address(caseinfo['remote_addr']))
     if 'remote_as' in caseinfo:
       caseinfo['remote_as'] = int(caseinfo["remote_as"])
     if 'peer_uptime' in caseinfo:
@@ -654,10 +631,6 @@ class ritz():
       caseinfo['bfddiscr'] = int(caseinfo['bfddiscr'])
     if 'bfdaddr' in caseinfo:
       caseinfo['bfdaddr'] = ipaddress.ip_address(caseinfo['bfdaddr'])
-      try:
-        caseinfo['bfdaddr_host'] = str(dns.resolver.query(dns.reversename.from_address(str(caseinfo['bfdaddr'])),"PTR")[0])
-      except Exception:
-        caseinfo['bfdaddr_host'] = str(ipaddress.ip_address(caseinfo['bfdaddr']))
 
 
     return caseinfo

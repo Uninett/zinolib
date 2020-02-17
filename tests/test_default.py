@@ -151,9 +151,7 @@ class DefaultTest(unittest.TestCase):
                 'router': 'uninett-gsw2',
                 'state': caseState.WORKING,
                 'type': caseType.BGP,
-                'updated': datetime.datetime(2018, 8, 1, 11, 45, 51),
-                'remote_addr_host': 'nraas-1.cert.uninett.no.',
-                'polladdr_host': 'localhost.'}
+                'updated': datetime.datetime(2018, 8, 1, 11, 45, 51)}
         self.assertTrue(dict_diff(sess.get_attributes(32802), test))
 
         test = {'alarm_count': 1,
@@ -166,8 +164,7 @@ class DefaultTest(unittest.TestCase):
                 'router': 'bergen-sw1',
                 'state': caseState.WORKING,
                 'type': caseType.ALARM,
-                'updated': datetime.datetime(2018, 6, 16, 15, 37, 15),
-                'polladdr_host': 'localhost.'}
+                'updated': datetime.datetime(2018, 6, 16, 15, 37, 15)}
         self.assertTrue(dict_diff(sess.get_attributes(34978), test))
 
   def test_H_get_history(self):
