@@ -184,7 +184,7 @@ def _decode_history(logarray):
       curr["date"] = datetime.fromtimestamp(int(header[0]))
       curr["header"] = header[1]
 
-      if header[1].count(" ") is not 0:
+      if header[1].count(" ") != 0:
         # this is a short system log
         curr["log"] = []
         curr["user"] = "system"  # re.match(".*\((\w+)\)$", header[1]).group(1)
