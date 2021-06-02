@@ -1104,6 +1104,11 @@ class ritz():
     return _decode_history(response.data)
     # raise NotImplementedError("Not Implemented")
 
+  def init_notifier(self):
+      notif = notifier(self)
+      notif.connect()
+      return notif
+
 
 class notifier:
   """Zino notifier socket
