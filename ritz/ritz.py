@@ -11,6 +11,7 @@ import re
 from os.path import expanduser
 from typing import NamedTuple
 import codecs
+import select
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
@@ -1152,7 +1153,7 @@ class notifier:
         else:
             raise NotConnectedError("Key not found")
 
-  def poll(self):
+  def poll(self, timeout=0):
     """Poll the notifier socket for new data
 
     Returns a notifier object when data is waiting, otherwise None
@@ -1161,7 +1162,12 @@ class notifier:
         if n:
             ....
     """
+
     try:
+        r, _, _ = select.select([self._sock], [], [], timeout)
+        if not r:
+            # No socket have data after the timeout
+            return None
         self._buff += self._sock.recv(4096).decode()
     except socket.error as e:
         if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
