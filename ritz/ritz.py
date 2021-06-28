@@ -1168,18 +1168,17 @@ class notifier:
             ....
     """
 
-    try:
-        r, _, _ = select.select([self._sock], [], [], timeout)
-        if not r:
-            # No socket have data after the timeout
-            return None
-        self._buff += self._sock.recv(4096).decode()
-    except socket.error as e:
-        if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
-            # a "real" error occurred
-            self._sock = None
-            self.connStatus = False
-            raise NotConnectedError("Not connected to server")
+
+    r, _, _ = select.select([self._sock], [], [], timeout)
+    if r:
+        try:
+            self._buff += self._sock.recv(4096).decode()
+        except socket.error as e:
+            if not (e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK):
+                # a "real" error occurred
+                self._sock = None
+                self.connStatus = False
+                raise NotConnectedError("Not connected to server")
 
     if "\r\n" in self._buff:
         try:
