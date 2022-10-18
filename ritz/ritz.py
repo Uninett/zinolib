@@ -102,7 +102,7 @@ zinoDataEntry = NamedTuple("zinoDataEntry", [('data', str),
 
 def windows_codepage_cp1251(error):
     """Windows Codepage 1251 decoder fallback
-    
+
     This function could be used as a failback for UnicodeEncodeError to fail
     back to windows codepage 1251 decoding when eg. utf-8 failes
 
@@ -250,7 +250,7 @@ class Case():
         c = ritz_session.case(123)
         c.clear_clapping()
     """
-    if self.type == "portstate":
+    if self.type == caseType.PORTSTATE:
       return self._zino.clear_flapping(self._attrs["router"],
                                        self._attrs["ifindex"])
     else:
@@ -284,11 +284,9 @@ class Case():
       """
       if self.type == caseType.PORTSTATE:
           return self._zino.poll_interface(self._attrs["router"],
-                                           self._attr["ifindex"])
-      elif self.type == [caseType.REACHABILITY, caseType.ALARM, caseType.BGP]:
-          return self._zino_poll_device(self._attrs["router"])
+                                           self._attrs["ifindex"])
       else:
-          raise TypeError("poll_interface is not supported under case type '%s'" % str(self._attr["type"]))
+          return self._zino.poll_router(self._attrs["router"])
 
   def __getattr__(self, name):
     """Wrapper to get all attributbutes of the object as python attributes
@@ -324,7 +322,7 @@ class Case():
 
   def get_downtime(self):
       """Calculate downtime on this object
-      
+
       This is only supported on portstate
       """
       if self.type is not caseType.PORTSTATE:
