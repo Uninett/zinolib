@@ -13,14 +13,6 @@ else:
     debug = 0
 
 
-if sys.version_info[:2] < (3, 6):  # Python older than 3.6
-    def compat_thread_isalive(thread):
-        return thread.isAlive()
-else:
-    def compat_thread_isalive(thread):
-        return thread.is_alive()
-
-
 def dprint(text):
     global debug
     if debug:
@@ -121,7 +113,7 @@ class zinoemu:
         dprint("stopping")
         self.stop_event.set()
         self.sock.close()
-        if compat_thread_isalive(self.thread):
+        if self.thread.is_alive():
           self.thread.join()
 
     def server_socket(self, server_ready: threading.Event):

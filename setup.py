@@ -6,7 +6,7 @@ setup(
     author='Runar Borge',
     author_email='runar.borge@uninett.no',
     packages=find_packages(),
-    python_requires='>=3.5',
+    python_requires='>=3.6',
     url=[''],
     license='LISENSE.txt',
     description="Python interface to Zino",
