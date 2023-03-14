@@ -2,10 +2,13 @@
 *.conf
 *.log
 *.bak
+.coverage*
 
-.mypy_cache/*
-PyRitz.egg-info/*
-build/*
-dist/*
+__pycache__
+.mypy_cache
+PyRitz.egg-info
+build
+dist
+htmlcov
 
-/debian/changelog
+debian/changelog
