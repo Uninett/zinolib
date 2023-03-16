@@ -1,4 +1,4 @@
-from ritz import ritz, notifier, parse_config, caseType
+from ritz import ritz, notifier, parse_tcl_config, caseType
 from pprint import pprint
 from os.path import expanduser
 from time import sleep
@@ -33,7 +33,7 @@ def main():
   parser.add_argument('--prod', action='store_true')
 
   args = parser.parse_args()
-  conf = parse_config("~/.ritz.tcl")
+  conf = parse_tcl_config("~/.ritz.tcl")
 
   if args.prod:
     c_server = conf["default"]["Server"]

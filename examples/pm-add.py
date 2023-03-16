@@ -1,4 +1,4 @@
-from ritz import ritz, notifier, parse_config
+from ritz import ritz, notifier, parse_tcl_config
 from pprint import pprint
 from time import sleep
 import re
@@ -14,7 +14,7 @@ def main():
   parser.add_argument('--remove-all-pms', action='store_true')
 
   args = parser.parse_args()
-  conf = parse_config("~/.ritz.tcl")
+  conf = parse_tcl_config("~/.ritz.tcl")
 
   if args.prod:
     c_server = conf["default"]["Server"]

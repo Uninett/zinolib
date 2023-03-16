@@ -202,7 +202,7 @@ def _decode_history(logarray):
   return ret
 
 
-def parse_config(file):
+def parse_tcl_config(file):
   """Parse a .ritz.tcl config file
 
   Used to fetch a users connection information to connect to zino
