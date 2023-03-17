@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zinolib"
+description = "Python interface to Zino"
+authors = [{name="Runar Borge", email="runar.borge@sikt.no"}]
+maintainers = [{name="Uninett Opensource", email="opensource@uninett.no"}]
+readme = "README.rst"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+classifiers = [
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: System :: Monitoring",
+]
+dynamic = ["version"]
+
+[tool.setuptools]
+include-package-data = false
+zip-safe = false
+platforms = ["any"]
+
+[tool.setuptools.packages.find]
+where = ["src/"]
+include = ["zinolib"]
+
+[tool.setuptools_scm]
+write_to = "src/zinolib/version.py"
