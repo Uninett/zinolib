@@ -1,3 +1,5 @@
+# from __future__ import annotations
+
 import logging
 import socket
 import hashlib
@@ -202,14 +204,15 @@ def _decode_history(logarray):
   return ret
 
 
-def parse_tcl_config(file):
+# def parse_tcl_config(filename: str | Path):
+def parse_tcl_config(filename):
   """Parse a .ritz.tcl config file
 
   Used to fetch a users connection information to connect to zino
-  .ritz.tcl is formated as a tcl file.
+  .ritz.tcl is formatted as a tcl file.
   """
   config = {}
-  with open(expanduser(file), 'r') as f:
+  with open(expanduser(filename), 'r') as f:
     for line in f.readlines():
       _set = re.findall(r'^\s?set _?([a-zA-Z0-9]+)(?:\((.*)\))? (.*)$', line)
       if _set:
