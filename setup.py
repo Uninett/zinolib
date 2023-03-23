@@ -15,5 +15,8 @@ setup(
     include_package_data=True,
     install_requires=[],
     scripts=['bin/curitz'],
-    py_modules=['culistbox']
+    py_modules=['culistbox'],
+    extras_require = {
+        'DNS':  ["dnspython"]
+    },
 )
