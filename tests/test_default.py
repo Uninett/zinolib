@@ -1,10 +1,13 @@
-from ritz import ritz, ProtocolError, AuthenticationError, caseState, caseType
-from ritz.zino_emu import zinoemu
 from pprint import pprint
 import logging
 import datetime
 import unittest
 from ipaddress import ip_address
+
+from zinolib.ritz import ritz, ProtocolError, AuthenticationError, caseState, caseType
+from zinolib.zino_emu import zinoemu
+
+
 ritzlog = logging.getLogger("ritz")
 ritzlog.setLevel(logging.DEBUG)
 ritzlog.addHandler(logging.FileHandler('test1.log'))
