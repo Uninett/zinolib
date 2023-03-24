@@ -2,12 +2,12 @@
 *.conf
 *.log
 *.bak
+*.egg-info
 .coverage*
 
 __pycache__
 .mypy_cache
-PyRitz.egg-info
-src/ritz/version.py
+src/zinolib/version.py
 build
 dist
 htmlcov
