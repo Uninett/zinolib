@@ -1,12 +1,17 @@
-* PyRitz
+=======
+Zinolib
+=======
 
-Python module to connect to zino data and notification channel
+Python library to connect to zino data and notification channel
 
-This module implements almost every functionality that Zino exports via the data and notification channel 
+This module implements almost every functionality that Zino exports via the data and notification channel.
+
+Split from internal project PyRitz on 2023-03-23.
 
 
+Testing
+=======
 
-** Testing
 This library is testable with unittests,
 When testing it starts a Zino emulator that reponds correctly to requests as the real server would do.
 
