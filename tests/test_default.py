@@ -110,7 +110,7 @@ class DefaultTest(unittest.TestCase):
         #  with self.assertRaises(ProtocolError):
         try:
           r.connect()
-        except ProtocolError as e:
+        except ProtocolError:
             pass
         finally:
           r.close()

@@ -1,6 +1,5 @@
 from ritz import ritz, ProtocolError, AuthenticationError, caseState, caseType
 from ritz.zino_emu import zinoemu
-from pprint import pprint
 import logging
 import datetime
 import unittest
@@ -26,10 +25,10 @@ class mock_socket:
 
 def create_connection(address, timeout=3):
     try:
-        int_port = int(address[1])
+        int(address[1])
     except ValueError:
         raise ValueError("Unable to convert tcp port to integer")
-    ms = mock_socket()
+    mock_socket()
 
 
 def dict_diff(x, y):
@@ -106,7 +105,7 @@ class DefaultTest(unittest.TestCase):
         try:
           r.connect()
           create_connection_mock.assert_called_once_with("127.0.0.1")
-        except ProtocolError as e:
+        except ProtocolError:
             pass
         finally:
           r.close()
