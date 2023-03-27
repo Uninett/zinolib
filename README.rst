@@ -29,3 +29,11 @@ To test on a specific python other than current, run:
 ```tox -e py{version}```
 
 where `version` is of the form "311" for Python 3.11.
+
+Development
+===========
+
+See the file `.git-blame-ignore-revs` for commits to ignore when running
+`git blame`. Use it like so::
+
+    git blame --ignore-revs-file .git-blame-ignore-revs FILE
