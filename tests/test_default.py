@@ -1,4 +1,3 @@
-from pprint import pprint
 import logging
 import datetime
 import unittest
@@ -11,50 +10,6 @@ from zinolib.zino_emu import zinoemu
 ritzlog = logging.getLogger("ritz")
 ritzlog.setLevel(logging.DEBUG)
 ritzlog.addHandler(logging.FileHandler("test1.log"))
-
-
-def dict_diff(x, y):
-    # keys in x not in y
-    a = [k for k in x.keys() if k not in y.keys()]
-    if a:
-        raise KeyError("keys %s not in y" % repr(a))
-
-    b = [k for k in y.keys() if k not in x.keys()]
-    if b:
-        raise KeyError("keys %s not in x" % repr(b))
-
-    for k in x.keys():
-        if x[k] != y[k]:
-            raise ValueError(
-                "Values in %s differs, x=%s, y=%s" % (k, repr(x[k]), repr(y[k]))
-            )
-    return True
-
-
-def dict_diff2(x, y):
-    # keys in x not in y
-    a = []
-    b = []
-    c = []
-    for k in x.keys():
-        if k not in y.keys():
-            a.append(k)
-        else:
-            if x[k] != y[k]:
-                b.append((k, x[k], y[k]))
-    for k in y.keys():
-        if k not in x.keys():
-            c.append(k)
-    if a:
-        pprint(x)
-        raise Exception("keys %s not in y" % repr(a))
-    if b:
-        raise Exception(
-            "Values in %s differs, x='%s', y='%s'" % (b[0][0], b[0][1], b[0][2])
-        )
-    if c:
-        raise Exception("keys %s not in x" % repr(b))
-    return True
 
 
 def executor(client):
@@ -177,7 +132,8 @@ class DefaultTest(unittest.TestCase):
             with ritz("127.0.0.1", username="testuser", password="test") as sess:
                 self.assertTrue(sess)
 
-    def test_G_get_attributes(self):
+    def test_G_clean_attributes(self):
+        self.maxDiff = None
         with zinoemu(executor):
             with ritz("127.0.0.1", username="testuser", password="test") as sess:
                 caseids = sess.get_caseids()
@@ -185,10 +141,17 @@ class DefaultTest(unittest.TestCase):
                 self.assertTrue(34978 in caseids)
                 self.assertFalse(999 in caseids)
                 test = {
+                    "ac_down": None,
+                    "alarm_count": None,
+                    "bfddiscr": None,
+                    "bfdix": None,
                     "bgpas": "halted",
                     "bgpos": "down",
+                    "flaps": None,
                     "id": 32802,
+                    "ifindex": None,
                     "lastevent": "peer is admin turned off",
+                    "lasttrans": None,
                     "opened": datetime.datetime(2018, 4, 23, 8, 32, 22),
                     "peer_uptime": 0,
                     "polladdr": ip_address("127.0.0.1"),
@@ -200,22 +163,33 @@ class DefaultTest(unittest.TestCase):
                     "type": caseType.BGP,
                     "updated": datetime.datetime(2018, 8, 1, 11, 45, 51),
                 }
-                self.assertTrue(dict_diff(sess.get_attributes(32802), test))
+                raw_attrs = sess.get_attributes(32802)
+                cleaned_attrs = sess.clean_attributes(raw_attrs)
 
                 test = {
+                    "ac_down": None,
                     "alarm_count": 1,
+                    "bfddiscr": None,
+                    "bfdix": None,
+                    "flaps": None,
                     "alarm_type": "yellow",
                     "id": 34978,
+                    "ifindex": None,
                     "lastevent": "alarms went from 0 to 1",
+                    "lasttrans": None,
+                    "peer_uptime": None,
                     "opened": datetime.datetime(2018, 6, 16, 15, 37, 15),
                     "polladdr": ip_address("127.0.0.1"),
                     "priority": 100,
+                    "remote_as": None,
                     "router": "bergen-sw1",
                     "state": caseState.WORKING,
                     "type": caseType.ALARM,
                     "updated": datetime.datetime(2018, 6, 16, 15, 37, 15),
                 }
-                self.assertTrue(dict_diff(sess.get_attributes(34978), test))
+                raw_attrs = sess.get_attributes(34978)
+                cleaned_attrs = sess.clean_attributes(raw_attrs)
+                self.assertEqual(cleaned_attrs, test)
 
     def test_H_get_history(self):
         with zinoemu(executor):
@@ -227,7 +201,7 @@ class DefaultTest(unittest.TestCase):
                     "user": "system",
                     "log": [],
                 }
-                self.assertTrue(dict_diff(hist[0], test))
+                self.assertEqual(hist[0], test)
 
                 test = {
                     "date": datetime.datetime(2018, 10, 14, 11, 25, 23),
@@ -235,7 +209,7 @@ class DefaultTest(unittest.TestCase):
                     "user": "runarb",
                     "log": ["Testmelding ifra pyRitz"],
                 }
-                self.assertTrue(dict_diff(hist[1], test))
+                self.assertEqual(hist[1], test)
 
     def test_I_add_history(self):
         with zinoemu(executor):

@@ -240,10 +240,27 @@ class Case:
     def __init__(self, zino, caseid):
         self._zino = zino
         self._caseid = caseid
-        self._attrs = self._zino.get_attributes(caseid)
+        self._copy_attributes(caseid)
 
     def __repr__(self):
         return "%s(%s)" % (str(self.__class__), self._caseid)
+
+    def _copy_attributes(self, caseid):
+        self._attrs = self._zino.get_attributes(caseid)
+        for attr, value in self._attrs.items():
+            setattr(self, attr, value)
+
+    @property
+    def history(self):
+        return self._zino.get_history(self._caseid)
+
+    @property
+    def log(self):
+        return self._zino.get_log(self._caseid)
+
+    @property
+    def downtime(self):
+        return self.get_downtime()
 
     def clear_flapping(self):
         """Clear flapping state if this case object
@@ -293,25 +310,6 @@ class Case:
             )
         else:
             return self._zino.poll_router(self._attrs["router"])
-
-    def __getattr__(self, name):
-        """Wrapper to get all attributbutes of the object as python attributes
-        Usage:
-            c = ritz_session.case(123)
-            print(c.id)
-        """
-        if name in self._attrs:
-            return self._attrs[name]
-        elif "history" == name:
-            return self._zino.get_history(self._caseid)
-        elif "log" == name:
-            return self._zino.get_log(self._caseid)
-        elif "downtime" == name:
-            return self.get_downtime()
-        else:
-            self.__getattribute__(name)
-            # raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
-        return self
 
     def __getitem__(self, key):
         """Wrapper to dict
@@ -592,7 +590,6 @@ class ritz:
         """Collect all attributes of a zino CaseID object
 
         Returns a dict of all attributes registred on this case in zino
-        also does formatting of fields for known attributes
 
         Usage:
             attrs = ritz_session.get_attributes(123)
@@ -608,45 +605,53 @@ class ritz:
         if response.header[0] >= 500:
             raise ProtocolError(response.header)
         caseinfo = {}
-        for d in response.data:
-            v = d.split(":", 1)
-            caseinfo[v[0].strip().lower().replace("-", "_")] = v[1].strip()
-
-        caseinfo["id"] = int(caseinfo["id"])
-        caseinfo["opened"] = datetime.fromtimestamp(int(caseinfo["opened"]))
-        caseinfo["updated"] = datetime.fromtimestamp(int(caseinfo["updated"]))
-        caseinfo["priority"] = int(caseinfo["priority"])
-
-        if "ifindex" in caseinfo:
-            caseinfo["ifindex"] = int(caseinfo["ifindex"])
-        if "lasttrans" in caseinfo:
-            caseinfo["lasttrans"] = datetime.fromtimestamp(int(caseinfo["lasttrans"]))
-        if "flaps" in caseinfo:
-            caseinfo["flaps"] = int(caseinfo["flaps"])
-        if "ac_down" in caseinfo:
-            caseinfo["ac_down"] = timedelta(seconds=int(caseinfo["ac_down"]))
-        if "state" in caseinfo:
-            caseinfo["state"] = caseState(caseinfo["state"])
-        if "type" in caseinfo:
-            caseinfo["type"] = caseType(caseinfo["type"])
-        if "polladdr" in caseinfo:
-            caseinfo["polladdr"] = ipaddress.ip_address(caseinfo["polladdr"])
-        if "remote_addr" in caseinfo:
-            caseinfo["remote_addr"] = ipaddress.ip_address(caseinfo["remote_addr"])
-        if "remote_as" in caseinfo:
-            caseinfo["remote_as"] = int(caseinfo["remote_as"])
-        if "peer_uptime" in caseinfo:
-            caseinfo["peer_uptime"] = int(caseinfo["peer_uptime"])
-        if "alarm_count" in caseinfo:
-            caseinfo["alarm_count"] = int(caseinfo["alarm_count"])
-        if "bfdix" in caseinfo:
-            caseinfo["bfdix"] = int(caseinfo["bfdix"])
-        if "bfddiscr" in caseinfo:
-            caseinfo["bfddiscr"] = int(caseinfo["bfddiscr"])
-        if "bfdaddr" in caseinfo:
-            caseinfo["bfdaddr"] = ipaddress.ip_address(caseinfo["bfdaddr"])
-
+        for item in response.data:
+            k, v = item.split(":", 1)
+            safe_k = k.strip().lower().replace("-", "_")  # suitable as attribute
+            caseinfo[safe_k] = v.strip()
         return caseinfo
+
+    def clean_attributes(self, caseinfo):
+        """Format attributes received via self.get_attributes"""
+        cleaninfo = {}
+
+        # required
+        cleaninfo["id"] = int(caseinfo.pop("id"))
+        cleaninfo["opened"] = datetime.fromtimestamp(int(caseinfo.pop("opened")))
+        cleaninfo["updated"] = datetime.fromtimestamp(int(caseinfo.pop("updated")))
+        cleaninfo["priority"] = int(caseinfo.pop("priority"))
+
+        # optional
+        # serialized as ints
+        for attr in ("ifindex", "flaps", "remote_as", "peer_uptime", "alarm_count", "bfdix", "bfddiscr", "lasttrans", "ac_down"):
+            value = caseinfo.pop(attr, None)
+            if value is not None:
+                value = int(value)
+            cleaninfo[attr] = value
+
+        # various time fields serialized as ints
+        if cleaninfo["lasttrans"] is not None:
+            cleaninfo["lasttrans"] = datetime.fromtimestamp(cleaninfo["lasttrans"])
+        if cleaninfo["ac_down"] is not None:
+            cleaninfo["ac_down"] = timedelta(seconds=cleaninfo["ac_down"])
+
+        # ip addresses serialized as strings
+        for attr in ("polladdr", "remote_addr", "bfdaddr"):
+            value = caseinfo.pop(attr, None)
+            if value:
+                cleaninfo[attr] = ipaddress.ip_address(value)
+
+        # enums serialized as strings
+        state_ = caseinfo.pop("state", None)
+        cleaninfo["state"] = caseState(state_) if state_ else None
+        type_ = caseinfo.pop("type", None)
+        cleaninfo["type"] = caseType(type_) if type_ else None
+
+        # unknown, treated as strings
+        for attr, value in caseinfo.items():
+            cleaninfo[attr] = str(value)
+
+        return cleaninfo
 
     def get_history(self, caseid):
         """Return all history elements of a CaseID
