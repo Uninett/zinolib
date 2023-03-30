@@ -4,6 +4,7 @@
 *.bak
 *.egg-info
 .coverage*
+.ruff_cache
 
 __pycache__
 .mypy_cache
