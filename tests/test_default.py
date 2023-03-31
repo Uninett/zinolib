@@ -1,5 +1,7 @@
 import logging
 import datetime
+import os
+import time
 import unittest
 from ipaddress import ip_address
 
@@ -71,6 +73,16 @@ def executor(client):
 
 
 class DefaultTest(unittest.TestCase):
+    def setUp(self):
+        self.old_timezone = os.environ.get('TZ', None)
+        os.environ['TZ'] = 'Europe/Oslo'
+        time.tzset()
+
+    def tearDown(self):
+        if self.old_timezone:
+            os.environ['TZ'] = self.old_timezone
+            time.tzset()
+
     def test_A_connect_imediate_disconnect(self):
         def client(client):
             pass
