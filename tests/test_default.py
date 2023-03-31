@@ -1,5 +1,7 @@
 import logging
 import datetime
+import os
+import time
 import unittest
 from ipaddress import ip_address
 
@@ -71,6 +73,16 @@ def executor(client):
 
 
 class DefaultTest(unittest.TestCase):
+    def setUp(self):
+        self.old_timezone = os.environ.get('TZ', None)
+        os.environ['TZ'] = 'Europe/Oslo'
+        time.tzset()
+
+    def tearDown(self):
+        if self.old_timezone:
+            os.environ['TZ'] = self.old_timezone
+            time.tzset()
+
     def test_A_connect_imediate_disconnect(self):
         def client(client):
             pass
@@ -140,7 +152,7 @@ class DefaultTest(unittest.TestCase):
                 self.assertTrue(32802 in caseids)
                 self.assertTrue(34978 in caseids)
                 self.assertFalse(999 in caseids)
-                test = {
+                expected_result = {
                     "ac_down": None,
                     "alarm_count": None,
                     "bfddiscr": None,
@@ -165,8 +177,9 @@ class DefaultTest(unittest.TestCase):
                 }
                 raw_attrs = sess.get_attributes(32802)
                 cleaned_attrs = sess.clean_attributes(raw_attrs)
+                self.assertEqual(cleaned_attrs, expected_result)
 
-                test = {
+                expected_result = {
                     "ac_down": None,
                     "alarm_count": 1,
                     "bfddiscr": None,
@@ -189,7 +202,7 @@ class DefaultTest(unittest.TestCase):
                 }
                 raw_attrs = sess.get_attributes(34978)
                 cleaned_attrs = sess.clean_attributes(raw_attrs)
-                self.assertEqual(cleaned_attrs, test)
+                self.assertEqual(cleaned_attrs, expected_result)
 
     def test_H_get_history(self):
         with zinoemu(executor):
