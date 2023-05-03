@@ -20,6 +20,9 @@ classifiers = [
     "Topic :: System :: Monitoring",
 ]
 dynamic = ["version"]
+dependencies = [
+    "tomli; python<3.11"
+]
 
 [tool.setuptools]
 include-package-data = false
