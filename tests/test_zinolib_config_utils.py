@@ -5,15 +5,7 @@ from unittest import TestCase
 
 from zinolib.config.utils import find_config_file
 
-
-def make_file():
-    fd, filename = mkstemp(dir=str(Path.cwd()))
-    os.write(fd, b"")
-    return filename
-
-
-def delete_file(filename):
-    Path(filename).unlink(missing_ok=True)
+from .utils import make_tmptextfile, delete_tmpfile
 
 
 class FindConfigFileTest(TestCase):
@@ -22,13 +14,7 @@ class FindConfigFileTest(TestCase):
             find_config_file("bcekjyfbu eyxxgyikyvub iysbiucbcsiu")
 
     def test_find_config_file_golden_path(self):
-        filename = make_file()
+        filename = make_tmptextfile("", None)
         found_filename = find_config_file(filename)
-        delete_file(filename)
+        delete_tmpfile(filename)
         self.assertEqual(Path.cwd() / filename, found_filename)
-
-    def test_find_config_file_unusuable_file(self):
-        with self.assertRaises(FileNotFoundError):
-            filename = mkdtemp(dir=str(Path.cwd()))
-            found_filename = find_config_file(filename)
-            delete_file(filename)

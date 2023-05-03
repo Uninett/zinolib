@@ -1,9 +1,8 @@
-import os
-from pathlib import Path
-from tempfile import mkstemp
 from unittest import TestCase
 
 from zinolib.config.tcl import parse_tcl_config, normalize, parse
+
+from .utils import clean_textfile, make_tmptextfile, delete_tmpfile
 
 
 RITZ_CONFIG = """
@@ -22,36 +21,21 @@ RITZ_CONFIG = """
 """
 
 
-def clean_config(configtext):
-    config = "\n".join(line.strip() for line in configtext.split("\n"))
-    return config
-
-
-def make_configfile(text):
-    config = clean_config(text)
-    fd, filename = mkstemp(text=True, suffix=".tcl")
-    os.write(fd, bytes(config, encoding="ascii"))
-    return filename
-
-
-def delete_configfile(filename):
-    Path(filename).unlink(missing_ok=True)
-
-
 class ParseTclConfigTest(TestCase):
     def test_parse_tcl_config_missing_config_file(self):
         with self.assertRaises(FileNotFoundError):
             parse_tcl_config("cvfgdh vghj vbjhk")
 
     def test_parse_tcl_config_empty_config_file(self):
-        filename = make_configfile("")
+        filename = make_tmptextfile("", suffix=".tcl")
         tcl_config_dict = parse_tcl_config(filename)
+        delete_tmpfile(filename)
         self.assertEqual(tcl_config_dict, {})
-        delete_configfile(filename)
 
     def test_parse_tcl_config_golden_path(self):
-        filename = make_configfile(RITZ_CONFIG)
+        filename = make_tmptextfile(RITZ_CONFIG, suffix=".tcl")
         tcl_config_dict = parse_tcl_config(filename)
+        delete_tmpfile(filename)
         expected = {
             "default": {
                 "Port": "8001",
@@ -68,7 +52,6 @@ class ParseTclConfigTest(TestCase):
             },
         }
         self.assertEqual(tcl_config_dict, expected)
-        delete_configfile(filename)
 
 
 class ParseNormalizeTest(TestCase):
@@ -77,7 +60,7 @@ class ParseNormalizeTest(TestCase):
         self.assertEqual(normalize({}), expected)
 
     def test_normalize_golden_path(self):
-        tcl_config_dict = parse(clean_config(RITZ_CONFIG))
+        tcl_config_dict = parse(clean_textfile(RITZ_CONFIG))
         expected = {
             "global_options": {"sort_by": '"upd-rev"'},
             "connections": {

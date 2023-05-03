@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from . import tcl
+from . import tcl, toml
 from .models import UserConfig, ServerV1Config, Options
 
 
@@ -35,6 +35,11 @@ class ZinoV1Config(UserConfig, ServerV1Config, Options):
         config_dict = tcl.parse_tcl_config(filename)
         connection, options = _parse_tcl(config_dict, section)
         return cls(**connection, **options)
+
+    @classmethod
+    def from_toml(cls, filename=None, section="default"):
+        config_dict = toml.parse_toml_config(filename)
+        return cls(**config_dict["connections"], **config_dict["options"])
 
     def set_userauth(self, username, password):
         self.username = username
