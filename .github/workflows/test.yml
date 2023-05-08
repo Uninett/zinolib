@@ -34,9 +34,16 @@ jobs:
         python -VV
         python -m site
         python -m pip install --upgrade pip setuptools setuptools-scm wheel
-        python -m pip install --upgrade virtualenv tox tox-gh-actions
+        python -m pip install --upgrade virtualenv tox tox-gh-actions coverage
         python -m pip freeze
 
     - name: Run tests
       run: |
         python -m tox
+
+    - name: "Upload coverage to Codecov"
+      if: "github.repository_owner == 'Uninett'"
+      uses: codecov/codecov-action@v3
+      with:
+        fail_ci_if_error: true
+        token: ${{ secrets.CODECOV_TOKEN }} # not required for public repos
