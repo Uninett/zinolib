@@ -1,4 +1,79 @@
 # from __future__ import annotations
+"""
+Status and overview, supported zino line protocol commands
+/local/src/zino/zino/server.tcl
+  user        Authenticate user
+              Status: Implemented
+
+  nsocket     Outdated, DO NOT IMPLEMENT
+
+  ntie        Connect to notification socket
+              Status: NOT implemented
+
+  caseids     Get list of get_caseids
+              Status: Implemented
+
+  clearflap   doClearFlap $chan $l
+
+  getattrs    Get attributes of CaseID
+              Status: Crude implementation
+
+              All but "state" are under control by the server,
+              "state" may be changed by a client via "setstate".
+
+  getlog      Get Logs from CaseID
+              Status: Crude implementation
+
+              This is updated by the zino server.
+
+  gethist     Get History from CaseID
+              Status: Crude implementation
+
+              This is updated by "addhist".
+
+  addhist     Add history line to CaseID
+              Status: Implemented
+
+              Appends one history event to the history list.
+
+  setstate    Set noe state on caseID
+              Status: Implemented
+
+              Changes state, see caseState for available options.
+
+  community   Returns SNMP Community to comm. with device
+              uses router name as parameter
+              State: not Implemented
+
+  pollintf    Poll a router
+              State: implemented but not tested
+
+  pollrtr     Poll an interface
+              State: implemented but not Testmelding
+
+  pm          Preventive Maintenance
+              has a bid tree of sob commands,
+                pm add      - Scheduled a PM
+                  State: Crude implementation
+                pm list     - List all PMs
+                  State: Crude implementation
+                pm cancel   - Cancel a PM
+                  State: Implemented
+                pm details  - Details of a PM
+                  State: Crude implementation
+                pm matching - Get ports and devices matching a PM
+                  State: Crude implementation not tested
+                pm addlog   - Add a log entry to a PM
+                  State: Not Implemented
+                pm log      - Get log of a PM
+                  State: Not Implemented
+                pm help     - Get help... wil not implement
+                 State: NOT implemented
+
+  quit        doQuitCmd $chan $l
+  help        doHelpCmd $chan $l
+  version     doVersionCmd $chan $l
+"""
 
 import logging
 import socket
@@ -14,72 +89,9 @@ from typing import NamedTuple
 import codecs
 import select
 
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
-
-# Things to implement
-# /local/src/zino/zino/server.tcl
-#   user        Authenticate user
-#               Status: Implemented
-
-#   nsocket     Outdated, DO NOT IMPLEMENT
-
-#   ntie        Connect to notification socket
-#               Status: NOT implemented
-
-#   caseids     Get list of get_caseids
-#               Status: Implemented
-
-#   clearflap   doClearFlap $chan $l
-
-#   getattrs    Get attributes of CaseID
-#               Status: Crude implementation
-
-#   getlog      Get Logs from CaseID
-#               Status: Crude implementation
-
-#   gethist     Get History from CaseID
-#               Status: Crude implementation
-
-#   addhist     Add history line to CaseID
-#               Status: Implemented
-
-#   setstate    Set noe state on caseID
-#               Status: Implemented
-
-#   community   Returns SNMP Community to comm. with device
-#               uses router name as parameter
-#               State: not Implemented
-
-#   pollintf    Poll a router
-#               State: implemented but not tested
-
-#   pollrtr     Poll an interface
-#               State: implemented but not Testmelding
-
-#   pm          Preventive Maintenance
-#               has a bid tree of sob commands,
-#                 pm add      - Scheduled a PM
-#                   State: Crude implementation
-#                 pm list     - List all PMs
-#                   State: Crude implementation
-#                 pm cancel   - Cancel a PM
-#                   State: Implemented
-#                 pm details  - Details of a PM
-#                   State: Crude implementation
-#                 pm matching - Get ports and devices matching a PM
-#                   State: Crude implementation not tested
-#                 pm addlog   - Add a log entry to a PM
-#                   State: Not Implemented
-#                 pm log      - Get log of a PM
-#                   State: Not Implemented
-#                 pm help     - Get help... wil not implement
-#                  State: NOT implemented
-#
-#   quit        doQuitCmd $chan $l
-#   help        doHelpCmd $chan $l
-#   version     doVersionCmd $chan $l
-
 
 class AuthenticationError(Exception):
     pass
