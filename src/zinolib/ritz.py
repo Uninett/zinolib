@@ -399,7 +399,7 @@ class ritz:
         """Zino object deletion"""
         self.close()
 
-    def _read_command(self, command, recv_buffer=4096, delim="\r\n"):
+    def _request(self, command, recv_buffer=4096, delim="\r\n"):
         """Read a command from the ritz TCP socket
 
         This code needs a rewrite, maby use socket file object?
@@ -477,7 +477,7 @@ class ritz:
             )
         except socket.gaierror as E:
             raise NotConnectedError(E)
-        response = self._read_command(None)
+        response = self._request(None)
         if response.header[0] == 200:
             self.authChallenge = response.header[1].split(" ", 1)[0]
             self.connStatus = True
@@ -525,7 +525,7 @@ class ritz:
         cmd = "user %s %s  -\r\n" % (user, authToken)
         #  try:
         try:
-            response = self._read_command(cmd.encode("UTF-8"))
+            response = self._request(cmd.encode("UTF-8"))
             #  except ProtocolError as e:
             #    raise AuthenticationError(e)
             if response.header[0] == 200:
@@ -577,7 +577,7 @@ class ritz:
         if not self.authenticated:
             raise AuthenticationError("User not authenticated")
 
-        response = self._read_command(b"caseids\r\n")
+        response = self._request(b"caseids\r\n")
 
         ids = []
         for id in response.data:
@@ -601,7 +601,7 @@ class ritz:
         if not isinstance(caseid, int):
             raise TypeError("CaseID needs to be an integer")
         cmd = "getattrs %s\r\n" % caseid
-        response = self._read_command(cmd.encode("UTF-8"))
+        response = self._request(cmd.encode("UTF-8"))
         if response.header[0] >= 500:
             raise ProtocolError(response.header)
         caseinfo = {}
@@ -668,7 +668,7 @@ class ritz:
             raise AuthenticationError("User not authenticated")
         if not isinstance(caseid, int):
             raise TypeError("CaseID needs to be an integer")
-        response = self._read_command(b"gethist %d\r\n" % caseid)
+        response = self._request(b"gethist %d\r\n" % caseid)
 
         return _decode_history(response.data)
 
@@ -688,7 +688,7 @@ class ritz:
         if not isinstance(caseid, int):
             raise TypeError("CaseID needs to be an integer")
 
-        response = self._read_command(b"getlog %d\r\n" % caseid)
+        response = self._request(b"getlog %d\r\n" % caseid)
 
         return _decode_history(response.data)
 
@@ -709,12 +709,12 @@ class ritz:
             msg = message
 
         # Start Command
-        response = self._read_command(b"addhist %d  -\r\n" % (caseid))
+        response = self._request(b"addhist %d  -\r\n" % (caseid))
         if not response.header[0] == 302:
             raise ProtocolError("Unknown return from server: %s" % response.data)
 
         # Send message
-        response = self._read_command(b"%s\r\n\r\n.\r\n" % msg.encode())
+        response = self._request(b"%s\r\n\r\n.\r\n" % msg.encode())
         if not response.header[0] == 200:
             raise ProtocolError("Not getting 200 OK from server: %s" % response.data)
         return True
@@ -736,7 +736,7 @@ class ritz:
         if not isinstance(caseid, int):
             raise TypeError("CaseID needs to be an integer")
 
-        response = self._read_command(
+        response = self._request(
             b"setstate %d %s\r\n" % (caseid, state.value.encode())
         )
 
@@ -757,7 +757,7 @@ class ritz:
         if not isinstance(ifindex, int):
             raise TypeError("CaseID needs to be an integer")
 
-        response = self._read_command(
+        response = self._request(
             b"clearflap %s %d\r\n" % (router.encode(), ifindex)
         )
 
@@ -772,7 +772,7 @@ class ritz:
         Usage:
             zino_session.poll_router("routername")
         """
-        response = self._read_command(b"pollrtr %s\r\n" % router.encode())
+        response = self._request(b"pollrtr %s\r\n" % router.encode())
 
         # Check returncode
         if not response.header[0] == 200:
@@ -788,7 +788,7 @@ class ritz:
         """
         if not isinstance(ifindex, int):
             raise TypeError("CaseID needs to be an interger")
-        response = self._read_command(
+        response = self._request(
             b"pollintf %s %d\r\n" % (router.encode(), ifindex)
         )
 
@@ -822,7 +822,7 @@ class ritz:
             pass
         else:
             raise ValueError("key needs to be string or bytes")
-        response = self._read_command(b"ntie %s\r\n" % key)
+        response = self._request(b"ntie %s\r\n" % key)
 
         # Check returncode
         if not response.header[0] == 200:
@@ -866,7 +866,7 @@ class ritz:
         from_ts = mktime(from_t.timetuple())
         to_ts = mktime(to_t.timetuple())
 
-        response = self._read_command(
+        response = self._request(
             b"pm add %d %d device %s %s\r\n"
             % (from_ts, to_ts, m_type.encode(), device.encode())
         )
@@ -916,7 +916,7 @@ class ritz:
         from_ts = mktime(from_t.timetuple())
         to_ts = mktime(to_t.timetuple())
 
-        response = self._read_command(
+        response = self._request(
             b"pm add %d %d portstate intf-regexp %s %s\r\n"
             % (from_ts, to_ts, device.encode(), interface.encode())
         )
@@ -962,7 +962,7 @@ class ritz:
         from_ts = mktime(from_t.timetuple())
         to_ts = mktime(to_t.timetuple())
 
-        response = self._read_command(
+        response = self._request(
             b"pm add %d %d portstate regexp %s\r\n"
             % (from_ts, to_ts, description.encode())
         )
@@ -989,7 +989,7 @@ class ritz:
         if not self.authenticated:
             raise AuthenticationError("User not authenticated")
 
-        response = self._read_command(b"pm list\r\n")
+        response = self._request(b"pm list\r\n")
 
         ids = []
         for id in response.data:
@@ -1010,7 +1010,7 @@ class ritz:
 
         if not isinstance(id, int):
             raise TypeError("ID needs to be an integer")
-        response = self._read_command(b"pm cancel %d\r\n" % (id))
+        response = self._request(b"pm cancel %d\r\n" % (id))
 
         # Check returncode
         if not response.header[0] == 200:
@@ -1032,7 +1032,7 @@ class ritz:
         if not isinstance(id, int):
             raise TypeError("ID needs to be an integer")
 
-        response = self._read_command(b"pm details %d\r\n" % (id))
+        response = self._request(b"pm details %d\r\n" % (id))
 
         data2 = response.data.split(" ", 5)
         # print(data2)
@@ -1062,7 +1062,7 @@ class ritz:
         if not isinstance(id, int):
             raise TypeError("ID needs to be an integer")
 
-        response = self._read_command(b"pm matching %d\r\n" % id)
+        response = self._request(b"pm matching %d\r\n" % id)
 
         # Return list with element 1: "device"portstate,
         #                          2: device
@@ -1091,7 +1091,7 @@ class ritz:
         if not isinstance(id, int):
             raise TypeError("ID needs to be an integer")
 
-        response = self._read_command(b"pm addlog %d  -\r\n" % (id))
+        response = self._request(b"pm addlog %d  -\r\n" % (id))
 
         if not response.header[0] == 302:
             raise Exception("Unknown return from server: %s" % self._buff)
@@ -1103,7 +1103,7 @@ class ritz:
             msg = message
 
         # Send message
-        response = self._read_command(b"%s\r\n\r\n.\r\n" % msg.encode())
+        response = self._request(b"%s\r\n\r\n.\r\n" % msg.encode())
 
         # Check returncode
         if not response.header[0] == 200:
@@ -1125,7 +1125,7 @@ class ritz:
         if not self.authenticated:
             raise AuthenticationError("User not authenticated")
         self._sock.settimeout(30)
-        response = self._read_command(b"pm log %d\r\n" % id)
+        response = self._request(b"pm log %d\r\n" % id)
 
         # print(header)
         # print(data)
