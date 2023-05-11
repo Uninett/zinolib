@@ -41,6 +41,14 @@ jobs:
       run: |
         python -m tox
 
+    - name: Upload test reports (${{ matrix.python-version }})
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: reports
+        path: |
+          reports/**/*
+
     - name: "Upload coverage to Codecov"
       if: "github.repository_owner == 'Uninett'"
       uses: codecov/codecov-action@v3
