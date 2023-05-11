@@ -1247,7 +1247,3 @@ class notifier:
                 return NotifierResponse(id, type, text)
             except Exception:
                 raise ProtocolError("line: {} , _buff: {}".format(line, self._buff))
-
-
-if "__main__" == __name__:
-    print("This is a library, not an application :)")
