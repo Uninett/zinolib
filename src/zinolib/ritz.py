@@ -93,9 +93,8 @@ class ProtocolError(Exception):
     pass
 
 
-notifierEntry = NamedTuple("notifierEntry", [("id", int), ("type", str), ("info", str)])
-
-zinoDataEntry = NamedTuple("zinoDataEntry", [("data", str), ("header", str)])
+NotifierResponse = NamedTuple("NotifierResponse", [("id", int), ("type", str), ("info", str)])
+DataResponse = NamedTuple("DataResponse", [("data", str), ("header", str)])
 
 
 def windows_codepage_cp1252(error):
@@ -444,28 +443,28 @@ class ritz:
                     # Crude error detection :)
                     if header[0] >= 500:
                         # Die on Error codes
-                        return zinoDataEntry(header[1], header)
+                        return DataResponse(header[1], header)
                         # raise ProtocolError("Errorcode '%s %s' reported from server" % (header[0], header[1]))
                     if header[0] == 200:
                         # Return to user on 200, 200 doesent add more data
-                        return zinoDataEntry(header[1], header)
+                        return DataResponse(header[1], header)
                     if header[0] == 302:
                         # Return to user on 302, wee need more data
-                        return zinoDataEntry(header[1], header)
+                        return DataResponse(header[1], header)
                 next
 
             while buffer.find(self.DELIMITER) != -1:
                 # '\r\n' is not a byte
                 line, buffer = buffer.split(self.DELIMITER, 1)
                 if line == ".":
-                    return zinoDataEntry(r, header)
+                    return DataResponse(r, header)
                 r.append(line)
         if not header:
             raise ProtocolError(
                 "No header info detected for command %s, buffer %s"
                 % (repr(command), repr(buffer))
             )
-        return zinoDataEntry(r, header)
+        return DataResponse(r, header)
 
     def connect(self):
         """Connect to zino datachannel
@@ -1245,7 +1244,7 @@ class notifier:
                     text = element[2]
                 except IndexError:
                     text = ""
-                return notifierEntry(id, type, text)
+                return NotifierResponse(id, type, text)
             except Exception:
                 raise ProtocolError("line: {} , _buff: {}".format(line, self._buff))
 
