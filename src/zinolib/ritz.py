@@ -341,7 +341,6 @@ class ritz:
             ...
     """
     DELIMITER = "\r\n"
-    bDELIMITER = bytes(DELIMITER, 'ascii')
 
     def __init__(self, server, port=8001, timeout=10, username=None, password=None):
         """Initialize"""
@@ -382,8 +381,9 @@ class ritz:
         r = []
         logger.debug("send: %s" % command.__repr__())
         if command:
-            if not command.endswith(self.bDELIMITER):
-                command += self.bDELIMITER
+            delimiter = bytes(self.DELIMITER, 'ascii')
+            if not command.endswith(delimiter):
+                command += delimiter
             self._sock.send(command)
         while data:
             try:
