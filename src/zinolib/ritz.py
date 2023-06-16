@@ -512,6 +512,16 @@ class ritz:
         except TypeError:
             raise ProtocolError("Got an illegal response from the server")
 
+    def check_connection(self):
+        if not self.connStatus:
+            raise NotConnectedError("Not connected to device")
+        if not self.authenticated:
+            raise AuthenticationError("User not authenticated")
+
+    def check_id(self, id_, id_name="Id"):
+        if not isinstance(id_, int):
+            raise TypeError(f"{id_name} needs to be an integer")
+
     def case(self, id):
         """Get a zino Case object
 
@@ -546,10 +556,7 @@ class ritz:
             print(ids)
               [123,234,345,456,567,678,789]
         """
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
 
         response = self._request(b"caseids")
 
@@ -568,10 +575,8 @@ class ritz:
         Usage:
             attrs = ritz_session.get_raw_attributes(123)
         """
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
+
         if not isinstance(caseid, int):
             raise TypeError("CaseID needs to be an integer")
         cmd = "getattrs %s" % caseid
@@ -651,12 +656,9 @@ class ritz:
         #   gethist     Get Logs from CaseID
         #   Parameters: caseID
         #   Returns a list of historylines (timestamp, message)??
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
-        if not isinstance(caseid, int):
-            raise TypeError("CaseID needs to be an integer")
+        self.check_connection()
+        self.check_id(caseid, "CaseID")
+
         response = self._request(b"gethist %d" % caseid)
 
         return _decode_history(response.data)
@@ -670,12 +672,8 @@ class ritz:
         #   getlog      Get Logs from CaseID
         #   Parameters: caseID
         #   Returns a list of loglines (timestamp, message)
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
-        if not isinstance(caseid, int):
-            raise TypeError("CaseID needs to be an integer")
+        self.check_connection()
+        self.check_id(caseid, "CaseID")
 
         response = self._request(b"getlog %d" % caseid)
 
@@ -838,10 +836,7 @@ class ritz:
         #  Returns 200 with id on PM on sucessfull pm add
         #  Function returns id of added PM
         # str: matcher mot device-name, kan bruke ? - en char * - flere char
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
 
         if not isinstance(from_t, datetime):
             raise TypeError("from_t is not a datetime")
@@ -890,10 +885,7 @@ class ritz:
 
         #  Returns 200 with id on PM on sucessfull pm add
         #  Function returns id of added PM
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
 
         if not isinstance(from_t, datetime):
             raise TypeError("from_t is not a datetime")
@@ -936,10 +928,7 @@ class ritz:
 
         #  Returns 200 with id on PM on sucessfull pm add
         #  Function returns id of added PM
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
 
         if not isinstance(from_t, datetime):
             raise TypeError("from_t is not a datetime")
@@ -968,15 +957,7 @@ class ritz:
         # Lists all Maintenance periods registrered
         # pm list
         # returns 300 with list of all scheduled PM's, exits with ^.$
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
-
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
 
         response = self._request(b"pm list")
 
@@ -992,13 +973,9 @@ class ritz:
         # Cansels a Maintenance period
         # pm cancel
         #    [2] id      - id of pm to cancel
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
+        self.check_connection()
+        self.check_id(id)
 
-        if not isinstance(id, int):
-            raise TypeError("ID needs to be an integer")
         response = self._request(b"pm cancel %d" % (id))
 
         # Check returncode
@@ -1013,13 +990,8 @@ class ritz:
         # pm details
         #    [2] id      - id of pm
         # returns 200 with details. need testing
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
-
-        if not isinstance(id, int):
-            raise TypeError("ID needs to be an integer")
+        self.check_connection()
+        self.check_id(id)
 
         response = self._request(b"pm details %d" % (id))
 
@@ -1044,12 +1016,8 @@ class ritz:
         # pm matching
         #    [2] id       - id of pm
         # returns 300 with ports and devices matching id, exits with ^.$
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
-        if not isinstance(id, int):
-            raise TypeError("ID needs to be an integer")
+        self.check_connection()
+        self.check_id(id)
 
         response = self._request(b"pm matching %d" % id)
 
@@ -1072,13 +1040,8 @@ class ritz:
         #   <message here>
         # .
         # returns 200? need verification
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
-
-        if not isinstance(id, int):
-            raise TypeError("ID needs to be an integer")
+        self.check_connection()
+        self.check_id(id)
 
         response = self._request(b"pm addlog %d  -" % (id))
 
@@ -1106,13 +1069,9 @@ class ritz:
         #   [2] id       -  ID of pm to gat log from
         # returns 300 log follows, exits with ^.$
         #
+        self.check_connection()
+        self.check_id(id)
 
-        if not isinstance(id, int):
-            raise TypeError("ID needs to be a integer")
-        if not self.connStatus:
-            raise NotConnectedError("Not connected to device")
-        if not self.authenticated:
-            raise AuthenticationError("User not authenticated")
         self._sock.settimeout(30)
         response = self._request(b"pm log %d" % id)
 
