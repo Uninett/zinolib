@@ -1,0 +1,299 @@
+from datetime import datetime, timedelta, timezone
+from typing import Optional, ClassVar, List, TypeVar
+
+from pydantic import IPvAnyAddress
+from pydantic import BaseModel
+
+from .compat import StrEnum
+
+
+class PropertyBaseModel(BaseModel):
+    # Workaround for serializing properties with pydantic until
+    # https://github.com/samuelcolvin/pydantic/issues/935
+    # is solved, schgeduled for Pydantic v2
+    #
+    # Copied from https://github.com/pydantic/pydantic/issues/935#issuecomment-1202998566  # noqa: E501
+    @classmethod
+    def get_properties(cls):
+        return [prop for prop in dir(cls) if isinstance(getattr(cls, prop), property)]
+
+    def dict(self, *args, **kwargs):
+        self.__dict__.update(
+            {prop: getattr(self, prop) for prop in self.get_properties()}
+        )
+        return super().dict(*args, **kwargs)
+
+    def json(
+        self,
+        *args,
+        **kwargs,
+    ) -> str:
+        self.__dict__.update(
+            {prop: getattr(self, prop) for prop in self.get_properties()}
+        )
+
+        return super().json(*args, **kwargs)
+
+
+def utcnow():
+    return datetime.now(timezone.utc)
+
+
+class AdmState(StrEnum):
+    """
+
+    Historic states:
+
+    * "active" was used twice in 1998
+    """
+    # ACTIVE = "active"
+
+    CLOSED = "closed"
+    CONFIRM_WAIT = "confirm-wait"
+    IGNORED = "ignored"
+    OPEN = "open"
+    WAITING = "waiting"
+    WORKING = "working"
+
+
+class FlapState(StrEnum):
+    FLAPPING = 'flapping'
+    STABLE = 'stable'
+
+
+class BFDState(StrEnum):
+    ADMIN_DOWN = "adminDown"
+    DOWN = "down"
+    INIT = "init"
+    UP = "up"
+
+
+class ReachabilityState(StrEnum):
+    REACHABLE = "reachable"
+    NORESPONSE = "no-response"
+
+
+class PortState(StrEnum):
+    """
+    Historic states:
+
+    * "testing" was used six times from 2000 to 2001
+    * "admin0" was used ten times from 2000 to 2002
+    * "flapping" was used 22 times on 2016-07-13T09:55 UTC
+    * "notPresent" was used 161 times during 2003
+    * "5" was used 389 times from 1998 to 2000
+    * "dormant" was used 813 times from 2000 to 2006
+    """
+    # TESTING = "testing"
+    # ADMIN_0 = "admin0"
+    # FLAPPING = "flapping"
+    # NOT_PRESENT = "notPresent"
+    # FIVE = "5"
+    # DORMANT = "dormant"
+
+    ADMIN_DOWN = "adminDown"
+    DOWN = "down"
+    LOWER_LAYER_DOWN = "lowerLayerDown"
+    UP = "up"
+
+
+class LogEntry(BaseModel):
+    date: datetime  # epoch
+    log: str
+
+    @classmethod
+    def create_list(cls, raw_log_list):
+        log_list = []
+        for entry in raw_log_list:
+            obj = cls(**entry)
+            log_list.append(obj)
+        return log_list
+
+
+class HistoryEntry(BaseModel):
+    log: str
+    date: datetime  # epoch
+    user: str
+
+    @classmethod
+    def create_list(cls, raw_history_list):
+        history_list = []
+        for entry in raw_history_list:
+            obj = cls(**entry)
+            history_list.append(obj)
+        return history_list
+
+
+class Event(PropertyBaseModel):
+    """
+    """
+    class Type(StrEnum):
+        ALARM = "alarm"
+        BFD = "bfd"
+        BGP = "bgp"
+        PORTSTATE = "portstate"
+        REACHABILITY = "reachability"
+
+    id: int
+    type: ClassVar[Type]
+    adm_state: AdmState
+    router: str
+    opened: datetime  # epoch
+
+    lastevent: Optional[str]
+    lasttrans: Optional[datetime] = None  # epoch
+    updated: Optional[datetime]  # epoch
+    polladdr: Optional[IPvAnyAddress]
+    priority: int = 100
+
+    # Cannot be set here, only per subclass
+    # port: str = ""
+    # description: str = ""
+    # op_state: str = ""
+
+    log: List[LogEntry] = []
+    history: List[HistoryEntry] = []
+    SUBTYPES: ClassVar[dict] = {}
+
+    class Config:
+        validate_all = True
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.SUBTYPES[cls.type.value] = cls
+
+    @classmethod
+    def create(cls, attrdict):
+        event_type_string = attrdict["type"]
+        subtype = Event.SUBTYPES[event_type_string]
+        eventobj = subtype(**attrdict)
+        return eventobj
+
+
+EventType = TypeVar('EventType', bound=Event)
+
+
+class AlarmEvent(Event):
+    type = Event.Type.ALARM
+    alarm_count: int
+    alarm_type: str
+    port: str = ""
+
+    @property
+    def op_state(self) -> str:
+        return f"ALRM  {self.alarm_type}"
+
+    @property
+    def description(self) -> str:
+        return self.lastevent
+
+
+class BFDEvent(Event):
+    type = Event.Type.BFD
+    bfd_addr: Optional[IPvAnyAddress]
+    bfd_discr: Optional[int]
+    bfd_state: BFDState
+    bfd_ix: int
+    Neigh_rDNS: str = ""  # ?
+
+    @property
+    def port(self) -> str:
+        return self.bfd_addr if self.bfd_addr else f"ix {self.bfd_ix}"
+
+    @property
+    def description(self) -> str:
+        return f"{self.Neigh_rDNS}, {self.lastevent}"
+
+    @property
+    def op_state(self) -> str:
+        return f"BFD  {self.bfd_state[:5]}"
+
+
+class BGPEvent(Event):
+    type = Event.Type.BGP
+    bgp_AS: str
+    bgp_OS: str
+    remote_AS: int
+    remote_addr: IPvAnyAddress
+    peer_uptime: int
+    lastevent: str
+
+    @property
+    def port(self) -> str:
+        return f"AS{self.remote_AS}"
+
+    @property
+    def description(self) -> str:
+        # rdns = dns_reverse_resolver(str(cls.remote_addr))
+        # rdns = ''
+        # return f"{rdns}, {cls.lastevent}"
+        return f"{self.remote_addr}, {self.lastevent}"
+
+    @property
+    def op_state(self) -> str:
+        return f"BGP  {self.bgp_OS[:5]}"
+
+
+class ReachabilityEvent(Event):
+    type = Event.Type.REACHABILITY
+    reachability: ReachabilityState
+    ac_down: Optional[timedelta]  # int
+    description: str = ""
+    port: str = ""
+
+    @property
+    def op_state(self) -> str:
+        return self.reachability
+
+
+class PortStateEvent(Event):
+    type = Event.Type.PORTSTATE
+    ac_down: Optional[timedelta]  # int
+    descr: str = ""
+    flaps: Optional[int]
+    flapstate: Optional[FlapState]
+    if_index: int
+    port_state: PortState  # str *
+    reason: Optional[str]  # *
+    port: str = ""
+
+    @property
+    def description(self) -> str:
+        return self.descr
+
+    @property
+    def op_state(self) -> str:
+        return f"PORT  {self.port_state[:5]}"
+
+    def get_downtime(self):
+        """Calculate downtime on this PortState"""
+        # If no transition is detected, use now.
+        now = utcnow()
+        lasttrans = self.lasttrans or now
+        accumulated = self.ac_down or timedelta(seconds=0)
+
+        if self.port_state in [PortState.DOWN, PortState.LOWER_LAYER_DOWN]:
+            return accumulated + now - lasttrans
+        else:
+            return accumulated
+
+
+class EventEngine:
+    def __init__(self, session=None):
+        self.session = session
+
+    def check_session(self):
+        if not self.session:
+            raise ValueError  # raise correct error
+
+    def set_history_for_event(self, event: EventType, history_list: List[HistoryEntry]):
+        event.history = history_list
+        return event
+
+    def set_log_for_event(self, event: EventType, log_list):
+        event.log = log_list
+        return event
+
+    def add_history_for_event(self, event: EventType, history_entry):
+        event.history.append(history_entry)
+        return event
