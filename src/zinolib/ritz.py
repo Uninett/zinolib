@@ -645,21 +645,32 @@ class ritz:
 
         return cleaninfo
 
-    def get_history(self, caseid):
-        """Return all history elements of a CaseID
-
-        Usage:
-            case_history = ritz_session.get_history(123)
-        """
+    def get_raw_history(self, caseid):
         #   gethist     Get Logs from CaseID
         #   Parameters: caseID
         #   Returns a list of historylines (timestamp, message)??
         self.check_connection()
         self.check_id(caseid, "CaseID")
 
-        response = self._request(b"gethist %d" % caseid)
+        return self._request(b"gethist %d" % caseid)
 
+    def get_history(self, caseid):
+        """Return all history elements of a CaseID
+
+        Usage:
+            case_history = ritz_session.get_history(123)
+        """
+        response = self.get_raw_history(caseid)
         return _decode_history(response.data)
+
+    def get_raw_log(self, caseid):
+        #   getlog      Get Logs from CaseID
+        #   Parameters: caseID
+        #   Returns a list of loglines (timestamp, message)
+        self.check_connection()
+        self.check_id(caseid, "CaseID")
+
+        return self._request(b"getlog %d" % caseid)
 
     def get_log(self, caseid):
         """Return all log elements of a CaseID
@@ -667,14 +678,7 @@ class ritz:
         Usage:
             case_logs = ritz_session.get_log(123)
         """
-        #   getlog      Get Logs from CaseID
-        #   Parameters: caseID
-        #   Returns a list of loglines (timestamp, message)
-        self.check_connection()
-        self.check_id(caseid, "CaseID")
-
-        response = self._request(b"getlog %d" % caseid)
-
+        response = self.get_raw_log(caseid)
         return _decode_history(response.data)
 
     def add_history(self, caseid, message):
