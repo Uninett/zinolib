@@ -48,9 +48,21 @@ Both return the changed event.
 """
 
 from datetime import datetime, timezone
-from typing import List
+from typing import List, Dict, Union, TypedDict
 
 from .event_types import EventType, Event, EventEngine, HistoryEntry, LogEntry
+
+
+HistoryDict = TypedDict(
+    "HistoryDict",
+    {"date": datetime, "user": str, "log": str},
+    total=False,
+)
+LogDict = TypedDict(
+    "LogDict",
+    {"log": str, "date": datetime},
+    total=False,
+)
 
 
 def convert_timestamp(timestamp: int) -> datetime:
@@ -134,7 +146,7 @@ class HistoryAdapter:
             ..
         ]
         """
-        history_list = []
+        history_list: List[HistoryDict] = []
         for row in history_data:
             if row == " ":  # end of history
                 continue
@@ -142,12 +154,14 @@ class HistoryAdapter:
                 history_list[-1]["log"] += row.strip()
             else:
                 timestamp, body = row.split(" ", 1)
-                dt = convert_timestamp(timestamp)
-                entry = {"date": dt}
+                dt = convert_timestamp(int(timestamp))
+                entry: HistoryDict = {"date": dt}
                 if " " in body:  # server generated
-                    entry = {"log": body, "user": cls.SYSTEM_USER}
+                    entry["user"] = cls.SYSTEM_USER
+                    entry["log"] = body
                 else:
-                    entry = {"log": "", "user": body}
+                    entry["user"] =  body
+                    entry["log"] = ""
                 history_list.append(entry)
 
         return history_list
@@ -169,7 +183,7 @@ class LogAdapter:
         return session.get_raw_log(event_id).data
 
     @staticmethod
-    def parse_response(log_data: List[dict]):
+    def parse_response(log_data: List[str]) -> List[LogDict]:
         """
         Input:
         [
@@ -186,10 +200,10 @@ class LogAdapter:
             ..
         ]
         """
-        log_list = []
+        log_list: List[LogDict] = []
         for row in log_data:
             timestamp, log = row.split(" ", 1)
-            dt = convert_timestamp(timestamp)
+            dt = convert_timestamp(int(timestamp))
             log_list.append({"date": dt, "log": log})
         return log_list
 
@@ -232,5 +246,5 @@ class Zino1EventEngine(EventEngine):
     def get_log_for_id(self, event_id: int):
         self.check_session()
         raw_log = self._log_adapter.get_log(self.session, event_id)
-        parsed_log = self._log_adapter.parse_log_response(raw_log)
+        parsed_log = self._log_adapter.parse_response(raw_log)
         return LogEntry.create_list(parsed_log)

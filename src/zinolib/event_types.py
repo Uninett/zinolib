@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, ClassVar, List, TypeVar, Union, Dict
+from typing import Optional, ClassVar, List, TypeVar, Union, Dict, Generic
 
 from pydantic import IPvAnyAddress
 from pydantic import BaseModel
@@ -286,19 +286,20 @@ class EventEngine:
     A list of already existing events can be manipulated by an instance of
     this class out of the box, but the actual IO is done by subclasses.
     """
-    events: Dict[str, EventType]
+    events: Dict[int, Event]
 
     def __init__(self, session=None):
         self.session = session
         self.events = {}
 
-    def _get_event(self, event_or_id: EventOrId) -> EventType:
-        if isinstance(event_or_id, EventType):
+    def _get_event(self, event_or_id: EventOrId) -> Event:
+        if isinstance(event_or_id, Event):
             return event_or_id
         if isinstance(event_or_id, int):
             return self.events[event_or_id]
+        raise ValueError("Unknown type")
 
-    def _set_event(self, event: EventType):
+    def _set_event(self, event: Event):
         self.events[event.id] = event
 
     def check_session(self):
