@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, ClassVar, List, TypeVar
+from typing import Optional, ClassVar, List, TypeVar, Union, Dict
 
 from pydantic import IPvAnyAddress
 from pydantic import BaseModel
@@ -166,6 +166,7 @@ class Event(PropertyBaseModel):
 
 
 EventType = TypeVar('EventType', bound=Event)
+EventOrId = Union[EventType, int]
 
 
 class AlarmEvent(Event):
@@ -274,21 +275,44 @@ class PortStateEvent(Event):
 
 
 class EventEngine:
+    """
+    Implementation-agnostic controller for events
+
+    A list of already existing events can be manipulated by an instance of
+    this class out of the box, but the actual IO is done by subclasses.
+    """
+    events: Dict[str, EventType]
+
     def __init__(self, session=None):
         self.session = session
+        self.events = {}
+
+    def _get_event(self, event_or_id: EventOrId) -> EventType:
+        if isinstance(event_or_id, EventType):
+            return event_or_id
+        if isinstance(event_or_id, int):
+            return self.events[event_or_id]
+
+    def _set_event(self, event: EventType):
+        self.events[event.id] = event
 
     def check_session(self):
         if not self.session:
             raise ValueError  # raise correct error
 
-    def set_history_for_event(self, event: EventType, history_list: List[HistoryEntry]):
+    def set_history_for_event(self, event_or_id: EventOrId, history_list: List[HistoryEntry]):
+        event = self._get_event(event_or_id)
         event.history = history_list
+        self._set_event(event)
         return event
 
-    def set_log_for_event(self, event: EventType, log_list):
+    def set_log_for_event(self, event_or_id: EventOrId, log_list: List[LogEntry]):
+        event = self._get_event(event_or_id)
         event.log = log_list
+        self._set_event(event)
         return event
 
+    # not finished
     def add_history_for_event(self, event: EventType, history_entry):
         event.history.append(history_entry)
         return event

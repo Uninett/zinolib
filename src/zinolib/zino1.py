@@ -13,7 +13,38 @@ Get a live Zino 1 session to use::
 
 Now you can use the session when initializing Zino1EventEngine::
 
-    > events = Zino1EventEngine(session)
+    > event_engine = Zino1EventEngine(session)
+
+To get a list of currently available events::
+
+    > event_engine.get_events()
+
+The events are then available as::
+
+    > event_engine.events
+
+This is a dictionary of event_id, event object pairs.
+
+To get history for a specific event::
+
+    > history_list = event_engine.get_history_for_id(INT)
+
+To get the log for a specific event::
+
+    > log_list = event_engine.get_log_for_id(INT)
+
+History can be stored on the correct event with one of::
+
+    > event_engine.set_history_for_event(event, history_list)
+    > event_engine.set_history_for_event(INT, history_list)
+
+Log can be stored on the correct event with one of::
+
+    > event_engine.set_log_for_event(event, log_list)
+    > event_engine.set_log_for_event(INT, log_list)
+
+Both return the changed event.
+
 """
 
 from datetime import datetime, timezone
@@ -168,10 +199,6 @@ class Zino1EventEngine(EventEngine):
     _event_adapter = EventAdapter
     _history_adapter = HistoryAdapter
     _log_adapter = LogAdapter
-
-    def __init__(self, session=None):
-        super().__init__(session)
-        self.events = {}
 
     def clear_flapping(self, event: EventType):
         """Clear flapping state of a PortStateEvent
