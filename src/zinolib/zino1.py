@@ -48,11 +48,15 @@ Both return the changed event.
 """
 
 from datetime import datetime, timezone
+import logging
 from typing import List, Dict, Union, TypedDict
+
+from zinolib.ritz import ProtocolError
 
 from .event_types import EventType, Event, EventEngine, HistoryEntry, LogEntry
 
 
+LOG = logging.getLogger(__name__)
 HistoryDict = TypedDict(
     "HistoryDict",
     {"date": datetime, "user": str, "log": str},
@@ -85,7 +89,10 @@ class EventAdapter:
 
     @staticmethod
     def get_attrlist(session, event_id: int):
-        return session.get_raw_attributes(event_id)
+        try:
+            return session.get_raw_attributes(event_id)
+        except ProtocolError:
+            return []
 
     @classmethod
     def attrlist_to_attrdict(cls, attrlist: List[str]):
@@ -229,11 +236,16 @@ class Zino1EventEngine(EventEngine):
         self.check_session()
         for event_id in self._event_adapter.get_event_ids(self.session):
             event = self.create_event_from_id(event_id)
-            self.events[event_id] = event
+            if event:
+                self.events[event_id] = event
+            else:
+                LOG.info("Event with id {event_id} no longer on server")
 
     def create_event_from_id(self, event_id: int):
         self.check_session()
         attrlist = self._event_adapter.get_attrlist(self.session, event_id)
+        if not attrlist:
+            return None
         attrdict = self._event_adapter.attrlist_to_attrdict(attrlist)
         return Event.create(attrdict)
 
