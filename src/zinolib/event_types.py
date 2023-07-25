@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, ClassVar, List, TypeVar, Union, Dict, Generic
 
-from pydantic import IPvAnyAddress
+from pydantic import ConfigDict, IPvAnyAddress
 from pydantic import BaseModel
 
 from .compat import StrEnum
@@ -154,9 +154,7 @@ class Event(PropertyBaseModel):
     log: List[LogEntry] = []
     history: List[HistoryEntry] = []
     SUBTYPES: ClassVar[dict] = {}
-
-    class Config:
-        validate_all = True
+    model_config = ConfigDict(validate_default=True)
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
@@ -191,8 +189,8 @@ class AlarmEvent(Event):
 
 class BFDEvent(Event):
     type = Event.Type.BFD
-    bfd_addr: Optional[IPvAnyAddress]
-    bfd_discr: Optional[int]
+    bfd_addr: Optional[IPvAnyAddress] = None
+    bfd_discr: Optional[int] = None
     bfd_state: BFDState
     bfd_ix: int
     Neigh_rDNS: str = ""  # ?
@@ -238,7 +236,7 @@ class BGPEvent(Event):
 class ReachabilityEvent(Event):
     type = Event.Type.REACHABILITY
     reachability: ReachabilityState
-    ac_down: Optional[timedelta]  # int
+    ac_down: Optional[timedelta] = None  # int
     description: str = ""
     port: str = ""
 
@@ -249,13 +247,13 @@ class ReachabilityEvent(Event):
 
 class PortStateEvent(Event):
     type = Event.Type.PORTSTATE
-    ac_down: Optional[timedelta]  # int
+    ac_down: Optional[timedelta] = None  # int
     descr: str = ""
-    flaps: Optional[int]
-    flapstate: Optional[FlapState]
+    flaps: Optional[int] = None
+    flapstate: Optional[FlapState] = None
     if_index: int
     port_state: PortState  # str *
-    reason: Optional[str]  # *
+    reason: Optional[str] = None  # *
     port: str = ""
 
     @property
