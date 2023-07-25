@@ -2,37 +2,9 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, ClassVar, List, TypeVar, Union, Dict, Generic
 
 from pydantic import ConfigDict, IPvAnyAddress
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 
 from .compat import StrEnum
-
-
-class PropertyBaseModel(BaseModel):
-    # Workaround for serializing properties with pydantic until
-    # https://github.com/samuelcolvin/pydantic/issues/935
-    # is solved, schgeduled for Pydantic v2
-    #
-    # Copied from https://github.com/pydantic/pydantic/issues/935#issuecomment-1202998566  # noqa: E501
-    @classmethod
-    def get_properties(cls):
-        return [prop for prop in dir(cls) if isinstance(getattr(cls, prop), property)]
-
-    def dict(self, *args, **kwargs):
-        self.__dict__.update(
-            {prop: getattr(self, prop) for prop in self.get_properties()}
-        )
-        return super().dict(*args, **kwargs)
-
-    def json(
-        self,
-        *args,
-        **kwargs,
-    ) -> str:
-        self.__dict__.update(
-            {prop: getattr(self, prop) for prop in self.get_properties()}
-        )
-
-        return super().json(*args, **kwargs)
 
 
 def utcnow():
@@ -119,7 +91,7 @@ class HistoryEntry(BaseModel):
         return history_list
 
 
-class Event(PropertyBaseModel):
+class Event(BaseModel):
     """
     """
     class Type(StrEnum):
@@ -135,10 +107,10 @@ class Event(PropertyBaseModel):
     router: str
     opened: datetime  # epoch
 
-    lastevent: Optional[str]
+    lastevent: Optional[str] = ''
     lasttrans: Optional[datetime] = None  # epoch
-    updated: Optional[datetime]  # epoch
-    polladdr: Optional[IPvAnyAddress]
+    updated: Optional[datetime] = None # epoch
+    polladdr: Optional[IPvAnyAddress] = None
     priority: int = 100
 
     # Cannot be set here, only per subclass
@@ -173,10 +145,12 @@ class AlarmEvent(Event):
     alarm_type: str
     port: str = ""
 
+    @computed_field
     @property
     def op_state(self) -> str:
         return f"ALRM  {self.alarm_type}"
 
+    @computed_field
     @property
     def description(self) -> str:
         return self.lastevent
@@ -190,14 +164,17 @@ class BFDEvent(Event):
     bfd_ix: int
     Neigh_rDNS: str = ""  # ?
 
+    @computed_field
     @property
     def port(self) -> str:
         return self.bfd_addr if self.bfd_addr else f"ix {self.bfd_ix}"
 
+    @computed_field
     @property
     def description(self) -> str:
         return f"{self.Neigh_rDNS}, {self.lastevent}"
 
+    @computed_field
     @property
     def op_state(self) -> str:
         return f"BFD  {self.bfd_state[:5]}"
@@ -212,10 +189,12 @@ class BGPEvent(Event):
     peer_uptime: int
     lastevent: str
 
+    @computed_field
     @property
     def port(self) -> str:
         return f"AS{self.remote_AS}"
 
+    @computed_field
     @property
     def description(self) -> str:
         # rdns = dns_reverse_resolver(str(cls.remote_addr))
@@ -223,6 +202,7 @@ class BGPEvent(Event):
         # return f"{rdns}, {cls.lastevent}"
         return f"{self.remote_addr}, {self.lastevent}"
 
+    @computed_field
     @property
     def op_state(self) -> str:
         return f"BGP  {self.bgp_OS[:5]}"
@@ -235,6 +215,7 @@ class ReachabilityEvent(Event):
     description: str = ""
     port: str = ""
 
+    @computed_field
     @property
     def op_state(self) -> str:
         return self.reachability
@@ -251,10 +232,12 @@ class PortStateEvent(Event):
     reason: Optional[str] = None  # *
     port: str = ""
 
+    @computed_field
     @property
     def description(self) -> str:
         return self.descr
 
+    @computed_field
     @property
     def op_state(self) -> str:
         return f"PORT  {self.port_state[:5]}"
@@ -282,6 +265,7 @@ class EventEngine:
     events: Dict[int, Event]
 
     def __init__(self, session=None):
+        self.events = {}
         self.session = session
         self.events = {}
 

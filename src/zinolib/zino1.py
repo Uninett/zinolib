@@ -82,6 +82,9 @@ class EventAdapter:
         "ifindex": "if_index",
         "portstate": "port_state",
     }
+    FIELD_VALUE_CONVERTER_MAP = {
+        'ac_down': int,
+    }
 
     @staticmethod
     def get_attrlist(session, event_id: int):
@@ -103,6 +106,15 @@ class EventAdapter:
             k = cls.FIELD_MAP.get(k, k)
             event_dict[k.strip()] = v.strip()
         return event_dict
+
+    @classmethod
+    def convert_values(cls, attrdict):
+        "Convert some values that pydantic handles clumsily"
+        for field_name, function in cls.FIELD_VALUE_CONVERTER_MAP.items():
+            if field_name in attrdict:
+                value = function(attrdict[field_name])
+                attrdict[field_name] = value
+        return attrdict
 
     @staticmethod
     def set_admin_state(session, event: EventType, state):
@@ -235,6 +247,7 @@ class Zino1EventEngine(EventEngine):
         self.check_session()
         attrlist = self._event_adapter.get_attrlist(self.session, event_id)
         attrdict = self._event_adapter.attrlist_to_attrdict(attrlist)
+        attrdict = self._event_adapter.convert_values(attrdict)
         return Event.create(attrdict)
 
     def get_history_for_id(self, event_id: int):
