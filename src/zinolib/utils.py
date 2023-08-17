@@ -1,3 +1,12 @@
+import hashlib
+
+
+__all__ = [
+    "windows_codepage_cp1252",
+    "generate_authtoken",
+]
+
+
 def windows_codepage_cp1252(error):
     """Windows Codepage 1252 decoder fallback
 
@@ -39,3 +48,11 @@ def windows_codepage_cp1252(error):
             result.append(chr(0x00 + byte))
 
     return "".join(result), error.end
+
+
+def generate_authtoken(challenge, password):
+    "Combine Password and authChallenge from Ritz to make authToken"
+
+    raw_token = "%s %s" % (challenge, password)
+    token = hashlib.sha1(raw_token.encode("UTF-8")).hexdigest()
+    return token
