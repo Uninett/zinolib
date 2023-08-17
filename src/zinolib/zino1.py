@@ -13,6 +13,7 @@ Get a live Zino 1 session to use::
 
 Now you can use the session when initializing Zino1EventEngine::
 
+    > from zinolib.zino1 import Zino1EventEngine
     > event_engine = Zino1EventEngine(session)
 
 To get a list of currently available events::
@@ -48,9 +49,9 @@ Both return the changed event.
 """
 
 from datetime import datetime, timezone
-from typing import List, Dict, Union, TypedDict
+from typing import List, Dict, Union, TypedDict, Optional
 
-from .event_types import EventType, Event, EventEngine, HistoryEntry, LogEntry
+from .event_types import EventType, Event, EventEngine, HistoryEntry, LogEntry, AdmState
 
 
 HistoryDict = TypedDict(
@@ -117,7 +118,7 @@ class EventAdapter:
         return attrdict
 
     @staticmethod
-    def set_admin_state(session, event: EventType, state):
+    def set_admin_state(session, event: EventType, state: AdmState) -> bool:
         return session.set_state(event.id, state.value)
 
     @staticmethod
@@ -185,7 +186,9 @@ class HistoryAdapter:
             # fetch history
             raw_history = cls.get_history(session, event.id)
             parsed_history = cls.parse_response(raw_history)
-            event.history = HistoryEntry.create_list(parsed_history)
+            new_history = HistoryEntry.create_list(parsed_history)
+            if new_history != event.history:
+                event.history = new_history
             return event
 
 
@@ -250,13 +253,41 @@ class Zino1EventEngine(EventEngine):
         attrdict = self._event_adapter.convert_values(attrdict)
         return Event.create(attrdict)
 
-    def get_history_for_id(self, event_id: int):
+    def get_updated_event_for_id(self, event_id):
+        event = self.create_event_from_id(event_id)
+        history_list = self.get_history_for_id(event.id)
+        self.set_history_for_event(event, history_list)
+        log_list = self.get_log_for_id(event.id)
+        self.set_log_for_event(event, log_list)
+        return event
+
+    def change_admin_state_for_id(self, event_id, admin_state: AdmState) -> Optional[Event]:
+        self.check_session()
+        event = self._get_event(event_id)
+        success = self._event_adapter.set_admin_state(self.session, event, admin_state)
+        if success:
+            event = self.get_updated_event_for_id(event_id)
+            self._set_event(event)
+            return event
+        return None
+
+    def get_history_for_id(self, event_id: int) -> list[HistoryEntry]:
         self.check_session()
         raw_history = self._history_adapter.get_history(self.session, event_id)
         parsed_history = self._history_adapter.parse_response(raw_history)
         return HistoryEntry.create_list(parsed_history)
 
-    def get_log_for_id(self, event_id: int):
+    def add_history_entry_for_id(self, event_id: int, message) -> Optional[EventType]:
+        self.check_session()
+        event = self._get_event(event_id)
+        success = self._history_adapter.add(self.session, message, event)
+        if success:
+            event = self.get_updated_event_for_id(event_id)
+            self._set_event(event)
+            return event
+        return None
+
+    def get_log_for_id(self, event_id: int) -> list[LogEntry]:
         self.check_session()
         raw_log = self._log_adapter.get_log(self.session, event_id)
         parsed_log = self._log_adapter.parse_response(raw_log)

@@ -299,8 +299,3 @@ class EventEngine:
         event.log = log_list
         self._set_event(event)
         return event
-
-    # not finished
-    def add_history_for_event(self, event: EventType, history_entry):
-        event.history.append(history_entry)
-        return event
