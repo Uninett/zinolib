@@ -77,7 +77,6 @@ Status and overview, supported zino line protocol commands
 
 import logging
 import socket
-import hashlib
 import enum
 import ipaddress
 from datetime import datetime, timedelta
@@ -89,7 +88,7 @@ from typing import NamedTuple
 import codecs
 import select
 
-from .utils import windows_codepage_cp1252
+from .utils import windows_codepage_cp1252, generate_authtoken
 
 
 codecs.register_error("windows_codepage_cp1252", windows_codepage_cp1252)
@@ -489,13 +488,12 @@ class ritz:
             ritz_session.connect()
             ritz_session.authenticate("username","password")
         """
-        # Authenticate user
         if not self.connStatus:
             raise NotConnectedError("Not connected to device")
 
-        # Combine Password and authChallenge from Ritz to make authToken
-        genToken = "%s %s" % (self.authChallenge, password)
-        authToken = hashlib.sha1(genToken.encode("UTF-8")).hexdigest()
+        authToken = generate_authtoken(self.authChallenge, password)
+
+        # Authenticate user
         cmd = "user %s %s  -" % (user, authToken)
         #  try:
         try:
