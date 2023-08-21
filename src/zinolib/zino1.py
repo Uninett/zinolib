@@ -164,7 +164,7 @@ class HistoryAdapter:
             if row == " ":  # end of history
                 continue
             if row.startswith(" "):  # history
-                history_list[-1]["log"] += row.strip()
+                history_list[-1]["log"] += row.strip() + ' '
             else:
                 timestamp, body = row.split(" ", 1)
                 dt = convert_timestamp(int(timestamp))
@@ -176,6 +176,8 @@ class HistoryAdapter:
                     entry["user"] =  body
                     entry["log"] = ""
                 history_list.append(entry)
+        for entry in history_list:
+            entry["log"] = entry["log"].strip()
 
         return history_list
 
