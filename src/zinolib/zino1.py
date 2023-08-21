@@ -49,7 +49,7 @@ Both return the changed event.
 """
 
 from datetime import datetime, timezone
-from typing import List, Dict, Union, TypedDict, Optional
+from typing import Iterable, List, Dict, Union, TypedDict, Optional
 
 from .event_types import EventType, Event, EventEngine, HistoryEntry, LogEntry, AdmState
 
@@ -92,7 +92,7 @@ class EventAdapter:
         return session.get_raw_attributes(event_id)
 
     @classmethod
-    def attrlist_to_attrdict(cls, attrlist: List[str]):
+    def attrlist_to_attrdict(cls, attrlist: Iterable[str]):
         """Translate a wire protocol dump of a single event
 
         The dump is a list of lines of the format:
@@ -134,7 +134,7 @@ class HistoryAdapter:
         return session.get_raw_history(event_id).data
 
     @classmethod
-    def parse_response(cls, history_data: List[str]):
+    def parse_response(cls, history_data: Iterable[str]) -> list[HistoryDict]:
         """
         Input:
 
@@ -180,7 +180,7 @@ class HistoryAdapter:
         return history_list
 
     @classmethod
-    def add(cls, session, message: str, event: EventType):
+    def add(cls, session, message: str, event: EventType) -> Optional[EventType]:
         success = session.add_history(event.id, message)
         if success:
             # fetch history
@@ -190,15 +190,16 @@ class HistoryAdapter:
             if new_history != event.history:
                 event.history = new_history
             return event
+        return None
 
 
 class LogAdapter:
     @staticmethod
-    def get_log(session, event_id: int):
+    def get_log(session, event_id: int) -> list[str]:
         return session.get_raw_log(event_id).data
 
     @staticmethod
-    def parse_response(log_data: List[str]) -> List[LogDict]:
+    def parse_response(log_data: Iterable[str]) -> list[LogDict]:
         """
         Input:
         [
