@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 
 from pydantic import ValidationError
 
-from zinolib.event_types import Event, HistoryEntry, LogEntry, EventEngine
+from zinolib.controllers.base import EventEngine
+from zinolib.event_types import Event, HistoryEntry, LogEntry
 from zinolib.event_types import AdmState, BFDState, PortState, ReachabilityState
 
 

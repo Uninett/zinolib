@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from zinolib.event_types import AdmState, Event, HistoryEntry, LogEntry
-from zinolib.zino1 import EventAdapter, HistoryAdapter, LogAdapter, Zino1EventEngine
+from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, Zino1EventEngine
 
 raw_event_id = 139110
 raw_attrlist = [
