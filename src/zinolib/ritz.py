@@ -82,12 +82,11 @@ import ipaddress
 from datetime import datetime, timedelta
 import errno
 from time import mktime
-import re
-from os.path import expanduser
 from typing import NamedTuple, List, Tuple, Union
 import codecs
 import select
 
+from .config.tcl import parse_tcl_config
 from .utils import windows_codepage_cp1252, generate_authtoken
 
 
@@ -170,29 +169,6 @@ def _decode_history(logarray):
             # Append log line
             curr["log"].append(log[1::])
     return ret
-
-
-# def parse_tcl_config(filename: str | Path):
-def parse_tcl_config(filename):
-    """Parse a .ritz.tcl config file
-
-    Used to fetch a users connection information to connect to zino
-    .ritz.tcl is formatted as a tcl file.
-    """
-    config = {}
-    with open(expanduser(filename), "r") as f:
-        for line in f.readlines():
-            _set = re.findall(r"^\s?set _?([a-zA-Z0-9]+)(?:\((.*)\))? (.*)$", line)
-            if _set:
-                group = _set[0][1] if _set[0][1] != "" else "default"
-                key = _set[0][0]
-                value = _set[0][2]
-
-                if group not in config:
-                    config[group] = {}
-
-                config[group][key] = value
-    return config
 
 
 class Case:
