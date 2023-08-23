@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from zinolib.event_types import AdmState, Event, HistoryEntry, LogEntry
-from zinolib.zino1 import EventAdapter, HistoryAdapter, LogAdapter, Zino1EventEngine
+from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, Zino1EventManager
 
 raw_event_id = 139110
 raw_attrlist = [
@@ -69,7 +69,7 @@ class FakeLogAdapter(LogAdapter):
         return raw_log
 
 
-class FakeZino1EventEngine(Zino1EventEngine):
+class FakeZino1EventManager(Zino1EventManager):
     _event_adapter = FakeEventAdapter
     _history_adapter = FakeHistoryAdapter
     _log_adapter = FakeLogAdapter
@@ -78,10 +78,10 @@ class FakeZino1EventEngine(Zino1EventEngine):
         super().__init__(session)
 
 
-class Zino1EventEngineTest(unittest.TestCase):
+class Zino1EventManagerTest(unittest.TestCase):
 
     def test_get_events(self):
-        zino1 = FakeZino1EventEngine('foo')
+        zino1 = FakeZino1EventManager('foo')
         self.assertEqual(len(zino1.events), 0)
         zino1.get_events()
         self.assertEqual(len(zino1.events), 1)
@@ -89,7 +89,7 @@ class Zino1EventEngineTest(unittest.TestCase):
         self.assertEqual(zino1.events[raw_event_id].id, raw_event_id)
 
     def test_get_history_for_id(self):
-        zino1 = FakeZino1EventEngine('foo')
+        zino1 = FakeZino1EventManager('foo')
         history_list = zino1.get_history_for_id(4567)
         expected_history_list = [
             HistoryEntry(
@@ -116,7 +116,7 @@ class Zino1EventEngineTest(unittest.TestCase):
         self.assertEqual(history_list, expected_history_list)
 
     def test_get_log_for_id(self):
-        zino1 = FakeZino1EventEngine('foo')
+        zino1 = FakeZino1EventManager('foo')
         log_list = zino1.get_log_for_id(4567)
         expected_log_list = [
             LogEntry(

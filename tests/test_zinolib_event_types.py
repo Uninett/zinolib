@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 
 from pydantic import ValidationError
 
-from zinolib.event_types import Event, HistoryEntry, LogEntry, EventEngine
+from zinolib.controllers.base import EventManager
+from zinolib.event_types import Event, HistoryEntry, LogEntry
 from zinolib.event_types import AdmState, BFDState, PortState, ReachabilityState
 
 
@@ -199,7 +200,7 @@ class LogEntryTest(unittest.TestCase):
         self.assertEqual(log, [expected_log_entry])
 
 
-class EventEngineTest(unittest.TestCase):
+class EventManagerTest(unittest.TestCase):
 
     def setUp(self):
         minimal_input = common_minimal_input.copy()
@@ -213,41 +214,41 @@ class EventEngineTest(unittest.TestCase):
         self.event = event
 
     def test_check_session_wjen_no_session_should_fail_noisily(self):
-        event_engine = EventEngine()
+        event_manager = EventManager()
         with self.assertRaises(ValueError):
-            event_engine.check_session()
+            event_manager.check_session()
 
     def test_get_event_with_id_should_succeed(self):
         event = self.event
-        event_engine = EventEngine()
-        event_engine._set_event(event)
+        event_manager = EventManager()
+        event_manager._set_event(event)
 
-        resulting_event = event_engine._get_event(event.id)
+        resulting_event = event_manager._get_event(event.id)
         self.assertEqual(self.event, resulting_event)
 
     def test_set_history_for_event(self):
         event = self.event
-        event_engine = EventEngine()
-        event_engine._set_event(event)
-        self.assertFalse(event_engine.events[event.id].history)
+        event_manager = EventManager()
+        event_manager._set_event(event)
+        self.assertFalse(event_manager.events[event.id].history)
         dt = datetime.fromisoformat("2023-06-28T10:41:54+00:00")
         history_list = [{
             "date": dt,
             "log": "fhgj",
             "user": "ghj",
         }]
-        updated_event = event_engine.set_history_for_event(event, history_list)
-        self.assertTrue(event_engine.events[event.id].history)
+        updated_event = event_manager.set_history_for_event(event, history_list)
+        self.assertTrue(event_manager.events[event.id].history)
 
     def test_set_log_for_event(self):
         event = self.event
-        event_engine = EventEngine()
-        event_engine._set_event(event)
-        self.assertFalse(event_engine.events[event.id].log)
+        event_manager = EventManager()
+        event_manager._set_event(event)
+        self.assertFalse(event_manager.events[event.id].log)
         dt = datetime.fromisoformat("2023-06-28T10:41:54+00:00")
         log_list = [{
             "date": dt,
             "log": "fhgj",
         }]
-        updated_event = event_engine.set_log_for_event(event, log_list)
-        self.assertTrue(event_engine.events[event.id].log)
+        updated_event = event_manager.set_log_for_event(event, log_list)
+        self.assertTrue(event_manager.events[event.id].log)

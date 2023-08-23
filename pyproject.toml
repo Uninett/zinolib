@@ -31,7 +31,7 @@ platforms = ["any"]
 
 [tool.setuptools.packages.find]
 where = ["src/"]
-include = ["zinolib"]
+include = ["zinolib", "zinolib.controllers"]
 
 [tool.setuptools_scm]
 write_to = "src/zinolib/version.py"
