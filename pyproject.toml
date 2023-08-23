@@ -8,14 +8,12 @@ description = "Python interface to Zino"
 authors = [{name="Runar Borge", email="runar.borge@sikt.no"}]
 maintainers = [{name="Uninett Opensource", email="opensource@uninett.no"}]
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 license = {file = "LICENSE"}
 classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: System Administrators",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
