@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from zinolib.event_types import AdmState, Event, HistoryEntry, LogEntry
-from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, Zino1EventManager
+from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager
 
 raw_event_id = 139110
 raw_attrlist = [
@@ -41,7 +41,7 @@ raw_log = [
 
 class FakeEventAdapter:
     @staticmethod
-    def get_attrlist(session, event_id: int):
+    def get_attrlist(request, event_id: int):
         return raw_attrlist
 
     @classmethod
@@ -53,26 +53,39 @@ class FakeEventAdapter:
         return EventAdapter.convert_values(attrdict)
 
     @staticmethod
-    def get_event_ids(session):
+    def get_event_ids(request):
         return [raw_event_id]
 
 
 class FakeHistoryAdapter(HistoryAdapter):
     @staticmethod
-    def get_history(session, event_id: int):
+    def get_history(request, event_id: int):
         return raw_history
 
 
 class FakeLogAdapter(LogAdapter):
     @staticmethod
-    def get_log(session, event_id: int):
+    def get_log(request, event_id: int):
         return raw_log
+
+
+class FakeSessionAdapter(SessionAdapter):
+
+    @classmethod
+    def _setup_config(cls, config):
+        pass
+
+    @staticmethod
+    def _setup_request(session, config):
+        session.request = 'foo'  # needs to be truthy
+        return session
 
 
 class FakeZino1EventManager(Zino1EventManager):
     _event_adapter = FakeEventAdapter
     _history_adapter = FakeHistoryAdapter
     _log_adapter = FakeLogAdapter
+    _session_adapter = FakeSessionAdapter
 
     def __init__(self, session=None):
         super().__init__(session)
@@ -80,8 +93,12 @@ class FakeZino1EventManager(Zino1EventManager):
 
 class Zino1EventManagerTest(unittest.TestCase):
 
+    def init_manager(self):
+        zino1 = FakeZino1EventManager.configure(None)
+        return zino1
+
     def test_get_events(self):
-        zino1 = FakeZino1EventManager('foo')
+        zino1 = self.init_manager()
         self.assertEqual(len(zino1.events), 0)
         zino1.get_events()
         self.assertEqual(len(zino1.events), 1)
@@ -89,7 +106,7 @@ class Zino1EventManagerTest(unittest.TestCase):
         self.assertEqual(zino1.events[raw_event_id].id, raw_event_id)
 
     def test_get_history_for_id(self):
-        zino1 = FakeZino1EventManager('foo')
+        zino1 = self.init_manager()
         history_list = zino1.get_history_for_id(4567)
         expected_history_list = [
             HistoryEntry(
@@ -116,7 +133,7 @@ class Zino1EventManagerTest(unittest.TestCase):
         self.assertEqual(history_list, expected_history_list)
 
     def test_get_log_for_id(self):
-        zino1 = FakeZino1EventManager('foo')
+        zino1 = self.init_manager()
         log_list = zino1.get_log_for_id(4567)
         expected_log_list = [
             LogEntry(

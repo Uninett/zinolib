@@ -32,9 +32,17 @@ class EventManager:
     def _set_event(self, event: Event):
         self.events[event.id] = event
 
-    def check_session(self):
+    def remove_event(self, event_or_id: EventOrId):
+        event_id = self._get_event_id(event_or_id)
+        self.events.pop(event_id)
+        self.removed_ids.add(event_id)
+
+    def check_session(self, quiet=False):
         if not self.session:
+            if quiet:
+                return False
             raise ValueError  # raise correct error
+        return True
 
     def set_history_for_event(self, event_or_id: EventOrId, history_list: List[HistoryEntry]) -> Event:
         event = self._get_event(event_or_id)
