@@ -1097,6 +1097,7 @@ class notifier:
         with notifier(ritz_session) as notify_session:
             ....
     """
+    DELIMITER = "\r\n"
 
     def __init__(self, zino_session, port=8002, timeout=30):
         self._sock = None
