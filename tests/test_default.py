@@ -144,7 +144,8 @@ class DefaultTest(unittest.TestCase):
             with ritz("127.0.0.1", username="testuser", password="test") as sess:
                 self.assertTrue(sess)
 
-    def test_G_clean_attributes(self):
+
+    def test_G_get_attributes(self):
         self.maxDiff = None
         with zinoemu(executor):
             with ritz("127.0.0.1", username="testuser", password="test") as sess:
@@ -153,17 +154,10 @@ class DefaultTest(unittest.TestCase):
                 self.assertTrue(34978 in caseids)
                 self.assertFalse(999 in caseids)
                 expected_result = {
-                    "ac_down": None,
-                    "alarm_count": None,
-                    "bfddiscr": None,
-                    "bfdix": None,
                     "bgpas": "halted",
                     "bgpos": "down",
-                    "flaps": None,
                     "id": 32802,
-                    "ifindex": None,
                     "lastevent": "peer is admin turned off",
-                    "lasttrans": None,
                     "opened": datetime.datetime(2018, 4, 23, 8, 32, 22),
                     "peer_uptime": 0,
                     "polladdr": ip_address("127.0.0.1"),
@@ -175,34 +169,22 @@ class DefaultTest(unittest.TestCase):
                     "type": caseType.BGP,
                     "updated": datetime.datetime(2018, 8, 1, 11, 45, 51),
                 }
-                raw_attrs = sess.get_attributes(32802)
-                cleaned_attrs = sess.clean_attributes(raw_attrs)
-                self.assertEqual(cleaned_attrs, expected_result)
+                self.assertEqual(sess.get_attributes(32802), expected_result)
 
                 expected_result = {
-                    "ac_down": None,
                     "alarm_count": 1,
-                    "bfddiscr": None,
-                    "bfdix": None,
-                    "flaps": None,
                     "alarm_type": "yellow",
                     "id": 34978,
-                    "ifindex": None,
                     "lastevent": "alarms went from 0 to 1",
-                    "lasttrans": None,
-                    "peer_uptime": None,
                     "opened": datetime.datetime(2018, 6, 16, 15, 37, 15),
                     "polladdr": ip_address("127.0.0.1"),
                     "priority": 100,
-                    "remote_as": None,
                     "router": "bergen-sw1",
                     "state": caseState.WORKING,
                     "type": caseType.ALARM,
                     "updated": datetime.datetime(2018, 6, 16, 15, 37, 15),
                 }
-                raw_attrs = sess.get_attributes(34978)
-                cleaned_attrs = sess.clean_attributes(raw_attrs)
-                self.assertEqual(cleaned_attrs, expected_result)
+                self.assertEqual(sess.get_attributes(34978), expected_result)
 
     def test_H_get_history(self):
         with zinoemu(executor):
