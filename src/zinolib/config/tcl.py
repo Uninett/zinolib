@@ -62,11 +62,11 @@ def parse(text):
     lines = text.split("\n")
     config = {}
     for line in lines:
-        _set = re.findall(r"^\s?set _?([a-zA-Z0-9]+)(?:\((.*)\))? (.*)$", line)
-        if _set:
-            group = _set[0][1] if _set[0][1] != "" else "default"
-            key = _set[0][0]
-            value = _set[0][2]
+        match = re.fullmatch(r"\s?set _?([a-zA-Z0-9]+)(?:\((.*)\))? (.*)", line)
+        if match:
+            key, group, value = match.groups()
+            if not group:
+                group = "default"
 
             if group not in config:
                 config[group] = {}
