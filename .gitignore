@@ -3,14 +3,17 @@
 *.log
 *.bak
 *.egg-info
-.coverage*
-.ruff_cache
+.*
 
 __pycache__
-.mypy_cache
 src/zinolib/version.py
 build
 dist
 htmlcov
 
 debian/changelog
+
+!.git-blame-ignore-revs
+!.github
+!.gitignore
+!.pre-commit-config.yaml
