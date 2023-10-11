@@ -15,6 +15,9 @@ class EventManager:
     """
     events: Dict[int, Event]
 
+    class ManagerException(Exception):
+        pass
+
     def __init__(self, session=None):
         self.session = session
         self.events = {}

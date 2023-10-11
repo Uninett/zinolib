@@ -53,6 +53,7 @@ from typing import Iterable, List, TypedDict, Optional
 
 from .base import EventManager
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
+from ..ritz import ProtocolError
 
 
 HistoryDict = TypedDict(
@@ -233,6 +234,13 @@ class Zino1EventManager(EventManager):
     _history_adapter = HistoryAdapter
     _log_adapter = LogAdapter
 
+    def rename_exception(self, function, *args):
+        "Replace the original exception with our own"
+        try:
+            return function(*args)
+        except ProtocolError as e:
+            raise self.ManagerException(e)
+
     def clear_flapping(self, event: EventType):
         """Clear flapping state of a PortStateEvent
 
@@ -252,7 +260,7 @@ class Zino1EventManager(EventManager):
 
     def create_event_from_id(self, event_id: int):
         self.check_session()
-        attrlist = self._event_adapter.get_attrlist(self.session, event_id)
+        attrlist = self.rename_exception(self._event_adapter.get_attrlist, self.session, event_id)
         attrdict = self._event_adapter.attrlist_to_attrdict(attrlist)
         attrdict = self._event_adapter.convert_values(attrdict)
         return Event.create(attrdict)
@@ -277,7 +285,7 @@ class Zino1EventManager(EventManager):
 
     def get_history_for_id(self, event_id: int) -> list[HistoryEntry]:
         self.check_session()
-        raw_history = self._history_adapter.get_history(self.session, event_id)
+        raw_history = self.rename_exception(self._history_adapter.get_history, self.session, event_id)
         parsed_history = self._history_adapter.parse_response(raw_history)
         return HistoryEntry.create_list(parsed_history)
 
@@ -293,6 +301,6 @@ class Zino1EventManager(EventManager):
 
     def get_log_for_id(self, event_id: int) -> list[LogEntry]:
         self.check_session()
-        raw_log = self._log_adapter.get_log(self.session, event_id)
+        raw_log = self.rename_exception(self._log_adapter.get_log, self.session, event_id)
         parsed_log = self._log_adapter.parse_response(raw_log)
         return LogEntry.create_list(parsed_log)
