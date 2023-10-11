@@ -233,6 +233,7 @@ class Zino1EventManager(EventManager):
     _event_adapter = EventAdapter
     _history_adapter = HistoryAdapter
     _log_adapter = LogAdapter
+    removed_ids = set()
 
     def rename_exception(self, function, *args):
         "Replace the original exception with our own"
@@ -255,7 +256,11 @@ class Zino1EventManager(EventManager):
     def get_events(self):
         self.check_session()
         for event_id in self._event_adapter.get_event_ids(self.session):
-            event = self.create_event_from_id(event_id)
+            try:
+                event = self.create_event_from_id(event_id)
+            except self.ManagerException:
+                self.removed_ids.add(event_id)
+                continue
             self.events[event_id] = event
 
     def create_event_from_id(self, event_id: int):
