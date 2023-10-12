@@ -21,12 +21,20 @@ class EventManager:
     def __init__(self, session=None):
         self.session = session
         self.events = {}
+        self.removed_ids = set()
 
     def _get_event(self, event_or_id: EventOrId) -> Event:
         if isinstance(event_or_id, Event):
             return event_or_id
         if isinstance(event_or_id, int):
             return self.events[event_or_id]
+        raise ValueError("Unknown type")
+
+    def _get_event_id(self, event_or_id: EventOrId) -> int:
+        if isinstance(event_or_id, int):
+            return event_or_id
+        if isinstance(event_or_id, Event):
+            return event_or_id.id
         raise ValueError("Unknown type")
 
     def _set_event(self, event: Event):

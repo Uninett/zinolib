@@ -2,7 +2,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from zinolib.event_types import AdmState, Event, HistoryEntry, LogEntry
-from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager
+from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager, UpdateHandler
+from zinolib.ritz import NotifierResponse
 
 raw_event_id = 139110
 raw_attrlist = [
@@ -42,7 +43,7 @@ raw_log = [
 class FakeEventAdapter:
     @staticmethod
     def get_attrlist(request, event_id: int):
-        return raw_attrlist
+        return raw_attrlist.copy()
 
     @classmethod
     def attrlist_to_attrdict(cls, attrlist):
@@ -60,13 +61,13 @@ class FakeEventAdapter:
 class FakeHistoryAdapter(HistoryAdapter):
     @staticmethod
     def get_history(request, event_id: int):
-        return raw_history
+        return raw_history.copy()
 
 
 class FakeLogAdapter(LogAdapter):
     @staticmethod
     def get_log(request, event_id: int):
-        return raw_log
+        return raw_log.copy()
 
 
 class FakeSessionAdapter(SessionAdapter):
@@ -144,3 +145,102 @@ class Zino1EventManagerTest(unittest.TestCase):
                 log='some other log message')
         ]
         self.assertEqual(log_list, expected_log_list)
+
+
+class UpdateHandlerTest(unittest.TestCase):
+
+    def init_manager(self):
+        zino1 = FakeZino1EventManager.configure(None)
+        return zino1
+
+    def test_cmd_scavenged(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        self.assertIn(raw_event_id, zino1.events)
+        self.assertNotIn(raw_event_id, zino1.removed_ids)
+        updates = UpdateHandler(zino1)
+        update = NotifierResponse(raw_event_id, "","")
+        ok = updates.cmd_scavenged(update)
+        self.assertTrue(ok)
+        self.assertNotIn(raw_event_id, zino1.events)
+        self.assertIn(raw_event_id, zino1.removed_ids)
+
+    def test_cmd_attr(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        old_events = zino1.events.copy()
+        old_events[raw_event_id].priority = 500
+        updates = UpdateHandler(zino1)
+        update = NotifierResponse(raw_event_id, "","")
+        ok = updates.cmd_attr(update)
+        self.assertTrue(ok)
+        self.assertNotEqual(zino1.events[raw_event_id].priority, old_events[raw_event_id].priority)
+
+    def test_cmd_state_is_closed_and_autoremove_is_on(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        self.assertNotIn(raw_event_id, zino1.removed_ids)
+        self.assertIn(raw_event_id, zino1.events)
+        updates = UpdateHandler(zino1, autoremove=True)
+        update = NotifierResponse(raw_event_id, "", "X closed")
+        ok = updates.cmd_state(update)
+        self.assertTrue(ok)
+        self.assertIn(raw_event_id, zino1.removed_ids)
+        self.assertNotIn(raw_event_id, zino1.events)
+
+    def test_cmd_state_is_closed_and_autoremove_is_off(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        old_events = zino1.events.copy()
+        old_events[raw_event_id].priority = 500
+        updates = UpdateHandler(zino1, autoremove=False)
+        update = NotifierResponse(raw_event_id, "","X closed")
+        ok = updates.cmd_state(update)
+        self.assertTrue(ok)
+        self.assertNotEqual(zino1.events[raw_event_id].priority, old_events[raw_event_id].priority)
+
+    def test_cmd_state_is_not_closed(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        old_events = zino1.events.copy()
+        old_events[raw_event_id].priority = 500
+        updates = UpdateHandler(zino1, autoremove=False)
+        update = NotifierResponse(raw_event_id, "","x butterfly")
+        ok = updates.cmd_state(update)
+        self.assertTrue(ok)
+        self.assertNotEqual(zino1.events[raw_event_id].priority, old_events[raw_event_id].priority)
+
+    def test_fallback(self):
+        zino1 = self.init_manager()
+        updates = UpdateHandler(zino1)
+        update = NotifierResponse(raw_event_id, "", "")
+        with self.assertLogs('zinolib.controllers.zino1', level='WARNING') as cm:
+            self.assertFalse(updates.fallback(update))
+            self.assertEqual(cm.output, ['WARNING:zinolib.controllers.zino1:Unknown update type: "" for id 139110'])
+
+    def test_handle_new_stateless_event_is_very_special(self):
+        zino1 = self.init_manager()
+        updates = UpdateHandler(zino1)
+        update = NotifierResponse(1337, "", "")
+        result = updates.handle(update)
+        self.assertEqual(result, None)
+
+    def test_handle_known_type(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        old_events = zino1.events.copy()
+        old_events[raw_event_id].priority = 500
+        updates = UpdateHandler(zino1)
+        update = NotifierResponse(raw_event_id, updates.UpdateType.LOG, "")
+        ok = updates.handle(update)  # will refetch events
+        self.assertTrue(ok)
+        self.assertNotEqual(zino1.events[raw_event_id].priority, old_events[raw_event_id].priority)
+
+    def test_handle_unknown_type(self):
+        zino1 = self.init_manager()
+        zino1.get_events()
+        updates = UpdateHandler(zino1)
+        update = NotifierResponse(raw_event_id, "trout", "")
+        with self.assertLogs('zinolib.controllers.zino1', level='WARNING'):
+            ok = updates.handle(update)  # will run fallback
+            self.assertFalse(ok)

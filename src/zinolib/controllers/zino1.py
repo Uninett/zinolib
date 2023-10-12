@@ -29,6 +29,18 @@ The events are then available as::
 
 This is a dictionary of event_id, event object pairs.
 
+To get a set of removed event ids::
+
+    > event_manager.removed_ids
+
+For updates, either regularly use ``get_events()`` or utilize the UpdateHandler::
+
+    > updater = UpdateHandler(event_manager)
+    > updated = updater.poll()
+
+This updates ``event_manager.events`` and ``event_manager.removed_ids`` and
+returns ``True`` on any change, falsey otherwise.
+
 To get history for a specific event::
 
     > history_list = event_manager.get_history_for_id(INT)
@@ -54,8 +66,10 @@ The adapters are not meant to be used directly.
 
 from datetime import datetime, timezone
 from typing import Iterable, List, TypedDict, Optional, Set
+import logging
 
 from .base import EventManager
+from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
 from ..ritz import ProtocolError, ritz, notifier
 
@@ -78,10 +92,73 @@ LogDict = TypedDict(
 
 
 DEFAULT_TIMEOUT = 30
+LOG = logging.getLogger(__name__)
 
 
 def convert_timestamp(timestamp: int) -> datetime:
     return datetime.fromtimestamp(timestamp, timezone.utc)
+
+
+class UpdateHandler:
+    class UpdateType(StrEnum):
+        STATE = "state"
+        ATTR = "attr"
+        HISTORY = "history"
+        LOG = "log"
+        SCAVENGED = "scavenged"
+
+    def __init__(self, manager, autoremove=False):
+        self.manager = manager
+        self.events = manager.events
+        self.autoremove = autoremove
+
+    def poll(self):
+        update = self.manager.session.push.poll()
+        if not update:
+            return False
+        return self.handle(update)
+
+    def update(self, event_id: int):
+        event = self.manager.get_updated_event_for_id(event_id)
+        self.manager._set_event(event)
+        LOG.debug("Updated event #%i", event_id)
+
+    def remove(self, event_id: int):
+        self.manager.remove_event(event_id)
+        LOG.debug("Removed event #%i", event_id)
+
+    def handle(self, update):
+        if update.id not in self.events and update.type != self.UpdateType.STATE:
+            # new event that still don't have a state
+            return None
+        if update.type in tuple(self.UpdateType):
+            method = getattr(self, f"cmd_{update.type}")
+            return method(update)
+        return self.fallback(update)
+
+    def cmd_state(self, update):
+        states = update.info.split(" ")
+        if states[1] == "closed" and self.autoremove:
+            LOG.debug('Autoremoving "%s"', update.id)
+            self.remove(update.id)
+        else:
+            self.update(update.id)
+        return True
+
+    def cmd_attr(self, update):
+        self.update(update.id)
+        return True
+
+    cmd_history = cmd_attr
+    cmd_log = cmd_attr
+
+    def cmd_scavenged(self, update):
+        self.remove(update.id)
+        return True
+
+    def fallback(self, update):
+        LOG.warning('Unknown update type: "%s" for id %s' % (update.type, update.id))
+        return False
 
 
 class SessionAdapter:
@@ -126,6 +203,7 @@ class SessionAdapter:
     def close_session(session):
         session.push._sock.close()
         session.request.close()
+        return None
 
 
 class EventAdapter:
@@ -340,7 +418,7 @@ class Zino1EventManager(EventManager):
 
         Usage:
             c = ritz_session.case(123)
-            c.clear_clapping()
+            c.clear_flapping()
         """
         if event.type == Event.Type.PortState:
             return self.session.request.clear_flapping(event.router, event.ifindex)
