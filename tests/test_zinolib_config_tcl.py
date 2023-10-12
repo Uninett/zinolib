@@ -73,13 +73,13 @@ class ParseTclConfigTest(TestCase):
 
 class ParseNormalizeTest(TestCase):
     def test_normalize_empty_dict(self):
-        expected = {"globals": {}, "connections": {}}
+        expected = {"global_options": {}, "connections": {}}
         self.assertEqual(normalize({}), expected)
 
     def test_normalize_golden_path(self):
         tcl_config_dict = parse(clean_config(RITZ_CONFIG))
         expected = {
-            "globals": {"sort_by": '"upd-rev"'},
+            "global_options": {"sort_by": '"upd-rev"'},
             "connections": {
                 "default": {
                     "secret": "0123456789",

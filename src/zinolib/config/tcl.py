@@ -118,7 +118,7 @@ def normalize(tcl_config_dict):
                     "port": "8001",
                 },
             },
-            "globals": {
+            "global_options": {
                 "sort_by": "upd-rev",
             },
         }
@@ -126,19 +126,19 @@ def normalize(tcl_config_dict):
     KEYMAP = {"Sortby": "sort_by", "User": "username"}
     CONNECTION_KEYS = set(("username", "secret", "server", "port"))
     connections = {}
-    globals = {}
+    global_options = {}
     for name in tcl_config_dict:
         connection = {}
         for key, value in tcl_config_dict[name].items():
             key = KEYMAP.get(key, key.lower())
             key = "_".join(key.split("-"))
             if key not in CONNECTION_KEYS:
-                globals[key] = value
+                global_options[key] = value
             else:
                 connection[key] = value
         name = "_".join(name.split("-"))
         connections[name] = connection
-    return {"globals": globals, "connections": connections}
+    return {"global_options": global_options, "connections": connections}
 
 
 # legacy
