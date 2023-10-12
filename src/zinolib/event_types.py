@@ -98,6 +98,16 @@ class HistoryEntry(BaseModel):
 
 class Event(BaseModel):
     """
+    Base-class with common fields for all events.
+
+    Here there be dragons!
+    The following cannot be set here, only per subclass::
+
+        port: str = ""
+        description: str = ""
+        op_state: str = ""
+
+    For that reason, never ``Event()``, always ``Event.create()``!
     """
     class Type(StrEnum):
         ALARM = "alarm"
@@ -117,11 +127,6 @@ class Event(BaseModel):
     updated: Optional[datetime] = None # epoch
     polladdr: Optional[IPvAnyAddress] = None
     priority: int = 100
-
-    # Cannot be set here, only per subclass
-    # port: str = ""
-    # description: str = ""
-    # op_state: str = ""
 
     log: List[LogEntry] = []
     history: List[HistoryEntry] = []
