@@ -20,6 +20,9 @@ classifiers = [
     "Topic :: System :: Monitoring",
 ]
 dynamic = ["version"]
+dependencies = [
+    "pydantic >= 2.0",
+]
 
 [tool.setuptools]
 include-package-data = false
@@ -28,7 +31,7 @@ platforms = ["any"]
 
 [tool.setuptools.packages.find]
 where = ["src/"]
-include = ["zinolib"]
+include = ["zinolib", "zinolib.controllers"]
 
 [tool.setuptools_scm]
 write_to = "src/zinolib/version.py"
