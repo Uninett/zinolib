@@ -351,6 +351,7 @@ class ritz:
 
         self._sock = None
         self.connStatus = False
+        self.authenticated = None
         self.server = server
         self.port = port
         self.timeout = timeout
