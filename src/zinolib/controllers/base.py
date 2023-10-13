@@ -36,13 +36,13 @@ class EventManager:
         if not self.session:
             raise ValueError  # raise correct error
 
-    def set_history_for_event(self, event_or_id: EventOrId, history_list: List[HistoryEntry]) -> EventType:
+    def set_history_for_event(self, event_or_id: EventOrId, history_list: List[HistoryEntry]) -> Event:
         event = self._get_event(event_or_id)
         event.history = history_list
         self._set_event(event)
         return event
 
-    def set_log_for_event(self, event_or_id: EventOrId, log_list: List[LogEntry]) -> EventType:
+    def set_log_for_event(self, event_or_id: EventOrId, log_list: List[LogEntry]) -> Event:
         event = self._get_event(event_or_id)
         event.log = log_list
         self._set_event(event)

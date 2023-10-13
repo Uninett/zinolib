@@ -117,7 +117,7 @@ class Event(BaseModel):
         REACHABILITY = "reachability"
 
     id: int
-    type: ClassVar[Type]
+    type: Union[Type, str]
     adm_state: AdmState
     router: str
     opened: datetime  # epoch
@@ -150,48 +150,48 @@ EventOrId = Union[EventType, int]
 
 
 class AlarmEvent(Event):
-    type = Event.Type.ALARM
+    type: str = Event.Type.ALARM
     alarm_count: int
     alarm_type: str
     port: str = ""
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def op_state(self) -> str:
         return f"ALRM  {self.alarm_type}"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
-    def description(self) -> str:
+    def description(self) -> Optional[str]:
         return self.lastevent
 
 
 class BFDEvent(Event):
-    type = Event.Type.BFD
+    type: str = Event.Type.BFD
     bfd_addr: Optional[IPvAnyAddress] = None
     bfd_discr: Optional[int] = None
     bfd_state: BFDState
     bfd_ix: int
     Neigh_rDNS: str = ""  # ?
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def port(self) -> str:
         return self.bfd_addr if self.bfd_addr else f"ix {self.bfd_ix}"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def description(self) -> str:
         return f"{self.Neigh_rDNS}, {self.lastevent}"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def op_state(self) -> str:
         return f"BFD  {self.bfd_state[:5]}"
 
 
 class BGPEvent(Event):
-    type = Event.Type.BGP
+    type: str = Event.Type.BGP
     bgp_AS: str
     bgp_OS: str
     remote_AS: int
@@ -199,12 +199,12 @@ class BGPEvent(Event):
     peer_uptime: int
     lastevent: str
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def port(self) -> str:
         return f"AS{self.remote_AS}"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def description(self) -> str:
         # rdns = dns_reverse_resolver(str(cls.remote_addr))
@@ -212,27 +212,27 @@ class BGPEvent(Event):
         # return f"{rdns}, {cls.lastevent}"
         return f"{self.remote_addr}, {self.lastevent}"
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def op_state(self) -> str:
         return f"BGP  {self.bgp_OS[:5]}"
 
 
 class ReachabilityEvent(Event):
-    type = Event.Type.REACHABILITY
+    type: str = Event.Type.REACHABILITY
     reachability: ReachabilityState
     ac_down: Optional[timedelta] = None  # int
     description: str = ""
     port: str = ""
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def op_state(self) -> str:
         return self.reachability
 
 
 class PortStateEvent(Event):
-    type = Event.Type.PORTSTATE
+    type: str = Event.Type.PORTSTATE
     ac_down: Optional[timedelta] = None  # int
     descr: str = ""
     flaps: Optional[int] = None
@@ -242,12 +242,12 @@ class PortStateEvent(Event):
     reason: Optional[str] = None  # *
     port: str = ""
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def description(self) -> str:
         return self.descr
 
-    @computed_field
+    @computed_field  # type: ignore
     @property
     def op_state(self) -> str:
         return f"PORT  {self.port_state[:5]}"

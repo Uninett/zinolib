@@ -49,7 +49,7 @@ Both return the changed event.
 """
 
 from datetime import datetime, timezone
-from typing import Iterable, List, TypedDict, Optional
+from typing import Iterable, List, TypedDict, Optional, Set
 
 from .base import EventManager
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
@@ -233,7 +233,7 @@ class Zino1EventManager(EventManager):
     _event_adapter = EventAdapter
     _history_adapter = HistoryAdapter
     _log_adapter = LogAdapter
-    removed_ids = set()
+    removed_ids: Set[int] = set()
 
     def rename_exception(self, function, *args):
         "Replace the original exception with our own"
