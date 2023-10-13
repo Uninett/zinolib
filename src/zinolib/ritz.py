@@ -84,7 +84,7 @@ import errno
 from time import mktime
 import re
 from os.path import expanduser
-from typing import NamedTuple
+from typing import NamedTuple, List, Tuple, Union
 import codecs
 import select
 
@@ -108,7 +108,9 @@ class ProtocolError(Exception):
 
 
 NotifierResponse = NamedTuple("NotifierResponse", [("id", int), ("type", str), ("info", str)])
-DataResponse = NamedTuple("DataResponse", [("data", str), ("header", str)])
+DataResponseData = Union[List[str], str]
+DataResponseHeader = Union[Tuple[()], Tuple[int, str]]
+DataResponse = NamedTuple("DataResponse", [("data", DataResponseData), ("header", DataResponseHeader)])
 
 
 class caseState(enum.Enum):
@@ -377,9 +379,9 @@ class ritz:
         """
         global logger
         buffer = ""
-        data = True
-        header = False
-        r = []
+        data = b"DUMMY"  # truthy, for mypy
+        header: DataResponseHeader = ()
+        r: List[str] = []
         logger.debug("send: %s" % command.__repr__())
         if command:
             delimiter = bytes(self.DELIMITER, 'ascii')
