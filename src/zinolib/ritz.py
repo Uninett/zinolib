@@ -605,7 +605,7 @@ class ritz:
         """
         attrlist = self.get_raw_attributes(caseid)
         caseinfo = self.convert_attribute_list_to_case_dict(attrlist)
-        caesinfo = self.clean_attributes(caseinfo)
+        caseinfo = self.clean_attributes(caseinfo)
         return caseinfo
 
     def clean_attributes(self, caseinfo):
