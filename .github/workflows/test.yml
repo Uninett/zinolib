@@ -39,7 +39,9 @@ jobs:
 
     - name: Run tests
       run: |
+        ls
         python -m tox
+        ls
 
     - name: Upload test reports (${{ matrix.python-version }})
       if: always()
@@ -47,6 +49,7 @@ jobs:
       with:
         name: reports
         path: |
+          ls
           reports/**/*
 
     - name: "Upload coverage to Codecov"
