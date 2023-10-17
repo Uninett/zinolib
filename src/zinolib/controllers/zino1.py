@@ -46,6 +46,7 @@ Log can be stored on the correct event with one of::
 
 Both return the changed event.
 
+The adapters are not meant to be used directly.
 """
 
 from datetime import datetime, timezone
@@ -54,6 +55,11 @@ from typing import Iterable, List, TypedDict, Optional, Set
 from .base import EventManager
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
 from ..ritz import ProtocolError
+
+
+__all__ = [
+    'Zino1EventManager',
+]
 
 
 HistoryDict = TypedDict(
