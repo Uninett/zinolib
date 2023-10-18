@@ -1,4 +1,6 @@
+from pathlib import Path
 import unittest
+from unittest.mock import patch
 
 from zinolib.config.toml import parse_toml_config
 
@@ -25,13 +27,17 @@ class ParseTomlConfig(unittest.TestCase):
 
     def test_parse_toml_config_empty_config_file(self):
         filename = make_tmptextfile("", suffix=".toml")
-        toml_config_dict = parse_toml_config(filename)
+        tmp_directory = Path(filename).parent
+        with patch("zinolib.config.utils.CONFIG_DIRECTORIES", [tmp_directory]):
+            toml_config_dict = parse_toml_config(filename)
         self.assertEqual(toml_config_dict, {})
         delete_tmpfile(filename)
 
     def test_parse_toml_config_golden_path(self):
         filename = make_tmptextfile(CONFIG, ".toml")
-        toml_config_dict = parse_toml_config(filename)
+        tmp_directory = Path(filename).parent
+        with patch("zinolib.config.utils.CONFIG_DIRECTORIES", [tmp_directory]):
+            toml_config_dict = parse_toml_config(filename)
         expected = {
            "connections": {
                "default": {

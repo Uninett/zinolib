@@ -1,4 +1,6 @@
+from pathlib import Path
 from unittest import TestCase
+from unittest.mock import patch
 
 from zinolib.config.tcl import parse_tcl_config, normalize, parse
 
@@ -28,13 +30,17 @@ class ParseTclConfigTest(TestCase):
 
     def test_parse_tcl_config_empty_config_file(self):
         filename = make_tmptextfile("", suffix=".tcl")
-        tcl_config_dict = parse_tcl_config(filename)
+        tmp_directory = Path(filename).parent
+        with patch("zinolib.config.utils.CONFIG_DIRECTORIES", [tmp_directory]):
+            tcl_config_dict = parse_tcl_config(filename)
         delete_tmpfile(filename)
         self.assertEqual(tcl_config_dict, {})
 
     def test_parse_tcl_config_golden_path(self):
         filename = make_tmptextfile(RITZ_CONFIG, suffix=".tcl")
-        tcl_config_dict = parse_tcl_config(filename)
+        tmp_directory = Path(filename).parent
+        with patch("zinolib.config.utils.CONFIG_DIRECTORIES", [tmp_directory]):
+            tcl_config_dict = parse_tcl_config(filename)
         delete_tmpfile(filename)
         expected = {
             "default": {

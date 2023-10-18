@@ -13,7 +13,7 @@ def make_filename_safe(filename):
     return Path(filename).name
 
 
-def find_config_file(filename, directories=CONFIG_DIRECTORIES):
+def find_config_file(filename, directories=None):
     """
     Look for filename in ``directories`` in order
 
@@ -22,6 +22,8 @@ def find_config_file(filename, directories=CONFIG_DIRECTORIES):
 
     If the file isn't found in any of them, raise FileNotFoundError
     """
+    if directories is None:
+        directories = CONFIG_DIRECTORIES
     tried = []
     filename = filename.lstrip('.')
     filename = make_filename_safe(filename)
