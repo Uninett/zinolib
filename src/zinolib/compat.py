@@ -4,6 +4,7 @@ try:
 except ImportError:
     # < Python 3.11
     from enum import Enum
+
     class StrEnum(str, Enum):
         __str__ = str.__str__
 
@@ -13,4 +14,15 @@ except ImportError:
             """
             return name.lower()
 
-__all__ = ["StrEnum"]
+
+try:
+    from tomllib import load as tomlload
+except ImportError:
+    try:
+        from tomli import load as tomlload
+    except ImportError:
+        def tomlload(*args, **kwargs):
+            raise ImportError("TOML library not available, TOML configuration impossible")
+
+
+__all__ = ["StrEnum", "tomlload"]
