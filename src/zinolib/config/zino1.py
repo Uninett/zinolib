@@ -39,7 +39,8 @@ class ZinoV1Config(UserConfig, ServerV1Config, Options):
     @classmethod
     def from_toml(cls, filename=None, section="default"):
         config_dict = toml.parse_toml_config(filename)
-        return cls(**config_dict["connections"], **config_dict["options"])
+        connection = config_dict["connections"][section]
+        return cls(**connection, **config_dict["options"])
 
     def set_userauth(self, username, password):
         self.username = username
