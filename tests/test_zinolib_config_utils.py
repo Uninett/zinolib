@@ -15,6 +15,7 @@ class FindConfigFileTest(TestCase):
 
     def test_find_config_file_golden_path(self):
         filename = make_tmptextfile("", None)
-        found_filename = find_config_file(filename)
+        tmp_directory = Path(filename).parent
+        found_filename = find_config_file(filename, directories=[tmp_directory])
         delete_tmpfile(filename)
         self.assertEqual(Path.cwd() / filename, found_filename)

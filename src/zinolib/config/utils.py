@@ -9,9 +9,9 @@ INVISIBLE_LOCATIONS = [Path.cwd(), Path.home()]
 CONFIG_DIRECTORIES = INVISIBLE_LOCATIONS + VISIBLE_LOCATIONS
 
 
-def find_config_file(filename):
+def find_config_file(filename, directories=CONFIG_DIRECTORIES):
     """
-    Look for filename in CONFIG_DIRECTORIES in order
+    Look for filename in ``directories`` in order
 
     Looks for filenames both with and without a prefixed dot.
 
@@ -20,7 +20,8 @@ def find_config_file(filename):
     tried = []
     if filename.startswith('.'):
         filename = filename[1:]
-    for directory in CONFIG_DIRECTORIES:
+    for directory in directories:
+        directory = Path(directory)
         if directory in INVISIBLE_LOCATIONS:
             used_filename = f'.{filename}'
         else:
