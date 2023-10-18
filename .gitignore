@@ -10,6 +10,7 @@ src/zinolib/version.py
 build
 dist
 htmlcov
+reports/
 
 debian/changelog
 
