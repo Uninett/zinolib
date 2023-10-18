@@ -15,9 +15,9 @@ def clean_textfile(text):
     return text
 
 
-def make_tmptextfile(text, suffix, encoding='ascii'):
+def make_tmptextfile(text, suffix, prefix=None, encoding='ascii'):
     text = clean_textfile(text)
-    fd, filename = mkstemp(text=True, suffix=suffix)
+    fd, filename = mkstemp(text=True, suffix=suffix, prefix=prefix)
     os.write(fd, bytes(text, encoding=encoding))
     return filename
 

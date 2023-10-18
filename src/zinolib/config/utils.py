@@ -9,17 +9,22 @@ INVISIBLE_LOCATIONS = [Path.cwd(), Path.home()]
 CONFIG_DIRECTORIES = INVISIBLE_LOCATIONS + VISIBLE_LOCATIONS
 
 
+def make_filename_safe(filename):
+    return Path(filename).name
+
+
 def find_config_file(filename, directories=CONFIG_DIRECTORIES):
     """
     Look for filename in ``directories`` in order
 
-    Looks for filenames both with and without a prefixed dot.
+    The filename is validated. Any prefixed dot is removed, any path-magic (~,
+    /, .. etc.) is stripped away.
 
     If the file isn't found in any of them, raise FileNotFoundError
     """
     tried = []
-    if filename.startswith('.'):
-        filename = filename[1:]
+    filename = filename.lstrip('.')
+    filename = make_filename_safe(filename)
     for directory in directories:
         directory = Path(directory)
         if directory in INVISIBLE_LOCATIONS:
