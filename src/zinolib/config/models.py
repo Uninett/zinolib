@@ -8,7 +8,7 @@ class UserConfig(BaseModel):
 
 class ServerV1Config(BaseModel):
     server: str
-    port: str = "8001"
+    port: int = 8001
 
 
 class Options(BaseModel):

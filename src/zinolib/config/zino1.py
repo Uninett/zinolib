@@ -9,6 +9,7 @@ def _parse_tcl(config_dict, section):
     connection = fixed_dict["connections"][section]
     options = fixed_dict["global_options"]
     connection['password'] = connection.pop("secret")
+    connection['port'] = int(connection.pop("port"))
     return connection, options
 
 

@@ -25,7 +25,7 @@ class ParseTclTest(unittest.TestCase):
             },
         }
         expected_connection = {
-            "port": "8001",
+            "port": 8001,
             "password": "0123456789",
             "server": "example.org",
             "username": "admin",
@@ -54,7 +54,7 @@ class ZinoV1ConfigTest(unittest.TestCase):
 
     def test_manually_create_config(self):
         config = self.manually_create_config()
-        self.assertEqual(config.port, "8001")
+        self.assertEqual(config.port, 8001)
 
     def test_set_userauth(self):
         config = self.manually_create_config()
