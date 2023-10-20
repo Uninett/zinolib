@@ -213,10 +213,10 @@ class EventManagerTest(unittest.TestCase):
         event = Event.create(minimal_input)
         self.event = event
 
-    def test_check_session_wjen_no_session_should_fail_noisily(self):
+    def test__verify_session_wjen_no_session_should_fail_noisily(self):
         event_manager = EventManager()
         with self.assertRaises(ValueError):
-            event_manager.check_session()
+            event_manager._verify_session()
 
     def test_get_event_with_id_should_succeed(self):
         event = self.event

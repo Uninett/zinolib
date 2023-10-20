@@ -45,7 +45,7 @@ class EventManager:
         self.events.pop(event_id)
         self.removed_ids.add(event_id)
 
-    def check_session(self, quiet=False):
+    def _verify_session(self, quiet=False):
         if not self.session:
             if quiet:
                 return False

@@ -372,12 +372,12 @@ class Zino1EventManager(EventManager):
 
     @property
     def is_authenticated(self):
-        session_ok = self.check_session(quiet=True)
+        session_ok = self._verify_session(quiet=True)
         return self.session.request.authenticated if session_ok else False
 
     @property
     def is_connected(self):
-        session_ok = self.check_session(quiet=True)
+        session_ok = self._verify_session(quiet=True)
         return self.session.request.connected if session_ok else False
 
     def rename_exception(self, function, *args):
@@ -387,7 +387,7 @@ class Zino1EventManager(EventManager):
         except ProtocolError as e:
             raise self.ManagerException(e)
 
-    def check_session(self, quiet=False):
+    def _verify_session(self, quiet=False):
         if not getattr(self.session, 'request', None):
             if quiet:
                 return False
@@ -400,7 +400,7 @@ class Zino1EventManager(EventManager):
         return cls(session)
 
     def connect(self):
-        self.check_session()
+        self._verify_session()
         self.session = self._session_adapter.connect_session(self.session)
 
     def authenticate(self, username=None, password=None):
@@ -410,7 +410,7 @@ class Zino1EventManager(EventManager):
             raise self.ManagerException(e)
 
     def disconnect(self):
-        self.check_session()
+        self._verify_session()
         self.session = self._session_adapter.close_session(self.session)
 
     def clear_flapping(self, event: EventType):
@@ -425,7 +425,7 @@ class Zino1EventManager(EventManager):
         return None
 
     def get_events(self):
-        self.check_session()
+        self._verify_session()
         for event_id in self._event_adapter.get_event_ids(self.session.request):
             try:
                 event = self.create_event_from_id(event_id)
@@ -435,7 +435,7 @@ class Zino1EventManager(EventManager):
             self.events[event_id] = event
 
     def create_event_from_id(self, event_id: int):
-        self.check_session()
+        self._verify_session()
         attrlist = self.rename_exception(self._event_adapter.get_attrlist, self.session.request, event_id)
         attrdict = self._event_adapter.attrlist_to_attrdict(attrlist)
         attrdict = self._event_adapter.convert_values(attrdict)
@@ -450,7 +450,7 @@ class Zino1EventManager(EventManager):
         return event
 
     def change_admin_state_for_id(self, event_id, admin_state: AdmState) -> Optional[Event]:
-        self.check_session()
+        self._verify_session()
         event = self._get_event(event_id)
         success = self._event_adapter.set_admin_state(self.session.request, event, admin_state)
         if success:
@@ -460,13 +460,13 @@ class Zino1EventManager(EventManager):
         return None
 
     def get_history_for_id(self, event_id: int) -> list[HistoryEntry]:
-        self.check_session()
+        self._verify_session()
         raw_history = self.rename_exception(self._history_adapter.get_history, self.session.request, event_id)
         parsed_history = self._history_adapter.parse_response(raw_history)
         return HistoryEntry.create_list(parsed_history)
 
     def add_history_entry_for_id(self, event_id: int, message) -> Optional[EventType]:
-        self.check_session()
+        self._verify_session()
         event = self._get_event(event_id)
         success = self._history_adapter.add(self.session.request, message, event)
         if success:
@@ -476,7 +476,7 @@ class Zino1EventManager(EventManager):
         return None
 
     def get_log_for_id(self, event_id: int) -> list[LogEntry]:
-        self.check_session()
+        self._verify_session()
         raw_log = self.rename_exception(self._log_adapter.get_log, self.session.request, event_id)
         parsed_log = self._log_adapter.parse_response(raw_log)
         return LogEntry.create_list(parsed_log)
