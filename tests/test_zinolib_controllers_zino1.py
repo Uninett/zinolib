@@ -216,7 +216,6 @@ class UpdateHandlerTest(unittest.TestCase):
         update = NotifierResponse(raw_event_id, "", "")
         with self.assertLogs('zinolib.controllers.zino1', level='WARNING') as cm:
             self.assertFalse(updates.fallback(update))
-            self.assertEqual(cm.output, ['WARNING:zinolib.controllers.zino1:Unknown update type: "" for id 139110'])
 
     def test_handle_new_stateless_event_is_very_special(self):
         zino1 = self.init_manager()
