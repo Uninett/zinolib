@@ -21,6 +21,7 @@ class EventManager:
     def __init__(self, session=None):
         self.session = session
         self.events = {}
+        self.removed_ids = set()
 
     def _get_event(self, event_or_id: EventOrId) -> Event:
         if isinstance(event_or_id, Event):
@@ -29,12 +30,27 @@ class EventManager:
             return self.events[event_or_id]
         raise ValueError("Unknown type")
 
+    def _get_event_id(self, event_or_id: EventOrId) -> int:
+        if isinstance(event_or_id, int):
+            return event_or_id
+        if isinstance(event_or_id, Event):
+            return event_or_id.id
+        raise ValueError("Unknown type")
+
     def _set_event(self, event: Event):
         self.events[event.id] = event
 
-    def check_session(self):
+    def remove_event(self, event_or_id: EventOrId):
+        event_id = self._get_event_id(event_or_id)
+        self.events.pop(event_id)
+        self.removed_ids.add(event_id)
+
+    def _verify_session(self, quiet=False):
         if not self.session:
+            if quiet:
+                return False
             raise ValueError  # raise correct error
+        return True
 
     def set_history_for_event(self, event_or_id: EventOrId, history_list: List[HistoryEntry]) -> Event:
         event = self._get_event(event_or_id)
