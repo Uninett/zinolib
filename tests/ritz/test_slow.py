@@ -8,7 +8,7 @@ from ipaddress import ip_address
 from zinolib.ritz import ritz, ProtocolError, AuthenticationError, caseState, caseType
 from zinolib.zino_emu import zinoemu
 
-from .utils import executor
+from ..utils import executor
 
 
 class SlowTest(unittest.TestCase):

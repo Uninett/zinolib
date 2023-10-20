@@ -5,7 +5,7 @@ from unittest import TestCase
 
 from zinolib.config.utils import find_config_file, make_filename_safe
 
-from .utils import make_tmptextfile, delete_tmpfile
+from ..utils import make_tmptextfile, delete_tmpfile
 
 
 class MakeFilenameSafeTest(TestCase):

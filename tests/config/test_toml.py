@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from zinolib.config.toml import parse_toml_config
 
-from .utils import make_tmptextfile, delete_tmpfile
+from ..utils import make_tmptextfile, delete_tmpfile
 
 
 CONFIG = """

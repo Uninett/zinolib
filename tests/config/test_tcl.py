@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from zinolib.config.tcl import parse_tcl_config, normalize, parse
 
-from .utils import clean_textfile, make_tmptextfile, delete_tmpfile
+from ..utils import clean_textfile, make_tmptextfile, delete_tmpfile
 
 
 RITZ_CONFIG = """
