@@ -183,11 +183,16 @@ class SessionAdapter:
             )
         return session
 
-    @staticmethod
-    def connect_session(session):
+    @classmethod
+    def connect_session(cls, session):
         session.request.connect()
-        session.push = notifier(session.request)
-        session.push.connect()  # ntie
+        return cls.connect_push_channel(session)
+
+    @staticmethod
+    def connect_push_channel(session):
+        if session.request.connected:
+            session.push = notifier(session.request)
+            session.push.connect()  # ntie
         return session
 
     @staticmethod
@@ -405,7 +410,7 @@ class Zino1EventManager(EventManager):
 
     def authenticate(self, username=None, password=None):
         try:
-            self.session = self._session_adapter.authenticate(username, password)
+            self.session = self._session_adapter.authenticate(self.session, username, password)
         except (ZinoError, ValueError) as e:
             raise self.ManagerException(e)
 
