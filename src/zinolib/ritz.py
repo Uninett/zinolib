@@ -94,15 +94,20 @@ codecs.register_error("windows_codepage_cp1252", windows_codepage_cp1252)
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
-class AuthenticationError(Exception):
+
+class ZinoError(Exception):
     pass
 
 
-class NotConnectedError(Exception):
+class AuthenticationError(ZinoError):
     pass
 
 
-class ProtocolError(Exception):
+class NotConnectedError(ZinoError):
+    pass
+
+
+class ProtocolError(ZinoError):
     pass
 
 
@@ -733,7 +738,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
         return True
 
     def poll_router(self, router):
@@ -746,7 +751,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
         return True
 
     def poll_interface(self, router, ifindex):
@@ -764,7 +769,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
         return True
 
     def ntie(self, key):
@@ -796,7 +801,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception(
+            raise ZinoError(
                 "Not getting 200 OK from server: %s" % response.header.__repr__()
             )
         return True
@@ -828,7 +833,7 @@ class ritz:
         if from_t > to_t:
             raise ValueError("To timestamp is earlier than From timestamp")
         if m_type not in ("exact", "str", "regexp"):
-            raise Exception("Unknown m_type, needs to be exact, str or regexp")
+            raise ZinoError("Unknown m_type, needs to be exact, str or regexp")
 
         from_ts = mktime(from_t.timetuple())
         to_ts = mktime(to_t.timetuple())
@@ -840,7 +845,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
 
         data2 = response.data.split(" ", 3)
         return int(data2[2])
@@ -875,7 +880,7 @@ class ritz:
         if not isinstance(to_t, datetime):
             raise TypeError("to_t is not a datetime")
         if from_t > to_t:
-            raise Exception("To timestamp is earlier than From timestamp")
+            raise ZinoError("To timestamp is earlier than From timestamp")
 
         from_ts = mktime(from_t.timetuple())
         to_ts = mktime(to_t.timetuple())
@@ -887,7 +892,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
 
         data2 = response.data.split(" ", 3)
         return int(data2[2])
@@ -918,7 +923,7 @@ class ritz:
         if not isinstance(to_t, datetime):
             raise TypeError("to_t is not a datetime")
         if from_t > to_t:
-            raise Exception("To timestamp is earlier than From timestamp")
+            raise ZinoError("To timestamp is earlier than From timestamp")
 
         from_ts = mktime(from_t.timetuple())
         to_ts = mktime(to_t.timetuple())
@@ -930,7 +935,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
 
         data2 = response.data.split(" ", 3)
         return int(data2[2])
@@ -963,7 +968,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
         else:
             return True
 
@@ -1029,7 +1034,7 @@ class ritz:
         response = self._request(b"pm addlog %d  -" % (id))
 
         if not response.header[0] == 302:
-            raise Exception("Unknown return from server: %s" % self._buff)
+            raise ZinoError("Unknown return from server: %s" % self._buff)
 
         # Generate Message to zino
         if isinstance(message, list):
@@ -1042,7 +1047,7 @@ class ritz:
 
         # Check returncode
         if not response.header[0] == 200:
-            raise Exception("Not getting 200 OK from server: %s" % self._buff)
+            raise ZinoError("Not getting 200 OK from server: %s" % self._buff)
         return True
 
     def pm_get_log(self, id):

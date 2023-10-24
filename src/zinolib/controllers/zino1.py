@@ -71,7 +71,7 @@ import logging
 from .base import EventManager
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
-from ..ritz import ProtocolError, ritz, notifier
+from ..ritz import ZinoError, ritz, notifier
 
 
 __all__ = [
@@ -384,7 +384,7 @@ class Zino1EventManager(EventManager):
         "Replace the original exception with our own"
         try:
             return function(*args)
-        except ProtocolError as e:
+        except ZinoError as e:
             raise self.ManagerException(e)
 
     def _verify_session(self, quiet=False):
@@ -406,7 +406,7 @@ class Zino1EventManager(EventManager):
     def authenticate(self, username=None, password=None):
         try:
             self.session = self._session_adapter.authenticate(username, password)
-        except (ProtocolError, ValueError) as e:
+        except (ZinoError, ValueError) as e:
             raise self.ManagerException(e)
 
     def disconnect(self):
