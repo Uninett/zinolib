@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 from pydantic import BaseModel
 
 from . import tcl, toml
@@ -30,18 +32,24 @@ class ZinoV1Config(UserConfig, ServerV1Config, Options):
 
         > config.update_from_args(args)
     """
+    DEFAULT_SECTION: ClassVar = "default"
 
     @classmethod
-    def from_tcl(cls, filename=None, section="default"):
+    def from_dict(cls, config_dict, section=DEFAULT_SECTION):
+        connection = config_dict["connections"][section]
+        options = config_dict.get("options", {})
+        return cls(**connection, **options)
+
+    @classmethod
+    def from_tcl(cls, filename=None, section=DEFAULT_SECTION):
         config_dict = tcl.parse_tcl_config(filename)
         connection, options = _parse_tcl(config_dict, section)
         return cls(**connection, **options)
 
     @classmethod
-    def from_toml(cls, filename=None, section="default"):
+    def from_toml(cls, filename=None, section=DEFAULT_SECTION):
         config_dict = toml.parse_toml_config(filename)
-        connection = config_dict["connections"][section]
-        return cls(**connection, **config_dict["options"])
+        return cls.from_dict(config_dict)
 
     def set_userauth(self, username, password):
         self.username = username
