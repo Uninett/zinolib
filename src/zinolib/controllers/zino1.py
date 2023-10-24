@@ -38,8 +38,9 @@ For updates, either regularly use ``get_events()`` or utilize the UpdateHandler:
     > updater = UpdateHandler(event_manager)
     > updated = updater.poll()
 
-This updates ``event_manager.events`` and ``event_manager.removed_ids`` and
-returns ``True`` on any change, falsey otherwise.
+``updater.poll()`` updates ``event_manager.events`` and
+``event_manager.removed_ids`` and returns ``True`` on any change, falsey
+otherwise.
 
 To get history for a specific event::
 
@@ -95,6 +96,10 @@ DEFAULT_TIMEOUT = 30
 LOG = logging.getLogger(__name__)
 
 
+class Zino1Error(ZinoError):
+    pass
+
+
 def convert_timestamp(timestamp: int) -> datetime:
     return datetime.fromtimestamp(timestamp, timezone.utc)
 
@@ -107,8 +112,16 @@ class UpdateHandler:
         LOG = "log"
         SCAVENGED = "scavenged"
 
+    class UpdateError(Zino1Error):
+        pass
+
     def __init__(self, manager, autoremove=False):
+        if not manager.is_authenticated:
+            msg = "Cannot initiate update handler, not authenticated"
+            raise self.UpdateError(msg)
         self.manager = manager
+        if not self.manager.session.push:
+            self.manager.connect_push_channel()
         self.events = manager.events
         self.autoremove = autoremove
 
@@ -190,7 +203,7 @@ class SessionAdapter:
 
     @staticmethod
     def connect_push_channel(session):
-        if session.request.connected:
+        if session.request.connected and session.request.authenticated:
             session.push = notifier(session.request)
             session.push.connect()  # ntie
         return session
@@ -206,7 +219,8 @@ class SessionAdapter:
 
     @staticmethod
     def close_session(session):
-        session.push._sock.close()
+        if hasattr(session.push, '_sock'):
+            session.push._sock.close()
         session.request.close()
         return None
 
@@ -407,6 +421,9 @@ class Zino1EventManager(EventManager):
     def connect(self):
         self._verify_session()
         self.session = self._session_adapter.connect_session(self.session)
+
+    def connect_push_channel(self):
+        self.session = self._session_adapter.connect_push_channel(self.session)
 
     def authenticate(self, username=None, password=None):
         try:

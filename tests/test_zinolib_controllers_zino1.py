@@ -78,7 +78,11 @@ class FakeSessionAdapter(SessionAdapter):
 
     @staticmethod
     def _setup_request(session, config):
-        session.request = 'foo'  # needs to be truthy
+        class FakeSession:
+            authenticated = True
+
+        session.request = FakeSession()  # needs to be truthy
+        session.push = True  # needs to be truthy
         return session
 
 
