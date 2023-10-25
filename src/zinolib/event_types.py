@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timedelta, timezone
-from typing import Optional, ClassVar, List, TypeVar, Union, Dict, Generic
+from typing import Optional, ClassVar, List, TypeVar, Union, Dict, Generic, Set
 from typing_extensions import Annotated
 
 from pydantic import ConfigDict, IPvAnyAddress, ValidationError, ValidationInfo
@@ -149,7 +149,10 @@ class Event(BaseModel):
 
     log: List[LogEntry] = []
     history: List[HistoryEntry] = []
+
+    EXTRAS: ClassVar[Set[str]] = set()
     SUBTYPES: ClassVar[dict] = {}
+
     model_config = ConfigDict(validate_default=True)
 
     def __init_subclass__(cls, **kwargs):
@@ -261,6 +264,8 @@ class PortStateEvent(Event):
     port_state: PortState  # str *
     reason: Optional[str] = None  # *
     port: str = ""
+
+    EXTRAS: ClassVar[Set[str]] = {"clear_flapping", "get_downtime"}
 
     @computed_field  # type: ignore
     @property
