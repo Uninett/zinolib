@@ -177,7 +177,7 @@ class BFDEvent(Event):
     @computed_field  # type: ignore
     @property
     def port(self) -> str:
-        return self.bfd_addr if self.bfd_addr else f"ix {self.bfd_ix}"
+        return str(self.bfd_addr) if self.bfd_addr else f"ix {self.bfd_ix}"
 
     @computed_field  # type: ignore
     @property

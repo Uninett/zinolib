@@ -72,6 +72,7 @@ import logging
 from .base import EventManager
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
+from ..event_types import PortStateEvent
 from ..ritz import ZinoError, ritz, notifier
 
 
@@ -435,7 +436,7 @@ class Zino1EventManager(EventManager):
         self._verify_session()
         self.session = self._session_adapter.close_session(self.session)
 
-    def clear_flapping(self, event: EventType):
+    def clear_flapping(self, event: PortStateEvent):
         """Clear flapping state of a PortStateEvent
 
         Usage:
@@ -443,7 +444,7 @@ class Zino1EventManager(EventManager):
             c.clear_flapping()
         """
         if event.type == Event.Type.PortState:
-            return self.session.request.clear_flapping(event.router, event.ifindex)
+            return self.session.request.clear_flapping(event.router, event.if_index)
         return None
 
     def get_events(self):
@@ -487,7 +488,7 @@ class Zino1EventManager(EventManager):
         parsed_history = self._history_adapter.parse_response(raw_history)
         return HistoryEntry.create_list(parsed_history)
 
-    def add_history_entry_for_id(self, event_id: int, message) -> Optional[EventType]:
+    def add_history_entry_for_id(self, event_id: int, message) -> Optional[Event]:
         self._verify_session()
         event = self._get_event(event_id)
         success = self._history_adapter.add(self.session.request, message, event)
