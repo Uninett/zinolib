@@ -66,7 +66,7 @@ The adapters are not meant to be used directly.
 """
 
 from datetime import datetime, timezone
-from typing import Iterable, List, TypedDict, Optional, Set
+from typing import Dict, Iterable, List, TypedDict, Optional, Set
 import logging
 
 from .base import EventManager
@@ -74,6 +74,7 @@ from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
 from ..event_types import PortStateEvent
 from ..ritz import ZinoError, ritz, notifier
+from ..utils import log_exception_with_params
 
 
 __all__ = [
@@ -248,7 +249,8 @@ class EventAdapter:
         return request.get_raw_attributes(event_id)
 
     @classmethod
-    def attrlist_to_attrdict(cls, attrlist: Iterable[str]):
+    @log_exception_with_params(LOG)
+    def attrlist_to_attrdict(cls, attrlist: Iterable[str]) -> Dict[str, str]:
         """Translate a wire protocol dump of a single event
 
         The dump is a list of lines of the format:
@@ -290,6 +292,7 @@ class HistoryAdapter:
         return request.get_raw_history(event_id).data
 
     @classmethod
+    @log_exception_with_params(LOG)
     def parse_response(cls, history_data: Iterable[str]) -> list[HistoryDict]:
         """
         Input:
@@ -357,6 +360,7 @@ class LogAdapter:
         return request.get_raw_log(event_id).data
 
     @staticmethod
+    @log_exception_with_params(LOG)
     def parse_response(log_data: Iterable[str]) -> list[LogDict]:
         """
         Input:
