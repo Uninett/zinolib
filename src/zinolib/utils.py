@@ -1,4 +1,6 @@
+import functools
 import hashlib
+from typing import Any
 
 
 __all__ = [
@@ -56,3 +58,27 @@ def generate_authtoken(challenge, password):
     raw_token = "%s %s" % (challenge, password)
     token = hashlib.sha1(raw_token.encode("UTF-8")).hexdigest()
     return token
+
+
+def log_exception_with_params(logger, reraise=True, return_value=None):
+    """Log the params and exception if the wrapped function fails
+
+    If ``reraise`` is False, return ``return_value`` instead of reraising the
+    exception.
+    """
+    def inner(function):
+        @functools.wraps(function)
+        def wrapper(*args, **kwargs):
+            params = f'args={args} kwargs={kwargs}'
+            try:
+                result = function(*args, **kwargs)
+                return result
+            except Exception as e:
+                funcname = function.__name__
+                logger.error(f'"{funcname}" failed with: {params}')
+                logger.exception(f'Exception raised in "{funcname}": {str(e)}')
+                if reraise:
+                    raise
+                return return_value
+        return wrapper
+    return inner
