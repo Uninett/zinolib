@@ -69,14 +69,13 @@ def log_exception_with_params(logger, reraise=True, return_value=None):
     def inner(function):
         @functools.wraps(function)
         def wrapper(*args, **kwargs):
-            params = f'args={args} kwargs={kwargs}'
             try:
                 result = function(*args, **kwargs)
                 return result
             except Exception as e:
+                params = f'args={args} kwargs={kwargs}'
                 funcname = function.__name__
-                logger.error(f'"{funcname}" failed with: {params}')
-                logger.exception(f'Exception raised in "{funcname}": {str(e)}')
+                logger.exception(f'"{funcname}" failed with: {params}\n{e}')
                 if reraise:
                     raise
                 return return_value
