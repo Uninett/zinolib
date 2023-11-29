@@ -102,6 +102,10 @@ class Zino1Error(ZinoError):
     pass
 
 
+class RetryError(Zino1Error):
+    pass
+
+
 def convert_timestamp(timestamp: int) -> datetime:
     return datetime.fromtimestamp(timestamp, timezone.utc)
 
@@ -247,6 +251,14 @@ class EventAdapter:
     @staticmethod
     def get_attrlist(request, event_id: int):
         return request.get_raw_attributes(event_id)
+
+    @staticmethod
+    def validate_raw_attrlist(attrlist):
+        for item in attrlist:
+            if ':' not in item:
+                LOG.error('"getattrs" is spewing garbage: %s', attrlist)
+                return False
+        return True
 
     @classmethod
     @log_exception_with_params(LOG)
@@ -464,6 +476,8 @@ class Zino1EventManager(EventManager):
     def create_event_from_id(self, event_id: int):
         self._verify_session()
         attrlist = self.rename_exception(self._event_adapter.get_attrlist, self.session.request, event_id)
+        if not self._event_adapter.validate_raw_attrlist(attrlist):
+            raise RetryError('Zino 1 is flaking out, retry')
         attrdict = self._event_adapter.attrlist_to_attrdict(attrlist)
         attrdict = self._event_adapter.convert_values(attrdict)
         return Event.create(attrdict)

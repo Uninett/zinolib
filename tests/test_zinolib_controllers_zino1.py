@@ -2,7 +2,7 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from zinolib.event_types import AdmState, Event, HistoryEntry, LogEntry
-from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager, UpdateHandler
+from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager, UpdateHandler,RetryError
 from zinolib.ritz import NotifierResponse
 
 raw_event_id = 139110
@@ -48,6 +48,10 @@ class FakeEventAdapter:
     @classmethod
     def attrlist_to_attrdict(cls, attrlist):
         return EventAdapter.attrlist_to_attrdict(attrlist)
+
+    @staticmethod
+    def validate_raw_attrlist(attrlist):
+        return True
 
     @classmethod
     def convert_values(cls, attrdict):
@@ -101,6 +105,17 @@ class Zino1EventManagerTest(unittest.TestCase):
     def init_manager(self):
         zino1 = FakeZino1EventManager.configure(None)
         return zino1
+
+    def test_create_event_from_id_may_get_garabage_data(self):
+        def falsey(_):
+            return False
+
+        zino1 = self.init_manager()
+        old = zino1._event_adapter.validate_raw_attrlist
+        zino1._event_adapter.validate_raw_attrlist = staticmethod(falsey)
+        with self.assertRaises(RetryError):
+            zino1.create_event_from_id(139110)
+        zino1._event_adapter.validate_raw_attrlist = old
 
     def test_get_events(self):
         zino1 = self.init_manager()
