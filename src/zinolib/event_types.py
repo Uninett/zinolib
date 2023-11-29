@@ -1,10 +1,29 @@
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, ClassVar, List, TypeVar, Union, Dict, Generic
+from typing_extensions import Annotated
 
-from pydantic import ConfigDict, IPvAnyAddress
-from pydantic import BaseModel, computed_field
+from pydantic import ConfigDict, IPvAnyAddress, ValidationError, ValidationInfo
+from pydantic import BaseModel, computed_field, field_validator
+from pydantic.functional_validators import BeforeValidator
 
 from .compat import StrEnum
+from .utils import log_exception_with_params
+
+
+LOG = logging.getLogger(__name__)
+
+
+def unknown(v: Optional[str]) -> Optional[str]:
+    if v:
+        if 'unknown' in v:
+            return None
+        return v
+    return None
+
+
+# Must be after "unknown"
+OptionalIpAnyAddress = Annotated[Optional[IPvAnyAddress], BeforeValidator(unknown)]
 
 
 def utcnow():
@@ -138,6 +157,7 @@ class Event(BaseModel):
         cls.SUBTYPES[cls.type.value] = cls
 
     @classmethod
+    @log_exception_with_params(LOG)
     def create(cls, attrdict):
         event_type_string = attrdict["type"]
         subtype = Event.SUBTYPES[event_type_string]
@@ -168,7 +188,7 @@ class AlarmEvent(Event):
 
 class BFDEvent(Event):
     type: str = Event.Type.BFD
-    bfd_addr: Optional[IPvAnyAddress] = None
+    bfd_addr: OptionalIpAnyAddress = None
     bfd_discr: Optional[int] = None
     bfd_state: BFDState
     bfd_ix: int
