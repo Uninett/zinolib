@@ -106,6 +106,10 @@ class RetryError(Zino1Error):
     pass
 
 
+class EventClosedError(Zino1Error):
+    pass
+
+
 def convert_timestamp(timestamp: int) -> datetime:
     return datetime.fromtimestamp(timestamp, timezone.utc)
 
@@ -493,7 +497,13 @@ class Zino1EventManager(EventManager):
     def change_admin_state_for_id(self, event_id, admin_state: AdmState) -> Optional[Event]:
         self._verify_session()
         event = self._get_event(event_id)
-        success = self._event_adapter.set_admin_state(self.session.request, event, admin_state)
+        try:
+            success = self._event_adapter.set_admin_state(self.session.request, event, admin_state)
+        except ValueError as e:
+            if 'reopen' in str(e):
+                raise EventClosedError("Cannot set state on closed event")
+            else:
+                raise
         if success:
             event = self.get_updated_event_for_id(event_id)
             self._set_event(event)
