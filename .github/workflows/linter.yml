@@ -55,7 +55,7 @@ jobs:
         uses: github/super-linter/slim@v5
         env:
           VALIDATE_ALL_CODEBASE: false
-          DEFAULT_BRANCH: master
+          DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Add validation for other languages here or comment out all to validate all languages
           VALIDATE_PYTHON_FLAKE8: true
