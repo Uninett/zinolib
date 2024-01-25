@@ -391,10 +391,10 @@ class ritz:
                         line, buffer = buffer.split(self.DELIMITER, 1)
                         rawh = line.split(" ", 1)  # ' ' is not a byte
                         header = (int(rawh[0]), rawh[1])
-                    except ValueError:
+                    except ValueError as e:
                         raise ProtocolError(
                             "Illegal response from server detected: %s" % repr(buffer)
-                        )
+                        ) from e
                     # header = line
                     # Crude error detection :)
                     if header[0] >= 500:
