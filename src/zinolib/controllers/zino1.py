@@ -73,7 +73,7 @@ from .base import EventManager
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
 from ..event_types import PortStateEvent
-from ..ritz import ZinoError, ritz, notifier
+from ..ritz import ZinoError, ProtocolError, ritz, notifier
 from ..utils import log_exception_with_params
 
 
@@ -297,7 +297,10 @@ class EventAdapter:
 
     @staticmethod
     def get_event_ids(request):
-        return request.get_caseids()
+        try:
+            return request.get_caseids()
+        except ProtocolError as e:
+            raise RetryError('Zino 1 failed to send a correct response header, retry') from e
 
 
 class HistoryAdapter:
@@ -400,7 +403,7 @@ class LogAdapter:
             try:
                 timestamp = int(timestamp)
             except ValueError as e:
-                raise RetryError('Zino 1 is flaking out, retry') from e
+                raise RetryError('Zino 1 did not send a log, retry') from e
             dt = convert_timestamp(timestamp)
             log_list.append({"date": dt, "log": log})
         return log_list
@@ -485,7 +488,7 @@ class Zino1EventManager(EventManager):
         self._verify_session()
         attrlist = self.rename_exception(self._event_adapter.get_attrlist, self.session.request, event_id)
         if not self._event_adapter.validate_raw_attrlist(attrlist):
-            raise RetryError('Zino 1 is flaking out, retry')
+            raise RetryError('Zino 1 did not send event attributes, retry')
         attrdict = self._event_adapter.attrlist_to_attrdict(attrlist)
         attrdict = self._event_adapter.convert_values(attrdict)
         return Event.create(attrdict)
