@@ -75,7 +75,7 @@ def log_exception_with_params(logger, reraise=True, return_value=None):
             except Exception as e:
                 params = f'args={args} kwargs={kwargs}'
                 funcname = function.__name__
-                logger.exception(f'"{funcname}" failed with: {params}\n{e}')
+                logger.exception('"%s" failed with: %s\n%s', funcname, params, e)
                 if reraise:
                     raise
                 return return_value
