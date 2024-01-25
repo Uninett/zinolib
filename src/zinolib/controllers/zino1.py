@@ -397,7 +397,11 @@ class LogAdapter:
         log_list: List[LogDict] = []
         for row in log_data:
             timestamp, log = row.split(" ", 1)
-            dt = convert_timestamp(int(timestamp))
+            try:
+                timestamp = int(timestamp)
+            except ValueError as e:
+                raise RetryError('Zino 1 is flaking out, retry') from e
+            dt = convert_timestamp(timestamp)
             log_list.append({"date": dt, "log": log})
         return log_list
 
