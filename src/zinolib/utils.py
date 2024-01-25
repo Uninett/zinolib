@@ -1,6 +1,5 @@
 import functools
 import hashlib
-from typing import Any
 
 
 __all__ = [
