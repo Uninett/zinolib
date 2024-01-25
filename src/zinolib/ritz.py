@@ -86,7 +86,7 @@ from typing import NamedTuple, List, Tuple, Union
 import codecs
 import select
 
-from .config.tcl import parse_tcl_config
+from .config.tcl import parse_tcl_config  # noqa: F401 (used to be in this file)
 from .utils import windows_codepage_cp1252, generate_authtoken
 
 
@@ -260,7 +260,9 @@ class Case:
             return self.get_downtime()
         else:
             self.__getattribute__(name)
-            # raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
+            # raise AttributeError(
+            #     "%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name)
+            # )
         return self
 
     def __getitem__(self, key):
