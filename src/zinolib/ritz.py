@@ -371,7 +371,10 @@ class ritz:
             delimiter = bytes(self.DELIMITER, 'ascii')
             if not command.endswith(delimiter):
                 command += delimiter
-            self._sock.send(command)
+            try:
+                self._sock.send(command)
+            except BrokenPipeError as e:
+                raise NotConnectedError(f'Lost connection to server: {e}') from e
         while data:
             try:
                 data = self._sock.recv(recv_buffer)
