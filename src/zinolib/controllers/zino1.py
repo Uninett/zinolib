@@ -69,7 +69,7 @@ from datetime import datetime, timezone
 from typing import Dict, Iterable, List, TypedDict, Optional, Set
 import logging
 
-from .base import EventManager
+from .base import EventManager, EventOrId
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
 from ..event_types import PortStateEvent
@@ -463,13 +463,14 @@ class Zino1EventManager(EventManager):
         self._verify_session()
         self.session = self._session_adapter.close_session(self.session)
 
-    def clear_flapping(self, event: PortStateEvent):
+    def clear_flapping(self, event_or_id: EventOrId):
         """Clear flapping state of a PortStateEvent
 
         Usage:
             c = ritz_session.case(123)
             c.clear_flapping()
         """
+        event = self._get_event(event_or_id)
         if event.type == Event.Type.PORTSTATE:
             return self.session.request.clear_flapping(event.router, event.if_index)
         return None
