@@ -470,7 +470,7 @@ class Zino1EventManager(EventManager):
             c = ritz_session.case(123)
             c.clear_flapping()
         """
-        if event.type == Event.Type.PortState:
+        if event.type == Event.Type.PORTSTATE:
             return self.session.request.clear_flapping(event.router, event.if_index)
         return None
 
