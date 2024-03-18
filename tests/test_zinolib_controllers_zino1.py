@@ -106,6 +106,18 @@ class Zino1EventManagerTest(unittest.TestCase):
         zino1 = FakeZino1EventManager.configure(None)
         return zino1
 
+    def test_create_event_from_id_receiving_garbage_admstate_is_safely_handled(self):
+        global raw_attrlist
+        zino1 = self.init_manager()
+        good_attrlist = raw_attrlist[:] # copy
+        try:
+            raw_attrlist[0] = "state: garbage admstate"
+            event = zino1.create_event_from_id(139110)
+            self.assertEqual(event.adm_state, AdmState.UNKNOWN)
+        finally:
+            # reset to known good attrlist for other tests
+            raw_attrlist = good_attrlist
+
     def test_create_event_from_id_may_get_garabage_data(self):
         def falsey(_):
             return False

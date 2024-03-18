@@ -252,3 +252,15 @@ class EventManagerTest(unittest.TestCase):
         }]
         updated_event = event_manager.set_log_for_event(event, log_list)
         self.assertTrue(event_manager.events[event.id].log)
+
+
+class AdmStateTest(unittest.TestCase):
+
+    def test_golden_path(self):
+        for state in AdmState:
+            enum_state = AdmState(state)
+            self.assertEqual(enum_state.value, state)
+
+    def test_garbage_input_should_be_converted_to_UNKNOWN(self):
+        value = AdmState("random garbage")
+        self.assertEqual(value, AdmState.UNKNOWN)
