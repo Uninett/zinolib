@@ -240,7 +240,7 @@ class UpdateHandlerTest(unittest.TestCase):
         zino1 = self.init_manager()
         updates = UpdateHandler(zino1)
         update = NotifierResponse(1337, "", "")
-        result = updates.handle(update)
+        result = updates.handle_event_update(update)
         self.assertEqual(result, None)
 
     def test_handle_known_type(self):
@@ -250,7 +250,7 @@ class UpdateHandlerTest(unittest.TestCase):
         old_events[raw_event_id].priority = 500
         updates = UpdateHandler(zino1)
         update = NotifierResponse(raw_event_id, updates.UpdateType.LOG, "")
-        ok = updates.handle(update)  # will refetch events
+        ok = updates.handle_event_update(update)  # will refetch events
         self.assertTrue(ok)
         self.assertNotEqual(zino1.events[raw_event_id].priority, old_events[raw_event_id].priority)
 
@@ -260,5 +260,5 @@ class UpdateHandlerTest(unittest.TestCase):
         updates = UpdateHandler(zino1)
         update = NotifierResponse(raw_event_id, "trout", "")
         with self.assertLogs('zinolib.controllers.zino1', level='WARNING'):
-            ok = updates.handle(update)  # will run fallback
+            ok = updates.handle_event_update(update)  # will run fallback
             self.assertFalse(ok)
