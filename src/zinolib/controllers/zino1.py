@@ -538,7 +538,7 @@ class Zino1EventManager(EventManager):
             try:
                 event = self.create_event_from_id(event_id)
             except self.ManagerException:
-                self.removed_ids.add(event_id)
+                self.remove_event(event_id)
                 continue
             self.events[event_id] = event
 
