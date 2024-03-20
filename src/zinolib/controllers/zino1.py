@@ -343,6 +343,13 @@ class EventAdapter:
         except ProtocolError as e:
             raise RetryError('Zino 1 failed to send a correct response header, retry') from e
 
+    @staticmethod
+    def poll(request, event: EventType) -> bool:
+        if event.type == Event.Type.PORTSTATE:
+            return request.poll_interface(event.router, event.if_index)
+        else:
+            return request.poll_router(event.router)
+
 
 class HistoryAdapter:
     SYSTEM_USER = "monitor"
@@ -515,6 +522,15 @@ class Zino1EventManager(EventManager):
         if event.type == Event.Type.PORTSTATE:
             return self.session.request.clear_flapping(event.router, event.if_index)
         return None
+
+    def poll(self, event_or_id: EventOrId):
+        """Ask the server to refresh data for the event
+
+        If there are any changes they will be available through the update
+        handler in a bit
+        """
+        event = self._get_event(event_or_id)
+        return self._event_adapter.poll(self.session.request, event)
 
     def get_events(self):
         self._verify_session()
