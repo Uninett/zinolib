@@ -480,7 +480,7 @@ class Zino1EventManager(EventManager):
         try:
             return function(*args)
         except ZinoError as e:
-            raise self.ManagerException(e)
+            raise self.ManagerException(e) from e
 
     def _verify_session(self, quiet=False):
         if not getattr(self.session, 'request', None):
