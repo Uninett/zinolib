@@ -75,7 +75,6 @@ import logging
 from .base import EventManager, EventOrId
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
-from ..event_types import PortStateEvent
 from ..ritz import ZinoError, ProtocolError, ritz, notifier
 from ..utils import log_exception_with_params
 
