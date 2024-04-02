@@ -42,7 +42,7 @@ class EventManager:
 
     def remove_event(self, event_or_id: EventOrId):
         event_id = self._get_event_id(event_or_id)
-        self.events.pop(event_id)
+        self.events.pop(event_id, None)
         self.removed_ids.add(event_id)
 
     def _verify_session(self, quiet=False):

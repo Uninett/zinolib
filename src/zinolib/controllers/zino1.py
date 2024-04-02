@@ -36,11 +36,14 @@ To get a set of removed event ids::
 For updates, either regularly use ``get_events()`` or utilize the UpdateHandler::
 
     > updater = UpdateHandler(event_manager)
-    > updated = updater.poll()
+    > updated = updater.get_event_update()
 
-``updater.poll()`` updates ``event_manager.events`` and
-``event_manager.removed_ids`` and returns ``True`` on any change, falsey
-otherwise.
+The updater is unique per authenticated user and is only available after login.
+
+``updater.get_event_update()`` updates ``event_manager.events`` and
+``event_manager.removed_ids`` and returns the id of a changed event on any
+change, falsey otherwise. Check the id against the removed_id's set to see if
+it has been removed from the server.
 
 To get history for a specific event::
 
@@ -72,7 +75,6 @@ import logging
 from .base import EventManager, EventOrId
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
-from ..event_types import PortStateEvent
 from ..ritz import ZinoError, ProtocolError, ritz, notifier
 from ..utils import log_exception_with_params
 
@@ -135,24 +137,45 @@ class UpdateHandler:
         self.events = manager.events
         self.autoremove = autoremove
 
-    def poll(self):
+    def get_event_update(self):
+        """
+        Fetches one update for a single event and runs the appropriate handler
+
+        Attributes on the update object:
+
+        id: event id
+        type: update type, triggers the correct handler
+        info: a type-specific string with the actual change
+
+        Run in a loop/every N seconds for a lightweight way to update the event
+        list
+        """
         update = self.manager.session.push.poll()
         if not update:
             return False
-        return self.handle(update)
+        return self.handle_event_update(update)
 
     def update(self, event_id: int):
+        "Refresh an event from the server, refreshing everything"
         event = self.manager.get_updated_event_for_id(event_id)
         self.manager._set_event(event)
         LOG.debug("Updated event #%i", event_id)
 
     def remove(self, event_id: int):
+        "Remove an event from our local copy of the events list"
         self.manager.remove_event(event_id)
         LOG.debug("Removed event #%i", event_id)
 
-    def handle(self, update):
+    def handle_event_update(self, update):
+        """Call the right handle on the update object depending on type
+
+        If the update is about a locally unknown id and the update type is not
+        UpdateType.STATE it is a new, incomplete event so we return nothing.
+
+        Otherwise call the right handler on the update data.
+        """
         if update.id not in self.events and update.type != self.UpdateType.STATE:
-            # new event that still don't have a state
+            # unknown event that don't have a state (yet), wait for new update
             return None
         if update.type in tuple(self.UpdateType):
             method = getattr(self, f"cmd_{update.type}")
@@ -160,26 +183,43 @@ class UpdateHandler:
         return self.fallback(update)
 
     def cmd_state(self, update):
+        """State has been changed
+
+        Removes a now closed state if the setting "autoremove" is True,
+        otherwise refreshes the event from the server.
+        """
         states = update.info.split(" ")
         if states[1] == "closed" and self.autoremove:
             LOG.debug('Autoremoving "%s"', update.id)
             self.remove(update.id)
         else:
             self.update(update.id)
-        return True
+        return update.id
 
     def cmd_attr(self, update):
+        """Attributes has been changed
+
+        Refresh the event from the server.
+        """
         self.update(update.id)
-        return True
+        return update.id
 
     cmd_history = cmd_attr
     cmd_log = cmd_attr
 
     def cmd_scavenged(self, update):
+        """The event has been removed from the server
+
+        Remove it from our local copy of the events list.
+        """
         self.remove(update.id)
-        return True
+        return update.id
 
     def fallback(self, update):
+        """There's an unknown update type
+
+        Log it and do nothing.
+        """
         LOG.warning('Unknown update type: "%s" for id %s' % (update.type, update.id))
         return False
 
@@ -301,6 +341,13 @@ class EventAdapter:
             return request.get_caseids()
         except ProtocolError as e:
             raise RetryError('Zino 1 failed to send a correct response header, retry') from e
+
+    @staticmethod
+    def poll(request, event: EventType) -> bool:
+        if event.type == Event.Type.PORTSTATE:
+            return request.poll_interface(event.router, event.if_index)
+        else:
+            return request.poll_router(event.router)
 
 
 class HistoryAdapter:
@@ -432,7 +479,7 @@ class Zino1EventManager(EventManager):
         try:
             return function(*args)
         except ZinoError as e:
-            raise self.ManagerException(e)
+            raise self.ManagerException(e) from e
 
     def _verify_session(self, quiet=False):
         if not getattr(self.session, 'request', None):
@@ -475,13 +522,22 @@ class Zino1EventManager(EventManager):
             return self.session.request.clear_flapping(event.router, event.if_index)
         return None
 
+    def poll(self, event_or_id: EventOrId):
+        """Ask the server to refresh data for the event
+
+        If there are any changes they will be available through the update
+        handler in a bit
+        """
+        event = self._get_event(event_or_id)
+        return self._event_adapter.poll(self.session.request, event)
+
     def get_events(self):
         self._verify_session()
         for event_id in self._event_adapter.get_event_ids(self.session.request):
             try:
                 event = self.create_event_from_id(event_id)
             except self.ManagerException:
-                self.removed_ids.add(event_id)
+                self.remove_event(event_id)
                 continue
             self.events[event_id] = event
 
