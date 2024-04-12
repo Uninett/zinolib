@@ -276,8 +276,12 @@ class Case:
         elif "downtime" == name:
             return self.get_downtime()
         else:
-            self.__getattribute__(name)
-            # raise AttributeError("%s instance of type %s has no attribute '%s'" % (self.__class__, self._attrs["type"], name))
+            try:
+                self.__getattribute__(name)
+            except AttributeError as e:
+                msg = "%s of type %s has no attribute '%s'"
+                typename = self._attrs.get("type", "UNKNOWN")
+                raise AttributeError(msg % (self, typename, name))
         return self
 
     def __getitem__(self, key):
