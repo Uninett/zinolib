@@ -120,6 +120,10 @@ class EventClosedError(Zino1Error):
     pass
 
 
+class LostConnectionError(Zino1Error):
+    pass
+
+
 def convert_timestamp(timestamp: int) -> datetime:
     return datetime.fromtimestamp(timestamp, timezone.utc)
 
@@ -370,6 +374,8 @@ class EventAdapter:
             return request.get_caseids()
         except ProtocolError as e:
             raise RetryError('Zino 1 failed to send a correct response header, retry') from e
+        except BrokenPipeError as e:
+            raise LostConnectionError('Lost connection to Zino 1 server') from e
 
     @staticmethod
     def poll(request, event: EventType) -> bool:
