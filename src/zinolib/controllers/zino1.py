@@ -150,7 +150,7 @@ class UpdateHandler:
             self._connected = True
             return True
         self._connected = False
-        raise self.SocektError("Push socket reports failure, fileno = -1")
+        raise self.SocketError("Push socket reports failure, fileno = -1")
 
     def get_event_update(self):
         """
