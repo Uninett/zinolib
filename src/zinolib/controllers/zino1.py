@@ -36,6 +36,7 @@ To get a set of removed event ids::
 For updates, either regularly use ``get_events()`` or utilize the UpdateHandler::
 
     > updater = UpdateHandler(event_manager)
+    > updater.connect()
     > updated = updater.get_event_update()
 
 The updater is unique per authenticated user and is only available after login.
@@ -127,15 +128,29 @@ class UpdateHandler:
     class UpdateError(Zino1Error):
         pass
 
+    class SocketError(UpdateError):
+        pass
+
     def __init__(self, manager, autoremove=False):
+        self._connected = False
         if not manager.is_authenticated:
             msg = "Cannot initiate update handler, not authenticated"
             raise self.UpdateError(msg)
         self.manager = manager
-        if not self.manager.session.push:
-            self.manager.connect_push_channel()
         self.events = manager.events
         self.autoremove = autoremove
+
+    def connect(self):
+        if not self.manager.session.push:
+            self.manager.connect_push_channel()
+        self.check_connection()
+
+    def check_connection(self):
+        if self.manager.session.push._sock.fileno() >= 0:
+            self._connected = True
+            return True
+        self._connected = False
+        raise self.SocektError("Push socket reports failure, fileno = -1")
 
     def get_event_update(self):
         """
@@ -150,6 +165,7 @@ class UpdateHandler:
         Run in a loop/every N seconds for a lightweight way to update the event
         list
         """
+        self.check_connection()
         update = self.manager.session.push.poll()
         if not update:
             return False
@@ -268,10 +284,16 @@ class SessionAdapter:
         return session
 
     @staticmethod
-    def close_session(session):
+    def close_push_channel(session):
         if hasattr(session.push, '_sock'):
             session.push._sock.close()
+        session.push = None
+
+    @classmethod
+    def close_session(cls, session):
+        cls.close_push_channel()
         session.request.close()
+        session.request = None
         return None
 
 
