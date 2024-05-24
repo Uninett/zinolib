@@ -45,6 +45,13 @@ class AdmState(StrEnum):
     OPEN = "open"
     WAITING = "waiting"
     WORKING = "working"
+    UNKNOWN = "unknown"
+
+    @classmethod
+    def _missing_(cls, value):
+        # Python 3.12: "if not value in cls:"
+        if not value in cls._value2member_map_:
+            return cls.UNKNOWN
 
 
 class FlapState(StrEnum):
