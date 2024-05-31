@@ -15,7 +15,7 @@ def _parse_tcl(config_dict, section):
     return connection, options
 
 
-class ZinoV1Config(UserConfig, ServerV1Config, Options):
+class ZinoV1Config(ServerV1Config, Options):
     """
     How to use::
 
@@ -41,25 +41,25 @@ class ZinoV1Config(UserConfig, ServerV1Config, Options):
 
     @classmethod
     def get_legacy_class(cls):
-        return type("ZinoV1LegacyConfig", (UserConfig, ServerV1Config, Options, cls))
+        return type("ZinoV1LegacyConfig", (UserConfig, cls), dict())
 
     @classmethod
     def get_class(cls):
-        return type("ZinoV1Config", (OptionalUserConfig, ServerV1Config, Options, cls))
+        return type("ZinoV1Config", (OptionalUserConfig, cls), dict())
 
     @classmethod
     def from_dict(cls, config_dict, section=DEFAULT_SECTION):
         connection = config_dict["connections"][section]
         options = config_dict.get("options", {})
         classobj = cls.get_class()
-        return cls(**connection, **options)
+        return classobj(**connection, **options)
 
     @classmethod
     def from_tcl(cls, filename=None, section=DEFAULT_SECTION):
         config_dict = tcl.parse_tcl_config(filename)
         connection, options = _parse_tcl(config_dict, section)
         classobj = cls.get_legacy_class()
-        return cls(**connection, **options)
+        return classobj(**connection, **options)
 
     @classmethod
     def from_toml(cls, filename=None, section=DEFAULT_SECTION):

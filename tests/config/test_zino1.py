@@ -49,8 +49,8 @@ class ZinoV1ConfigTest(unittest.TestCase):
 
     def manually_create_config(self, connection=None):
         connection = connection or self.example_connection
-        options = {}
-        return ZinoV1Config(**connection, **options)
+        _dict = {"connections": {"default": connection}}
+        return ZinoV1Config.from_dict(_dict)
 
     def test_manually_create_config(self):
         config = self.manually_create_config()
