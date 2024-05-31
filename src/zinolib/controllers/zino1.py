@@ -298,7 +298,7 @@ class SessionAdapter:
 
     @classmethod
     def close_session(cls, session):
-        cls.close_push_channel()
+        cls.close_push_channel(session)
         session.request.close()
         session.request = None
         return None
@@ -492,6 +492,7 @@ class Zino1EventManager(EventManager):
     _history_adapter = HistoryAdapter
     _log_adapter = LogAdapter
     removed_ids: Set[int] = set()
+    config = None
 
     @property
     def is_authenticated(self):
@@ -520,10 +521,13 @@ class Zino1EventManager(EventManager):
     @classmethod
     def configure(cls, config):
         session = cls._session_adapter.create_session(config)
-        return cls(session)
+        classobj = cls(session)
+        classobj.config = config
+        return classobj
 
     def connect(self):
-        self._verify_session()
+        if not self._verify_session(quiet=True):
+            self.session =  self._session_adapter.create_session(self.config)
         self.session = self._session_adapter.connect_session(self.session)
 
     def connect_push_channel(self):
