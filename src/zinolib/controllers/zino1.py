@@ -2,7 +2,7 @@
 Get a live Zino 1 session to use::
 
     > from zinolib.config.zino1 import ZinoV1Config
-    > from zinolib.zino1 import Zino1EventManager
+    > from zinolib.controllers.zino1 import Zino1EventManager
     > config = ZinoV1Config.from_tcl('.ritz.tcl', 'default')
     > event_manager = Zino1EventManager.configure(config)
     > event_manager.connect()
@@ -10,6 +10,13 @@ Get a live Zino 1 session to use::
 The configuration can also be stored in a toml-file::
 
     > config = ZinoV1Config.from_toml('.ritz.toml', 'default')
+
+.. or in a dict with the format::
+
+    > config_dict = {"connections": "default": { "server": ACTUAL CONFIG .. }}
+    > config = ZinoV1Config.from_dict(config_dict, 'default')
+
+Do not initialize ZinoV1Config directly, avoid ``ZinoV1Config(**dict)``.
 
 Authenticate using a username and password from the config-file::
 
