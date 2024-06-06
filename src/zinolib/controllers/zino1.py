@@ -83,7 +83,7 @@ import logging
 from .base import EventManager, EventOrId
 from ..compat import StrEnum
 from ..event_types import EventType, Event, HistoryEntry, LogEntry, AdmState
-from ..ritz import ZinoError, ProtocolError, ritz, notifier
+from ..ritz import ZinoError, ProtocolError, ritz, notifier, NotConnectedError
 from ..utils import log_exception_with_params
 
 
@@ -117,6 +117,10 @@ class RetryError(Zino1Error):
 
 
 class EventClosedError(Zino1Error):
+    pass
+
+
+class LostConnectionError(NotConnectedError):
     pass
 
 
@@ -370,6 +374,8 @@ class EventAdapter:
             return request.get_caseids()
         except ProtocolError as e:
             raise RetryError('Zino 1 failed to send a correct response header, retry') from e
+        except BrokenPipeError as e:
+            raise LostConnectionError('Lost connection to Zino 1 server') from e
 
     @staticmethod
     def poll(request, event: EventType) -> bool:
