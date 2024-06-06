@@ -378,12 +378,14 @@ class ritz:
         while data:
             try:
                 data = self._sock.recv(recv_buffer)
-            except socket.timeout:
+            except socket.timeout as e:
                 raise TimeoutError(
                     "Timed out waiting for data. command: %s buffer: %s"
                     % (repr(command), repr(buffer))
-                )
+                ) from e
             logger.debug("recv: %s" % data.__repr__())
+            if not data:
+                raise NotConnectedError(f'Lost connection to server')
 
             buffer += data.decode("UTF-8", errors="windows_codepage_cp1252")
 
@@ -439,8 +441,8 @@ class ritz:
             self._sock = socket.create_connection(
                 (self.server, self.port), self.timeout
             )
-        except socket.gaierror as E:
-            raise NotConnectedError(E)
+        except socket.gaierror as e:
+            raise NotConnectedError(e) from e
         response = self._request(None)
         if response.header[0] == 200:
             self.authChallenge = response.header[1].split(" ", 1)[0]
@@ -1119,6 +1121,8 @@ class notifier:
                 (self.zino_session.server, self.port), self.timeout
             )
             self._buff = self._sock.recv(4096)
+            if not self._buff:
+                raise NotConnectedError("Lost connection to server")
             self._sock.setblocking(False)
             rawHeader = self._buff.split(bytes(self.DELIMITER, 'ascii'))[0]
             header = rawHeader.split(b" ", 1)
@@ -1146,8 +1150,11 @@ class notifier:
             r, _, _ = select.select([self._sock], [], [], timeout)
             if r:
                 try:
-                    self._buff += self._sock.recv(4096).decode()
-                except socket.error as e:
+                    newbuff = self._sock.recv(4096).decode()
+                    if not newbuff:
+                        raise NotConnectedError("Lost connection to server")
+                    self._buff += newbuff
+                except OSError as e:
                     if not (
                         e.args[0] == errno.EAGAIN or e.args[0] == errno.EWOULDBLOCK
                     ):
