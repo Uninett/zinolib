@@ -384,8 +384,6 @@ class ritz:
                     % (repr(command), repr(buffer))
                 ) from e
             logger.debug("recv: %s" % data.__repr__())
-            if not data:
-                raise NotConnectedError(f'Lost connection to server')
 
             buffer += data.decode("UTF-8", errors="windows_codepage_cp1252")
 
