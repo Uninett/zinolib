@@ -514,6 +514,8 @@ class Zino1EventManager(EventManager):
         "Replace the original exception with our own"
         try:
             return function(*args)
+        except (NotConnectedError, LostConnectionError) as e:
+            raise
         except ZinoError as e:
             raise self.ManagerException(e) from e
 
