@@ -195,6 +195,9 @@ class AlarmEvent(Event):
     def description(self) -> Optional[str]:
         return self.lastevent
 
+    def is_down(self) -> bool:
+        return self.alarm_count > 0
+
 
 class BFDEvent(Event):
     type: str = Event.Type.BFD
@@ -218,6 +221,9 @@ class BFDEvent(Event):
     @property
     def op_state(self) -> str:
         return f"BFD  {self.bfd_state[:5]}"
+
+    def is_down(self) -> bool:
+        return self.bfd_state == BFDState.DOWN
 
 
 class BGPEvent(Event):
@@ -247,6 +253,9 @@ class BGPEvent(Event):
     def op_state(self) -> str:
         return f"BGP  {self.bgp_OS[:5]}"
 
+    def is_down(self) -> bool:
+        return self.bgp_OS == "down"
+
 
 class ReachabilityEvent(Event):
     type: str = Event.Type.REACHABILITY
@@ -259,6 +268,9 @@ class ReachabilityEvent(Event):
     @property
     def op_state(self) -> str:
         return self.reachability
+
+    def is_down(self) -> bool:
+        return self.reachability == ReachabilityState.NORESPONSE
 
 
 class PortStateEvent(Event):
@@ -295,3 +307,6 @@ class PortStateEvent(Event):
             return accumulated + now - lasttrans
         else:
             return accumulated
+
+    def is_down(self) -> bool:
+        return self.port_state in [PortState.DOWN, PortState.LOWER_LAYER_DOWN]
