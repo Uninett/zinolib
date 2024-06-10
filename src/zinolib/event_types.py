@@ -174,6 +174,9 @@ class Event(BaseModel):
         eventobj = subtype(**attrdict)
         return eventobj
 
+    def is_down(self):
+        raise NotImplementedError("Abstract method was called, can not calculate is_down status without event type.")
+
 
 EventType = TypeVar('EventType', bound=Event)
 EventOrId = Union[EventType, int]
