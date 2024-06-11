@@ -582,6 +582,19 @@ class Zino1EventManager(EventManager):
                 continue
             self.events[event_id] = event
 
+    def test_connection(self):
+        """Try fetching info about a non-existing event
+
+        If the connection is up, we get a ProtocolError due to the
+        non-existent event. Do nothing.
+
+        If the connection is down we will pass on a TimeoutError.
+        """
+        try:
+            self._event_adapter.get_attrlist(self.session.request, 0)
+        except ProtocolError:
+            pass
+
     def create_event_from_id(self, event_id: int):
         self._verify_session()
         attrlist = self.rename_exception(self._event_adapter.get_attrlist, self.session.request, event_id)
