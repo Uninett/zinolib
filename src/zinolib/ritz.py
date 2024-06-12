@@ -88,7 +88,7 @@ from typing import NamedTuple
 import codecs
 import select
 
-from .utils import windows_codepage_cp1252, generate_authtoken
+from .utils import windows_codepage_cp1252, generate_authtoken, enable_socket_keepalive
 
 
 codecs.register_error("windows_codepage_cp1252", windows_codepage_cp1252)
@@ -347,7 +347,7 @@ class ritz:
     """
     DELIMITER = "\r\n"
 
-    def __init__(self, server, port=8001, timeout=10, username=None, password=None):
+    def __init__(self, server, port=8001, timeout=10, username=None, password=None, keepalive=True):
         """Initialize"""
         global logger
 
@@ -358,6 +358,7 @@ class ritz:
         self.timeout = timeout
         self.username = username
         self.password = password
+        self.keepalive = keepalive
         self._buff = ""
 
     def __enter__(self):
@@ -462,6 +463,10 @@ class ritz:
             self.connStatus = True
         else:
             raise NotConnectedError("Did not get a status code 200")
+
+        if self.keepalive:
+            enable_socket_keepalive(self._sock)
+            logger.info("Set keepalive on protocol socket")
 
         # Automaticly authenticate if username and password is supplied
         if self.username and self.password:
@@ -1105,13 +1110,14 @@ class notifier:
     """
     DELIMITER = "\r\n"
 
-    def __init__(self, zino_session, port=8002, timeout=30):
+    def __init__(self, zino_session, port=8002, timeout=30, keepalive=True):
         self._sock = None
         self.connStatus = False
         self._buff = ""
         self.zino_session = zino_session
         self.port = port
         self.timeout = timeout
+        self.keepalive = keepalive
 
     def __enter__(self):
         self.connect()
@@ -1145,6 +1151,10 @@ class notifier:
                 self.zino_session.ntie(header[0])
             else:
                 raise NotConnectedError("Key not found")
+
+            if self.keepalive:
+                enable_socket_keepalive(self._sock)
+                logger.info("Set keepalive on notifier socket")
 
     def poll(self, timeout=0):
         """Poll the notifier socket for new data
