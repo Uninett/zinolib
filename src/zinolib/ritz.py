@@ -87,7 +87,7 @@ import codecs
 import select
 
 from .config.tcl import parse_tcl_config  # noqa: F401 (used to be in this file)
-from .utils import windows_codepage_cp1252, generate_authtoken
+from .utils import windows_codepage_cp1252, generate_authtoken, enable_socket_keepalive
 
 
 codecs.register_error("windows_codepage_cp1252", windows_codepage_cp1252)
@@ -1122,6 +1122,7 @@ class notifier:
             if not self._buff:
                 raise NotConnectedError("Lost connection to server")
             self._sock.setblocking(False)
+            enable_socket_keepalive(self._sock)
             rawHeader = self._buff.split(bytes(self.DELIMITER, 'ascii'))[0]
             header = rawHeader.split(b" ", 1)
             # print(len(header[0]))
