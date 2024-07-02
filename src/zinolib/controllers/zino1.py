@@ -523,7 +523,11 @@ class Zino1EventManager(EventManager):
         if not getattr(self.session, 'request', None):
             if quiet:
                 return False
-            raise ValueError
+            raise NotConnectedError("The request socket have not been set up correctly. Reconnect necessary.")
+        if not self.session.request.connected:
+            if quiet:
+                return False
+            raise NotConnectedError("Authentication necessary")
         return True
 
     @classmethod
