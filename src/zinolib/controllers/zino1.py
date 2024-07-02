@@ -548,8 +548,11 @@ class Zino1EventManager(EventManager):
             raise self.ManagerException(e)
 
     def disconnect(self):
-        self._verify_session()
-        self.session = self._session_adapter.close_session(self.session)
+        session_ok = self._verify_session(quiet=True)
+        if session_ok:
+            self.session = self._session_adapter.close_session(self.session)
+        else:
+            self._session_adapter.close_push_channel(self.session)
 
     def clear_flapping(self, event_or_id: EventOrId):
         """Clear flapping state of a PortStateEvent
