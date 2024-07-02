@@ -84,6 +84,7 @@ class FakeSessionAdapter(SessionAdapter):
     def _setup_request(session, config):
         class FakeSession:
             authenticated = True
+            connected = True
 
         session.request = FakeSession()  # needs to be truthy
         session.push = True  # needs to be truthy

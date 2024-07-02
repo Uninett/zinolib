@@ -523,7 +523,11 @@ class Zino1EventManager(EventManager):
         if not getattr(self.session, 'request', None):
             if quiet:
                 return False
-            raise ValueError
+            raise NotConnectedError("The request socket have not been set up correctly. Reconnect necessary.")
+        if not self.session.request.connected:
+            if quiet:
+                return False
+            raise NotConnectedError("Authentication necessary")
         return True
 
     @classmethod
@@ -548,8 +552,11 @@ class Zino1EventManager(EventManager):
             raise self.ManagerException(e)
 
     def disconnect(self):
-        self._verify_session()
-        self.session = self._session_adapter.close_session(self.session)
+        session_ok = self._verify_session(quiet=True)
+        if session_ok:
+            self.session = self._session_adapter.close_session(self.session)
+        else:
+            self._session_adapter.close_push_channel(self.session)
 
     def clear_flapping(self, event_or_id: EventOrId):
         """Clear flapping state of a PortStateEvent
