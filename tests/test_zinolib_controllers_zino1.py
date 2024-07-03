@@ -2,7 +2,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 
 from zinolib.event_types import AdmState, Event, HistoryEntry, LogEntry
-from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager, UpdateHandler,RetryError
+from zinolib.controllers.zino1 import EventAdapter, HistoryAdapter, LogAdapter, SessionAdapter, Zino1EventManager, UpdateHandler
+from zinolib.controllers.zino1 import RetryError, NotConnectedError
 from zinolib.ritz import NotifierResponse
 
 raw_event_id = 139110
@@ -106,6 +107,28 @@ class Zino1EventManagerTest(unittest.TestCase):
     def init_manager(self):
         zino1 = FakeZino1EventManager.configure(None)
         return zino1
+
+    def test_verify_session_raises_notconnectederror_on_incorrect_manager(self):
+        zino1 = FakeZino1EventManager()
+        with self.assertRaises(NotConnectedError) as e:
+            zino1._verify_session()
+            self.assertIn("The request socket have not been set up correctly", e)
+
+    def test_verify_session_raises_notconnectederror_if_not_connected(self):
+        zino1 = FakeZino1EventManager.configure(None)
+        orig = zino1.session.request.connected
+        zino1.session.request.connected = False
+        try:
+            with self.assertRaises(NotConnectedError) as e:
+                zino1._verify_session()
+                self.assertIn("Authentication necessary", e)
+        finally:
+            zino1.session.request.connected = orig
+
+    def test_verify_session_returns_False_if_quieted_on_incorrect_manager(self):
+        zino1 = FakeZino1EventManager()
+        result = zino1._verify_session(quiet=True)
+        self.assertEqual(result, False)
 
     def test_create_event_from_id_receiving_garbage_admstate_is_safely_handled(self):
         global raw_attrlist
