@@ -157,6 +157,7 @@ class UpdateHandler:
         self.check_connection()
 
     def check_connection(self):
+        self.manager._verify_session()
         if self.manager.session.push._sock.fileno() >= 0:
             self._connected = True
             return True
