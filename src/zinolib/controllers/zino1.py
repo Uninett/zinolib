@@ -297,14 +297,15 @@ class SessionAdapter:
 
     @staticmethod
     def close_push_channel(session):
-        if hasattr(session.push, '_sock'):
+        if hasattr(session, 'push') and hasattr(session.push, '_sock'):
             session.push._sock.close()
         session.push = None
 
     @classmethod
     def close_session(cls, session):
         cls.close_push_channel(session)
-        session.request.close()
+        if hasattr(session, 'request'):
+            session.request.close()
         session.request = None
         return None
 
