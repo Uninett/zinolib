@@ -41,3 +41,9 @@ include = [
 
 [tool.setuptools_scm]
 write_to = "src/zinolib/version.py"
+
+[tool.ruff]
+output-format = "full"
+
+[tool.ruff.lint]
+select = ["E9", "F63", "F7", "F82"]
