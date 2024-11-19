@@ -47,7 +47,7 @@ def main():
       while True:
         n = notif.poll()
         if n:
-          print n
+          print(n)
           p = n.split(' ',2)
           if "attr" in p[1]:
             pprint(sess.get_attributes(int(p[0])))
