@@ -73,6 +73,18 @@ def _enable_keepalive_linux(sock, after_idle_sec, interval_sec, max_fails):
     sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_sec)
     sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_fails)
 
+def _enable_keepalive_netbsd(sock, after_idle_sec, interval_sec, max_fails):
+    """Set TCP keepalive on an open socket.
+
+    It activates after (after_idle_sec) of idleness, then
+    sends a keepalive ping once every (interval_sec) seconds,
+    and closes the connection after (max_fails) failed pings.
+    """
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, after_idle_sec)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_sec)
+    sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_fails)
+
 
 def _enable_keepalive_osx(sock, after_idle_sec, interval_sec, max_fails):
     """Set TCP keepalive on an open socket.
@@ -93,6 +105,7 @@ def enable_socket_keepalive(sock, after_idle_sec=60, interval_sec=60, max_fails=
     platforms = {
         "Linux": _enable_keepalive_linux,
         "Darwin": _enable_keepalive_osx,
+        "NetBSD": _enable_keepalive_netbsd,
         "Windows": _enable_keepalive_win,
     }
     plat = platform.system()
