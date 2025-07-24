@@ -61,7 +61,7 @@ def generate_authtoken(challenge, password):
     return token
 
 
-def _enable_keepalive_linux(sock, after_idle_sec, interval_sec, max_fails):
+def _enable_keepalive_linux_netbsd(sock, after_idle_sec, interval_sec, max_fails):
     """Set TCP keepalive on an open socket.
 
     It activates after 1 second (after_idle_sec) of idleness,
@@ -91,8 +91,9 @@ def _enable_keepalive_win(sock, after_idle_sec, interval_sec, max_fails):
 
 def enable_socket_keepalive(sock, after_idle_sec=60, interval_sec=60, max_fails=5):
     platforms = {
-        "Linux": _enable_keepalive_linux,
+        "Linux": _enable_keepalive_linux_netbsd,
         "Darwin": _enable_keepalive_osx,
+        "NetBSD": _enable_keepalive_linux_netbsd,
         "Windows": _enable_keepalive_win,
     }
     plat = platform.system()
