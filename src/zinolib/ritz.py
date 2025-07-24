@@ -144,6 +144,10 @@ def _decode_history(logarray):
     for log in logarray:
         if not log[0] == " ":
             # This is a header line
+            if curr:
+                # We've found a new header, append the current entry first
+                ret.append(curr)
+
             curr = {}
             curr["log"] = []
 
@@ -157,16 +161,14 @@ def _decode_history(logarray):
                 # this is a short system log
                 curr["log"] = []
                 curr["user"] = "system"  # re.match(".*\((\w+)\)$", header[1]).group(1)
-                ret.append(curr)
             else:
                 curr["user"] = header[1]
 
-        elif log == " ":
-            # End entry, empty line with one space
-            ret.append(curr)
         else:
             # Append log line
             curr["log"].append(log[1::])
+    if curr:
+        ret.append(curr)
     return ret
 
 
