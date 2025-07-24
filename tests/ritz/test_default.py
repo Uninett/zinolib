@@ -116,7 +116,7 @@ class DefaultTest(unittest.TestCase):
                     "date": datetime.datetime(2018, 10, 14, 11, 25, 23),
                     "header": "runarb",
                     "user": "runarb",
-                    "log": ["Testmelding ifra pyRitz"],
+                    "log": ["Testmelding ifra pyRitz", ""],
                 }
                 self.assertEqual(hist[1], test)
 
