@@ -15,7 +15,7 @@ class DecodeHistoryTest(unittest.TestCase):
             " ",
         ]
         history = _decode_history(raw_history)
-        self.assertEquals(len(history), 3, "Should have decoded 3 history entries")
+        self.assertEqual(len(history), 3, "Should have decoded 3 history entries")
 
     def test_when_entry_contains_empty_lines_it_should_not_be_duplicated(self):
         raw_history = [
@@ -26,4 +26,4 @@ class DecodeHistoryTest(unittest.TestCase):
             " ",
         ]
         history = _decode_history(raw_history)
-        self.assertEquals(len(history), 1, "Should have decoded only 1 history entry")
+        self.assertEqual(len(history), 1, "Should have decoded only 1 history entry")
