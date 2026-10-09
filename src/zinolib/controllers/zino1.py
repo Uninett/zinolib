@@ -483,9 +483,9 @@ class LogAdapter:
         """
         log_list: List[LogDict] = []
         for row in log_data:
-            timestamp, log = row.split(" ", 1)
+            raw_timestamp, log = row.split(" ", 1)
             try:
-                timestamp = int(timestamp)
+                timestamp = int(raw_timestamp)
             except ValueError as e:
                 raise RetryError('Zino 1 did not send a log, retry') from e
             dt = convert_timestamp(timestamp)
