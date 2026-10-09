@@ -21,7 +21,7 @@ Changed
 ================
 
 "howitz" was officially mothballed on 2025-10-07, "zino-argus-glue" started
-using zinolib in 2025-03-17.
+using zinolib 2025-03-17.
 
 Fixed
 -----
