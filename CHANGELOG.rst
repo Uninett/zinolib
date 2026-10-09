@@ -71,7 +71,7 @@ Changed
 Changed
 -------
 
-* Raise NotConnectedError instead of AttributeError if the session objects has
+* Raise NotConnectedError instead of AttributeError if the session object has
   been garbled when checking connection
 
 1.3.1 2024-07-03
