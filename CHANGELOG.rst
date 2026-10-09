@@ -9,7 +9,7 @@ Added
 -----
 
 * Test on Python 3.12 on Github
-* Added this changelog
+* This changelog
 
 Changed
 -------
@@ -20,6 +20,9 @@ Changed
 1.3.4 2025-07-24
 ================
 
+"howitz" was officially mothballed on 2025-10-07, "zino-argus-glue" started
+using zinolib in 2025-03-17.
+
 Fixed
 -----
 
@@ -28,14 +31,14 @@ Fixed
 Added
 -----
 
-* Added support for TCP keepalive on NetBSD
+* Support TCP keepalive on NetBSD
 
 Changed
 -------
 
-* Upgraded linters in pre-commit and ensure Github uses the same versions and
+* Upgrade linters in pre-commit and ensure Github uses the same versions and
   methods in CI
-* Fixed markup in README
+* Fix markup in README
 
 0.10.1 2025-07-24
 =================
@@ -50,7 +53,7 @@ Fixed
 Added
 -----
 
-* Added support for TCP keepalive on NetBSD
+* Support TCP keepalive on NetBSD
 
 Changed
 -------
@@ -80,7 +83,7 @@ Changed
 Changed
 -------
 
-* Improved _verify_session:
+* Improve _verify_session:
   * no longer raising an exception on disconnect
   * Raise NotConnectedError instead of ValueError if the connection is gone
 
@@ -90,7 +93,7 @@ Changed
 Added
 -----
 
-* Added support for TCP keepalive, on by default
+* Support for TCP keepalive, on by default
 
 Changed
 -------
@@ -103,7 +106,7 @@ Changed
 Added
 -----
 
-* Added support for TCP keepalive, on by default
+* Support for TCP keepalive, on by default
 
 1.2.0 2024-06-11
 ================
@@ -111,10 +114,10 @@ Added
 Added
 -----
 
-* Added a method "is_down" that varies by Case-type to make it easier to check
+* New method "is_down" on CVase, varying by Case-type to make it easier to check
   if there is a down-event
-* Added a way to test if the connection to the server is up, ask for
-  a non-existent event
+* New way to test if the connection to the server is up, ask for a non-existent
+  event
 
 Changed
 -------
@@ -141,7 +144,7 @@ Fixed
 Changed
 -------
 
-* Improved docstring for the new way of doing things
+* Improve docstring for the new way of doing things
 
 1.0.4 2024-05-24
 ================
@@ -164,14 +167,14 @@ Bugfix-release
 Fixed
 -----
 
-* Fixed a typoed variable name
-* Reverted to the old and risky way to set attributes on Case because fixing
+* Fix a typoed variable name
+* Revert to the old and risky way to set attributes on Case because fixing
   curitz to work with the safer way was too much work
 
 Changed
 -------
 
-* Improved the traceback for when a Case misses an attribute now that we get
+* Improve the traceback for when a Case misses an attribute now that we get
   them in an unsafe fashion again.
 
 1.0.3 2024-04-02
@@ -185,7 +188,7 @@ Fixed
 Added
 -----
 
-* Added support for triggering a server poll for an event
+* Add support for triggering a server poll for an event
 
 Changed
 -------
@@ -199,13 +202,13 @@ Changed
 Fixed
 -----
 
-* Fixed an error when parsing broken log records
-* Fixed an error when parsing invalid event ids
+* Fix an error when parsing broken log records
+* Fix an error when parsing invalid event ids
 
 Changed
 -------
 
-* Altered CI setup in Github, lint moar
+* Alter CI setup in Github, lint moar
 
 1.0.1 2024-01-11
 ================
@@ -214,7 +217,7 @@ Added
 -----
 
 * Support Python 3.12
-* Added a RetryError to help clients on flaky connections
+* Add a RetryError to help clients on flaky connections
 * Add a place to store misc case data
 
 Changed
@@ -237,27 +240,27 @@ zino depending on the 1-branch instead of the 0-branch.
 Fixed
 -----
 
-* Fixed a typoed variable name
+* Fix a typoed variable name
 
 Added
 -----
 
-* Added a Object Oriented way to model Cases with the help of Pydantic
+* Add an Object Oriented way to model Cases with the help of Pydantic
 * Lots of type hints in the new code
 * Configuration can be done via TOML-file
 
 Removed
 -------
 
-* Dropped support for Pythons older than 3.9
+* Drop support for Pythons older than 3.9
 
 Changed
 -------
 
-* Reverted to the old and risky way to set attributes on Case because fixing
+* Revert to the old and risky way to set attributes on Case because fixing
   curitz to work with the safer way was too much work
-* Refactored how config parsing happens in anticipation of supporting TOML.
-* Moved slow tests to a separate file to make it easy to exclude when rerunning
+* Refactor how config parsing happens in anticipation of supporting TOML.
+* Move slow tests to a separate file to make it easy to exclude when rerunning
   tests
 * Always store port numbers as int
 * Switch test runner from unittest to pytest
@@ -272,7 +275,8 @@ Bugfix-release, split branches for curitz and using zinolib as a library.
 Fixed
 -----
 
-* Added a class constant that was missed during the refactor in 0.9.21, now preventing a crash.
+* Add a class constant that was missed during the refactor in 0.9.21, now
+  preventing a crash.
 
 Changed
 -------
@@ -293,10 +297,10 @@ Added
 Fixed
 -----
 
-* Switched from supporting windows codepage 1251 (cyrrillic) to windows
+* Switch from supporting windows codepage 1251 (cyrrillic) to windows
   codepage 1252i (a superset of ISO-8859-1), necessary to better
   support UTF-8.
-* Improved readability of some tests
+* Improve readability of some tests
 * Control timezone better when testing, fixing some intermittently failing tests
 
 Changed
