@@ -14,7 +14,7 @@ Added
 Changed
 -------
 
-* Update depnendecies of CI on Github
+* Update dependencies of CI on Github
 * Upgrade linters and pre-commit itself
 
 1.3.4 2025-07-24
@@ -63,7 +63,7 @@ Changed
 Changed
 -------
 
-* Close connections in an even more paranoid fashion  to ensure cleanup
+* Close connections in an even more paranoid fashion to ensure cleanup
 
 1.3.2 2024-07-04
 ================
@@ -112,7 +112,7 @@ Added
 -----
 
 * Added a method "is_down" that varies by Case-type to make it easier to check
-  if there is a diown-event
+  if there is a down-event
 * Added a way to test if the connection to the server is up, ask for
   a non-existent event
 
@@ -166,7 +166,7 @@ Fixed
 
 * Fixed a typoed variable name
 * Reverted to the old and risky way to set attributes on Case because fixing
-  curitz to work wioth the safer way was too much work
+  curitz to work with the safer way was too much work
 
 Changed
 -------
@@ -227,7 +227,7 @@ Changed
 ================
 
 First release for zinolib as a more standalone library, split branches for
-curitz and using zinolib a a library.
+curitz and using zinolib as a library.
 
 The big new thing is an OO way of handling cases, which uses enums for states.
 It decouples a case from the wire protocol in anticipation of supporting
@@ -249,13 +249,13 @@ Added
 Removed
 -------
 
-* Dropped support for Python's older than 3.9
+* Dropped support for Pythons older than 3.9
 
 Changed
 -------
 
 * Reverted to the old and risky way to set attributes on Case because fixing
-  curitz to work wioth the safer way was too much work
+  curitz to work with the safer way was too much work
 * Refactored how config parsing happens in anticipation of supporting TOML.
 * Moved slow tests to a separate file to make it easy to exclude when rerunning
   tests
@@ -267,7 +267,7 @@ Changed
 0.9.22 2023-08-23
 =================
 
-Bugfix-release, split branches for curitz and using zinolib a a library.
+Bugfix-release, split branches for curitz and using zinolib as a library.
 
 Fixed
 -----
@@ -326,7 +326,7 @@ Changed
 
 * Remove all things curses-relevant
 * Rename project from ritz to zinolib
-* Drop support for Python's older than 3.6
+* Drop support for Pythons older than 3.6
 * Rename function ``parse_config()`` to ``parse_tcl_config()`` in preparation
   for supporting other config formats, and improve documentation.
 * Move source to src/ and get version number from git tag
